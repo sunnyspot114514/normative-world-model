@@ -1,10 +1,11 @@
-version = "1.0-retained"
-status = "frozen_before_phase2_retained_baseline"
-run_kind = "phase2_retained_discovery"
+version = "1.1-retained-transfer-schema"
+status = "frozen_before_phase2_retained_v2_baseline"
+run_kind = "phase2_retained_discovery_v2"
+supersedes_run_kind = "phase2_retained_discovery"
 source_data_dir = "data/generated/phase1_discovery_v3"
 source_artifact_dir = "artifacts/phase1_v3"
-output_data_dir = "data/generated/phase2_retained/arms"
-output_artifact_dir = "artifacts/phase2_retained"
+output_data_dir = "data/generated/phase2_retained_v2/arms"
+output_artifact_dir = "artifacts/phase2_retained_v2"
 families_per_environment = 1000
 total_families = 2000
 smoke_overlap_families_per_environment = 300
@@ -32,6 +33,13 @@ joint_views = ["joint_naive", "joint_consistency"]
 factorized_views = ["factorized_factual", "factorized_normative"]
 gzip_mtime = 0
 
+[transfer]
+value_free_target_physical_schema_in_prompt = true
+within_environment_estimand = "joint_pair_success"
+cross_environment_estimand = "event_normative_pair_success"
+domain_native_physical_delta_cross_environment_role = "separate_diagnostic"
+static_cross_environment_physical_fallback = "target_schema_neutral_values"
+
 [governance]
 phase1_retained_required = true
 phase1_smoke_default_forbidden = true
@@ -39,3 +47,4 @@ overwrite_existing_outputs = false
 confirmation_generation_authorized = false
 model_training_authorized = false
 h5_rollout_status = "UNIDENTIFIED"
+phase2_v1_cross_environment_result_status = "INVALIDATED_BEFORE_MODEL_TRAINING"

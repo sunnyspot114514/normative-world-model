@@ -12,6 +12,7 @@ from normative_world_model.model_arms import (
     recompute_factorized_policy_result,
 )
 from normative_world_model.phase1_v3 import generate_v3_environment_families
+from normative_world_model.phase2_dataset import PHYSICAL_DELTA_SCHEMAS
 
 
 class ModelArmDatasetTests(unittest.TestCase):
@@ -30,6 +31,17 @@ class ModelArmDatasetTests(unittest.TestCase):
                 == ["joint_naive", "joint_consistency"]
                 for record in joint
             )
+        )
+        expected_schema = json.dumps(
+            PHYSICAL_DELTA_SCHEMAS["game"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        self.assertTrue(
+            all(expected_schema in record["input_text"] for record in joint)
+        )
+        self.assertTrue(
+            all(expected_schema in record["input_text"] for record in factual)
         )
 
     def test_consistency_groups_separate_semantic_and_surface_pairs(self) -> None:

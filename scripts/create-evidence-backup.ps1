@@ -20,7 +20,9 @@ $EvidencePaths = @(
     "data\generated\phase1_v3_smoke",
     "artifacts\phase1_v3_smoke",
     "data\generated\phase1_discovery_v3",
-    "artifacts\phase1_v3"
+    "artifacts\phase1_v3",
+    "data\generated\phase2_retained",
+    "artifacts\phase2_retained"
 )
 
 New-Item -ItemType Directory -Path $ResolvedDestination | Out-Null

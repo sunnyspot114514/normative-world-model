@@ -21,9 +21,11 @@ from .audits import (
 from .bootstrap import scenario_cluster_bootstrap
 from .model_output import ParsedModelOutput, parse_model_output
 from .phase2_dataset import (
+    PHYSICAL_DELTA_SCHEMAS,
     Phase2Example,
     build_phase2_examples,
     canonical_json,
+    neutral_physical_delta,
 )
 from .phase2_metrics import score_evaluator_pair, score_one_step
 from .transfer_matrix import (
@@ -539,8 +541,20 @@ def _parsed_static_output(
     decision: str,
     factual: dict[str, Any],
 ) -> ParsedModelOutput | None:
+    physical_delta = factual["physical_delta"]
+    source_schema = set(physical_delta)
+    target_schema = set(PHYSICAL_DELTA_SCHEMAS[example.environment])
+    known_schemas = {
+        environment: set(schema)
+        for environment, schema in PHYSICAL_DELTA_SCHEMAS.items()
+    }
+    if (
+        source_schema != target_schema
+        and source_schema in known_schemas.values()
+    ):
+        physical_delta = neutral_physical_delta(example.environment)
     payload = {
-        "physical_delta": factual["physical_delta"],
+        "physical_delta": physical_delta,
         "event_record": factual["event_record"],
         "normative_decision": decision,
         "escalation_required": decision == "escalate",
@@ -647,6 +661,14 @@ def _scenario_joint_scores(
                         )
                     values[scenario_id]["joint_pair_success"].append(
                         float(score.joint_pair_success)
+                    )
+                    values[scenario_id][
+                        "event_normative_pair_success"
+                    ].append(
+                        float(
+                            score.event_record_consistent_and_correct
+                            and score.normative_pair_correct
+                        )
                     )
                     values[scenario_id]["normative_pair_accuracy"].append(
                         float(score.normative_pair_correct)
@@ -801,9 +823,14 @@ def _run_cell(
             predicted,
             factual_by_mode[stronger_factual_mode[arm]],
         )
-    joint_scores = {
+    bootstrap_estimand = (
+        "joint_pair_success"
+        if train_environment == test_environment
+        else "event_normative_pair_success"
+    )
+    estimand_scores = {
         arm: {
-            scenario_id: metrics["joint_pair_success"]
+            scenario_id: metrics[bootstrap_estimand]
             for scenario_id, metrics in scores.items()
         }
         for arm, scores in scenario_scores.items()
@@ -821,6 +848,7 @@ def _run_cell(
         "development_presentation_count": len(development),
         "eligible_arms": sorted(decisions),
         "eligible_joint_arms": sorted(scenario_scores),
+        "bootstrap_estimand": bootstrap_estimand,
         "classification_diagnostics": {
             arm: _classification_summary(actual, predicted)
             for arm, predicted in decisions.items()
@@ -830,13 +858,13 @@ def _run_cell(
             for arm, scores in scenario_scores.items()
         },
         "scenario_cluster_bootstrap": scenario_cluster_bootstrap(
-            joint_scores,
+            estimand_scores,
             samples=bootstrap_samples,
             confidence_level=confidence_level,
             seed=seed,
         ),
     }
-    return report, joint_scores
+    return report, estimand_scores
 
 
 def _pooled_bootstrap(
@@ -934,6 +962,10 @@ def run_smoke_baselines(
         "data_scope": str(data_dir.as_posix()),
         "effective_unit": "scenario_family",
         "primary_estimand": "ood_joint_pair_success",
+        "cross_environment_estimand": (
+            "event_normative_pair_success; domain-native physical_delta "
+            "is reported separately"
+        ),
         "primary_population": (
             "within-environment development families, including declared "
             "composition holdouts; cross-environment cells are reported separately"
@@ -950,7 +982,8 @@ def run_smoke_baselines(
             ),
             "scoring": (
                 "predictions pass through the strict parser and the same "
-                "evaluator-pair joint_pair_success implementation as model arms"
+                "evaluator-pair implementation as model arms; cross-environment "
+                "bootstrap uses the shared event-record plus normative pair"
             ),
         },
         "static_envelope_rule": (

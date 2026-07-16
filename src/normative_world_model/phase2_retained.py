@@ -1,4 +1,4 @@
-"""Frozen Phase-2 retained baseline and model-arm export orchestration."""
+"""Frozen Phase-2 retained-v2 baseline and model-arm export orchestration."""
 
 from __future__ import annotations
 
@@ -28,9 +28,9 @@ from .transfer_matrix import build_transfer_manifest
 CONFIG_RELATIVE_PATH = Path("configs/phase2_retained.toml")
 PHASE1_DATA_RELATIVE_PATH = Path("data/generated/phase1_discovery_v3")
 PHASE1_ARTIFACT_RELATIVE_PATH = Path("artifacts/phase1_v3")
-PHASE2_DATA_RELATIVE_PATH = Path("data/generated/phase2_retained/arms")
-PHASE2_ARTIFACT_RELATIVE_PATH = Path("artifacts/phase2_retained")
-RUN_KIND = "phase2_retained_discovery"
+PHASE2_DATA_RELATIVE_PATH = Path("data/generated/phase2_retained_v2/arms")
+PHASE2_ARTIFACT_RELATIVE_PATH = Path("artifacts/phase2_retained_v2")
+RUN_KIND = "phase2_retained_discovery_v2"
 
 SOURCE_PATHS = {
     "phase1_provenance_manifest": Path(
@@ -52,6 +52,9 @@ SOURCE_PATHS = {
 
 PHASE2_INPUT_PATHS = (
     CONFIG_RELATIVE_PATH,
+    Path("docs/PHASE2_RETAINED_EXECUTION.md"),
+    Path("docs/PHASE2_RETAINED_V1_INVALIDATION.md"),
+    Path("docs/PHASE2_TRANSFER_SCHEMA_AMENDMENT.md"),
     Path("scripts/run-phase2-retained.py"),
     Path("scripts/run-phase2-internal-check.py"),
     Path("src/normative_world_model/__init__.py"),
@@ -183,9 +186,10 @@ def validate_phase2_retained_inputs(root: Path | None = None) -> list[str]:
         return [*failures, f"invalid Phase-2 retained config: {error}"]
 
     exact_fields = {
-        "version": "1.0-retained",
-        "status": "frozen_before_phase2_retained_baseline",
+        "version": "1.1-retained-transfer-schema",
+        "status": "frozen_before_phase2_retained_v2_baseline",
         "run_kind": RUN_KIND,
+        "supersedes_run_kind": "phase2_retained_discovery",
         "source_data_dir": PHASE1_DATA_RELATIVE_PATH.as_posix(),
         "source_artifact_dir": PHASE1_ARTIFACT_RELATIVE_PATH.as_posix(),
         "output_data_dir": PHASE2_DATA_RELATIVE_PATH.as_posix(),
@@ -210,6 +214,9 @@ def validate_phase2_retained_inputs(root: Path | None = None) -> list[str]:
         "confirmation_generation_authorized": False,
         "model_training_authorized": False,
         "h5_rollout_status": "UNIDENTIFIED",
+        "phase2_v1_cross_environment_result_status": (
+            "INVALIDATED_BEFORE_MODEL_TRAINING"
+        ),
     }
     for field, expected in required_governance.items():
         if governance.get(field) != expected:
@@ -235,6 +242,19 @@ def validate_phase2_retained_inputs(root: Path | None = None) -> list[str]:
     }
     if config.get("exports") != expected_exports:
         failures.append("Phase-2 retained export contract changed")
+    expected_transfer = {
+        "value_free_target_physical_schema_in_prompt": True,
+        "within_environment_estimand": "joint_pair_success",
+        "cross_environment_estimand": "event_normative_pair_success",
+        "domain_native_physical_delta_cross_environment_role": (
+            "separate_diagnostic"
+        ),
+        "static_cross_environment_physical_fallback": (
+            "target_schema_neutral_values"
+        ),
+    }
+    if config.get("transfer") != expected_transfer:
+        failures.append("Phase-2 retained transfer contract changed")
 
     source_hashes = config.get("source_hashes", {})
     if set(source_hashes) != set(SOURCE_PATHS):
@@ -401,7 +421,7 @@ def run_phase2_retained(root: Path | None = None) -> dict[str, Any]:
             + "; ".join(uncommitted_phase2_inputs)
         )
 
-    staging_root = root / ".tmp" / "phase2_retained" / uuid.uuid4().hex
+    staging_root = root / ".tmp" / "phase2_retained_v2" / uuid.uuid4().hex
     staging_data = staging_root / "data"
     staging_artifacts = staging_root / "artifacts"
     staging_data.mkdir(parents=True)
@@ -443,7 +463,7 @@ def run_phase2_retained(root: Path | None = None) -> dict[str, Any]:
         confidence_level=float(bootstrap["confidence_level"]),
         seed=int(bootstrap["seed"]),
     )
-    baselines["status"] = "FROZEN_RETAINED_BASELINE"
+    baselines["status"] = "FROZEN_RETAINED_BASELINE_V2"
     baselines["retained_or_confirmation_result"] = True
     baselines["retained_discovery_result"] = True
     baselines["confirmation_result"] = False
@@ -480,7 +500,7 @@ def run_phase2_retained(root: Path | None = None) -> dict[str, Any]:
             if not visibility_failures and transfer["status"] == "READY"
             else "FAIL"
         ),
-        "scope": "PHASE2_RETAINED_DISCOVERY_EXPORT",
+        "scope": "PHASE2_RETAINED_DISCOVERY_V2_EXPORT",
         "run_kind": RUN_KIND,
         "family_count": len(families),
         "environment_counts": environment_counts,
@@ -506,7 +526,9 @@ def run_phase2_retained(root: Path | None = None) -> dict[str, Any]:
         "h5_rollout_status": "UNIDENTIFIED",
         "note": (
             "The retained discovery corpus extends the externally reviewed smoke "
-            "population and is not an independent confirmation population."
+            "population and is not an independent confirmation population. "
+            "Value-free target physical schemas are prompt metadata; the "
+            "cross-environment bootstrap estimand is shared event_record plus N."
         ),
     }
     _write_json(staging_artifacts / "arm_data_manifest.json", arm_manifest)
@@ -553,6 +575,9 @@ def run_phase2_retained(root: Path | None = None) -> dict[str, Any]:
             "confirmation_generation_authorized": False,
             "model_training_authorized": False,
             "h5_rollout_status": "UNIDENTIFIED",
+            "phase2_v1_cross_environment_result_status": (
+                "INVALIDATED_BEFORE_MODEL_TRAINING"
+            ),
         },
     }
     _write_json(staging_artifacts / "provenance_manifest.json", provenance)

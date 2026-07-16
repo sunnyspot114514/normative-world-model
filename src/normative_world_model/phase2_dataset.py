@@ -4,13 +4,41 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Any
 
 INPUT_CONDITIONS = ("structured", "natural_language")
-OUTPUT_INSTRUCTION = """Return exactly one JSON object with these keys:
+PHYSICAL_DELTA_SCHEMAS = {
+    "game": {
+        "choice_access_delta": "integer",
+        "fairness_balance_delta": "integer",
+        "health_level_delta": "integer",
+        "panic_level_delta": "integer",
+        "persistent_flags_added": "array[string]",
+        "progress_level_delta": "integer",
+        "promise_debt_delta": "integer",
+        "resource_stock_delta": "integer",
+        "secrecy_level_delta": "integer",
+        "trust_level_delta": "integer",
+    },
+    "organization": {
+        "allocation_balance_delta": "integer",
+        "budget_remaining_delta": "integer",
+        "durable_objects_added": "array[string]",
+        "exposure_level_delta": "integer",
+        "incident_pressure_delta": "integer",
+        "process_debt_delta": "integer",
+        "service_health_delta": "integer",
+        "stakeholder_trust_delta": "integer",
+        "user_control_delta": "integer",
+        "work_remaining_delta": "integer",
+    },
+}
+OUTPUT_INSTRUCTION = """Return exactly one JSON object with these top-level keys:
 physical_delta, event_record, normative_decision, escalation_required, rollout.
-Do not add prose. rollout is a list of objects with horizon, physical_delta, and event_record."""
+Do not add prose. rollout is a list of objects with horizon, physical_delta, and event_record.
+The physical_delta schema below applies to both the one-step output and every rollout item."""
 
 
 @dataclass(frozen=True)
@@ -34,6 +62,59 @@ def canonical_json(value: Any) -> str:
         sort_keys=True,
         separators=(",", ":"),
     )
+
+
+def physical_delta_schema_instruction(environment: str) -> str:
+    try:
+        schema = PHYSICAL_DELTA_SCHEMAS[environment]
+    except KeyError as error:
+        raise ValueError(f"unsupported environment: {environment}") from error
+    return (
+        f"{OUTPUT_INSTRUCTION}\n"
+        "Value-free target physical_delta schema (field: type):\n"
+        f"{canonical_json(schema)}"
+    )
+
+
+def neutral_physical_delta(environment: str) -> dict[str, Any]:
+    """Return a schema-valid, value-neutral physical delta for diagnostics."""
+
+    try:
+        schema = PHYSICAL_DELTA_SCHEMAS[environment]
+    except KeyError as error:
+        raise ValueError(f"unsupported environment: {environment}") from error
+    return {
+        field: [] if field_type == "array[string]" else 0
+        for field, field_type in schema.items()
+    }
+
+
+def validate_physical_delta_schema(
+    environment: str,
+    physical_delta: dict[str, Any],
+) -> None:
+    try:
+        schema = PHYSICAL_DELTA_SCHEMAS[environment]
+    except KeyError as error:
+        raise ValueError(f"unsupported environment: {environment}") from error
+    if set(physical_delta) != set(schema):
+        raise ValueError(
+            f"{environment} physical_delta fields do not match the public schema"
+        )
+    for field, field_type in schema.items():
+        value = physical_delta[field]
+        if field_type == "integer":
+            if not isinstance(value, int) or isinstance(value, bool):
+                raise ValueError(f"{environment} {field} must be an integer")
+        elif field_type == "array[string]":
+            if not isinstance(value, list) or not all(
+                isinstance(item, str) for item in value
+            ):
+                raise ValueError(
+                    f"{environment} {field} must be an array of strings"
+                )
+        else:
+            raise ValueError(f"unsupported physical schema type: {field_type}")
 
 
 def target_output(
@@ -72,7 +153,7 @@ def _structured_prompt(
         f"{canonical_json(family['model_input'])}\n"
         "Evaluator profile (JSON; formatting is not semantic):\n"
         f"{profile}\n"
-        f"{OUTPUT_INSTRUCTION}"
+        f"{physical_delta_schema_instruction(family['environment'])}"
     )
 
 
@@ -89,7 +170,7 @@ def _natural_language_prompt(
     return (
         f"Scenario:\n{scenario}\n"
         f"Evaluator contract:\n{profile}\n"
-        f"{OUTPUT_INSTRUCTION}"
+        f"{physical_delta_schema_instruction(family['environment'])}"
     )
 
 
@@ -114,6 +195,15 @@ def build_phase2_examples(
 
     examples: list[Phase2Example] = []
     for family in families:
+        validate_physical_delta_schema(
+            family["environment"],
+            family["primary"]["physical_delta"],
+        )
+        for rollout_item in family["rollout"]:
+            validate_physical_delta_schema(
+                family["environment"],
+                rollout_item["physical_delta"],
+            )
         for profile_id in family["evaluator_twins"]:
             target = target_output(
                 family["primary"],

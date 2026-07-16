@@ -5,7 +5,11 @@ import unittest
 
 from normative_world_model.model_output import parse_model_output
 from normative_world_model.phase1_v3 import generate_v3_environment_families
-from normative_world_model.phase2_dataset import build_phase2_examples
+from normative_world_model.phase2_dataset import (
+    PHYSICAL_DELTA_SCHEMAS,
+    build_phase2_examples,
+    validate_physical_delta_schema,
+)
 from normative_world_model.transfer_matrix import build_transfer_manifest
 
 
@@ -35,6 +39,64 @@ class Phase2DatasetTests(unittest.TestCase):
                 example.target,
             )
             self.assertTrue(result.ok, msg=result.error_detail)
+            self.assertIn(
+                json.dumps(
+                    PHYSICAL_DELTA_SCHEMAS["game"],
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ),
+                example.prompt,
+            )
+
+    def test_target_schema_metadata_is_value_free_and_environment_specific(
+        self,
+    ) -> None:
+        families = [
+            generate_v3_environment_families(environment, 1, 708)[0]
+            for environment in ("game", "organization")
+        ]
+        examples = build_phase2_examples(families)
+        for example in examples:
+            expected_schema = json.dumps(
+                PHYSICAL_DELTA_SCHEMAS[example.environment],
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            other_environment = (
+                "organization"
+                if example.environment == "game"
+                else "game"
+            )
+            other_schema = json.dumps(
+                PHYSICAL_DELTA_SCHEMAS[other_environment],
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            self.assertIn(expected_schema, example.prompt)
+            self.assertNotIn(other_schema, example.prompt)
+            for value in example.target["physical_delta"].values():
+                if isinstance(value, int) and value != 0:
+                    self.assertNotIn(
+                        f'":{value},',
+                        expected_schema,
+                    )
+
+    def test_public_physical_schema_rejects_missing_or_mistyped_fields(
+        self,
+    ) -> None:
+        valid = {
+            field: ([] if kind == "array[string]" else 0)
+            for field, kind in PHYSICAL_DELTA_SCHEMAS["game"].items()
+        }
+        validate_physical_delta_schema("game", valid)
+        missing = dict(valid)
+        missing.pop("trust_level_delta")
+        with self.assertRaises(ValueError):
+            validate_physical_delta_schema("game", missing)
+        mistyped = dict(valid)
+        mistyped["trust_level_delta"] = True
+        with self.assertRaises(ValueError):
+            validate_physical_delta_schema("game", mistyped)
 
     def test_transfer_manifest_has_all_eight_cells_and_no_overlap(self) -> None:
         dimensions = {

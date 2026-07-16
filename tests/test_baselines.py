@@ -5,9 +5,13 @@ import unittest
 
 from normative_world_model.baselines import (
     _fieldwise_factual_vote,
+    _parsed_static_output,
     _scenario_joint_scores,
 )
-from normative_world_model.phase2_dataset import Phase2Example
+from normative_world_model.phase2_dataset import (
+    PHYSICAL_DELTA_SCHEMAS,
+    Phase2Example,
+)
 
 PROFILES = (
     "procedure_preserving",
@@ -114,6 +118,45 @@ class StaticBaselineEstimandTests(unittest.TestCase):
         self.assertEqual(
             wrong["scenario-1"]["joint_pair_success"],
             0.0,
+        )
+
+    def test_cross_environment_static_output_uses_target_schema_without_values(
+        self,
+    ) -> None:
+        example = _example("harm_averse", "reject")
+        example = Phase2Example(
+            **{
+                **example.__dict__,
+                "environment": "organization",
+                "target": {
+                    **example.target,
+                    "physical_delta": {
+                        field: ([] if kind == "array[string]" else 1)
+                        for field, kind in PHYSICAL_DELTA_SCHEMAS[
+                            "organization"
+                        ].items()
+                    },
+                },
+            }
+        )
+        factual = {
+            "physical_delta": {
+                field: ([] if kind == "array[string]" else -2)
+                for field, kind in PHYSICAL_DELTA_SCHEMAS["game"].items()
+            },
+            "event_record": example.target["event_record"],
+        }
+        parsed = _parsed_static_output(example, "reject", factual)
+        self.assertIsNotNone(parsed)
+        assert parsed is not None
+        self.assertEqual(
+            parsed.one_step.physical_delta,
+            {
+                field: ([] if kind == "array[string]" else 0)
+                for field, kind in PHYSICAL_DELTA_SCHEMAS[
+                    "organization"
+                ].items()
+            },
         )
 
 

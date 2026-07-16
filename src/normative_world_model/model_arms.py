@@ -9,15 +9,17 @@ from dataclasses import asdict
 from typing import Any
 
 from .phase2_dataset import (
+    PHYSICAL_DELTA_SCHEMAS,
     build_phase2_examples,
     canonical_json,
 )
 from .policy_oracle import PolicyOracleInput, evaluate_policy
 from .transfer_matrix import TARGET_PROFILE_PAIRS
 
-FACTUAL_OUTPUT_INSTRUCTION = """Return exactly one JSON object with these keys:
+FACTUAL_OUTPUT_INSTRUCTION = """Return exactly one JSON object with these top-level keys:
 physical_delta, event_record, rollout.
-Do not add prose. rollout is a list of objects with horizon, physical_delta, and event_record."""
+Do not add prose. rollout is a list of objects with horizon, physical_delta, and event_record.
+The physical_delta schema below applies to both the one-step output and every rollout item."""
 NORMATIVE_OUTPUT_INSTRUCTION = """Return exactly one JSON object with these keys:
 normative_decision, escalation_required.
 Do not add prose."""
@@ -31,6 +33,18 @@ def model_output_json(value: Any) -> str:
         ensure_ascii=False,
         sort_keys=False,
         separators=(",", ":"),
+    )
+
+
+def factual_output_instruction(environment: str) -> str:
+    try:
+        schema = PHYSICAL_DELTA_SCHEMAS[environment]
+    except KeyError as error:
+        raise ValueError(f"unsupported environment: {environment}") from error
+    return (
+        f"{FACTUAL_OUTPUT_INSTRUCTION}\n"
+        "Value-free target physical_delta schema (field: type):\n"
+        f"{canonical_json(schema)}"
     )
 
 
@@ -160,7 +174,7 @@ def build_factorized_factual_records(
         structured_input = (
             "Pre-transition source (canonical JSON):\n"
             f"{canonical_json(family['model_input'])}\n"
-            f"{FACTUAL_OUTPUT_INSTRUCTION}"
+            f"{factual_output_instruction(family['environment'])}"
         )
         records.append(
             {
@@ -199,7 +213,7 @@ def build_factorized_factual_records(
                     "scenario_surface_variant": scenario_variant,
                     "input_text": (
                         f"Scenario:\n{surface['natural_language']}\n"
-                        f"{FACTUAL_OUTPUT_INSTRUCTION}"
+                        f"{factual_output_instruction(family['environment'])}"
                     ),
                     "target_text": target_text,
                     "arm": "factorized_factual",
