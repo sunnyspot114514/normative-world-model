@@ -1,0 +1,67 @@
+{
+  "archive_date": "2026-07-17",
+  "locked_commit": "1f9f7f3418dcfa353a9efcbb9a493d4a0914138b",
+  "audit_status": "EXTERNAL_ACCEPTED",
+  "activation_status": "INSTALLED_AND_VALIDATED",
+  "installed_acceptance": {
+    "path": "artifacts/phase1_v3_smoke/EXTERNAL_AUDIT_ACCEPTED.json",
+    "sha256": "3374b05aa41b800e79af2b82f82e770f4cdd65c8440eff644202a155766d5949"
+  },
+  "retained_unlock_result": {
+    "status": "PASS",
+    "families_per_environment": 1000,
+    "total_families": 2000,
+    "confirmation_status": "RESERVED_NOT_GENERATED",
+    "provenance_manifest_sha256": "71884458cce25d58311ab982e062e1d490dc5505e613de002da426228bab1d3e",
+    "phase1_exit_report_sha256": "268fc0aca0cc134991238baa258ae5c2a0707796276b6da620d3c3436685195b",
+    "corpus_sha256": {
+      "data/generated/phase1_discovery_v3/game.jsonl": "c0bc4e55e0a4fd1d016accc6583e9ffb97c79db1c97d3de329a792019ab3155d",
+      "data/generated/phase1_discovery_v3/organization.jsonl": "e459a38f5259981b1eec5ccf99e8699e9330e49127bd2df62902bfc3411b0f02"
+    }
+  },
+  "files": {
+    "EXTERNAL_AUDIT_ACCEPTED.json": {
+      "bytes": 1505,
+      "sha256": "3374b05aa41b800e79af2b82f82e770f4cdd65c8440eff644202a155766d5949"
+    },
+    "FINAL_AUDIT_REPORT.md": {
+      "bytes": 8588,
+      "sha256": "98a987e31c328e3c0d069f0e9bad41f435e8bce673197fee5cd2c868a628009c"
+    },
+    "PHASE2_REVIEW.md": {
+      "bytes": 6088,
+      "sha256": "ba8871f77e64fa9c7ea5867357f41f62dc883b052ca750f04a1726cd164e3ccd"
+    },
+    "track_p1_corpus_twins.md": {
+      "bytes": 22036,
+      "sha256": "d03e70482055424c1f0b2a0662456d69c44df051e2c6483b5d754b430fcf18d6"
+    },
+    "track_p1_language_leakage.md": {
+      "bytes": 25785,
+      "sha256": "5e864691fec6cacdb8fd2f52f8671048581a8aac79983b01c94c12fdb6163f67"
+    },
+    "track_p1_source_lock.md": {
+      "bytes": 23648,
+      "sha256": "bc84e62cebbf8cbf98e2514256ca5e3111ce3ca5211d03c250a8cb3a642fd137"
+    },
+    "track_p2_evaluation.md": {
+      "bytes": 39660,
+      "sha256": "90d9f59ce5344b77fcbc5d4e9faf85d0df1d1ef8d816ad25d3ff9e0f88709c0d"
+    }
+  },
+  "bound_objects": {
+    "artifacts/phase1_v3_smoke/provenance_manifest.json": "caa9beb6236663823b5126c94c318ca20e59aca2e99efa0c735b72f68f91e88a",
+    "data/generated/phase1_v3_smoke/game.jsonl": "afbe64f9b4a66ab6e974b645bb0ecec222708f7d82342cc8da454e8ae35a9768",
+    "data/generated/phase1_v3_smoke/organization.jsonl": "ef2633bba4c9fece3fcc6f3965fd1a1710a431ccea41fbd758619983d0cd8c92"
+  },
+  "external_bundle": {
+    "path": "artifacts/phase1_v3_smoke/external_audit_bundle_v3.zip",
+    "bytes": 1885415,
+    "sha256": "b071c4e0b5271e835f2df2c7a87d2626a29ff34149d23e60eee6c561ae34ad66"
+  },
+  "local_verification": {
+    "acceptance_binding_errors": [],
+    "source_lock_entries": 29,
+    "source_lock_mismatches": []
+  }
+}

@@ -95,6 +95,47 @@ class ModelOutputParserTests(unittest.TestCase):
         self.assertTrue(fenced.ok)
         self.assertEqual(set(plain.output.rollout), {1})
 
+    def test_plain_and_uppercase_json_fences_are_accepted(self) -> None:
+        payload = target()
+        plain_fence = parse_model_output(
+            f"```\n{json.dumps(payload)}\n```",
+            payload,
+        )
+        uppercase_json_fence = parse_model_output(
+            f"```JSON\n{json.dumps(payload)}\n```",
+            payload,
+        )
+        self.assertTrue(plain_fence.ok, msg=plain_fence.error_detail)
+        self.assertTrue(
+            uppercase_json_fence.ok,
+            msg=uppercase_json_fence.error_detail,
+        )
+
+    def test_invalid_confidence_values_are_rejected(self) -> None:
+        for confidence in (1.5, float("nan"), float("inf")):
+            with self.subTest(confidence=confidence):
+                payload = target()
+                payload["confidence"] = confidence
+                result = parse_model_output(json.dumps(payload), target())
+                self.assertFalse(result.ok)
+                self.assertEqual(result.error_code, "invalid_confidence")
+
+    def test_factorized_factual_output_rejects_confidence_field(self) -> None:
+        expected = target()
+        expected["rollout"] = []
+        factual_payload = {
+            "physical_delta": expected["physical_delta"],
+            "event_record": expected["event_record"],
+            "rollout": [],
+            "confidence": 0.8,
+        }
+        factual, error = parse_factual_output(
+            json.dumps(factual_payload),
+            expected,
+        )
+        self.assertIsNone(factual)
+        self.assertEqual(error, "top_level_keys")
+
     def test_continuous_numeric_spellings_are_accepted(self) -> None:
         payload = target()
         payload["event_record"]["uncertainty"] = ".20"

@@ -1,0 +1,16 @@
+{
+  "status": "EXTERNAL_ACCEPTED",
+  "unconditional": true,
+  "preregistration_version": 3,
+  "generator_revision": 1,
+  "run_kind": "v3_internal_smoke",
+  "reviewer": "external-audit-team (Mavis orchestrator, 2026-07-17)",
+  "reviewed_at": "2026-07-16T17:24:32Z",
+  "provenance_manifest_sha256": "caa9beb6236663823b5126c94c318ca20e59aca2e99efa0c735b72f68f91e88a",
+  "corpus_sha256": {
+    "data/generated/phase1_v3_smoke/game.jsonl": "afbe64f9b4a66ab6e974b645bb0ecec222708f7d82342cc8da454e8ae35a9768",
+    "data/generated/phase1_v3_smoke/organization.jsonl": "ef2633bba4c9fece3fcc6f3965fd1a1710a431ccea41fbd758619983d0cd8c92"
+  },
+  "blocking_findings": [],
+  "notes": "Phase-1 v3 revision-1 external audit PASS, 4 parallel tracks. (1) source-lock+bundle: 29/29 source-lock SHA-256 + 25/25 bundle manifest + 10/10 sample + 36/36 DSFR; (2) corpus-twins: 600/600 minimal intervention, derived fields reproducible, oracle re-computable, rollout chain valid; (3) language-leakage: 107/107 gate checks (per env Gate C point ≤ 0.55, upper ≤ 0.60; density max_pair_share ≤ 0.40, min_flip ≥ 0.20, undiv ≥ 0.03; nontriviality ≤ 0.90; language 0 errors), 0 real leakage candidates; (4) Phase-2 evaluation: APPROVE_WITH_FIXES (0 blocking, 2 medium test-coverage, 4 low). No cross-track contradictions. One non-blocking design observation in track 2 (rollout[0].pre_state == source.state vs primary.next_state; rollout[0].next_state == primary.next_state 600/600, three-step chain consistency holds)."
+}

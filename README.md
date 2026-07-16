@@ -22,18 +22,22 @@ This project does not attempt to train a universal human value system. Instead, 
   phrases missed by the machine gates.
 - Preregistration-v3 revision 1 changes only controlled-language action rendering and its audits.
   Its smoke corpus contains 300 scenario families per environment and passes native,
-  package-independent, and deterministic readable-sample review.
-- V3 Gate C passes independently in both environments:
+  package-independent, deterministic readable-sample, and unconditional external review.
+- The signed acceptance record binds the exact v3 smoke corpus, provenance manifest, and 29-file
+  source lock. Phase-2 findings M1/M2 have been resolved with explicit parser tests.
+- The formal retained discovery corpus now contains 1,000 families per environment and passes
+  native plus package-independent replay. Retained Gate C passes independently in both
+  environments:
 
 | environment | maximum word/character macro AUC | 95% cluster upper bound | frozen gate |
 |---|---:|---:|---|
-| game | `0.4942` | `0.5220` | **PASS** |
-| organization | `0.4818` | `0.5110` | **PASS** |
+| game | `0.4943` | `0.5093` | **PASS** |
+| organization | `0.4892` | `0.5021` | **PASS** |
 
 - The two v3 raw smoke JSONL files and confirmation reservation are byte-stable across same-seed
   reruns.
-- External review is temporarily unavailable. Internal PASS permits exploratory Phase-2
-  infrastructure and smoke-scale baselines, but cannot unlock retained generation.
+- External acceptance has unlocked retained discovery only. Confirmation remains
+  `RESERVED_NOT_GENERATED`.
 - Cheap Static baselines now emit complete factual and normative outputs and are scored on the same
   `joint_pair_success` estimand as model arms; their v3 smoke results remain exploratory.
 - The Phase-2 parser, metric, and transfer harness passes an oracle-fixture check over all 14,400
@@ -42,8 +46,8 @@ This project does not attempt to train a universal human value system. Instead, 
   725-token joint LoRA optimizer smoke passes on the RTX 3060 at 66.7% peak allocated CUDA memory.
   A full-rollout target was separately retained as a failed resource diagnostic because it relied
   on WDDM oversubscription.
-- The full retained corpus, confirmation corpus, trained adapters/checkpoints, and training runs
-  have not been generated.
+- The retained Phase-1 corpus has been generated locally. The confirmation corpus, trained
+  adapters/checkpoints, and retained training runs have not been generated.
 - Generated data, models, caches, secret nonces, and experiment artifacts are intentionally ignored by Git.
 
 ## Motivation
@@ -184,6 +188,8 @@ See:
 - [Phase-1 v2 internal rejection](docs/PHASE1_V2_INTERNAL_REVIEW.md)
 - [External audit adjudication](docs/EXTERNAL_AUDIT_ADJUDICATION.md)
 - [V3 external smoke acceptance contract](docs/EXTERNAL_SMOKE_ACCEPTANCE_V3.md)
+- [V3 retained execution contract](docs/PHASE1_V3_RETAINED_EXECUTION.md)
+- [V3 retained discovery record](docs/PHASE1_V3_RETAINED_DISCOVERY.md)
 - [Historical v2 external smoke acceptance contract](docs/EXTERNAL_SMOKE_ACCEPTANCE.md)
 
 ## Quick Start
@@ -258,6 +264,7 @@ The repository currently provides:
 - Per-environment leakage and nontriviality gates
 - A shared v2.1 numeric comparator
 - Hash-bound external acceptance before retained generation
+- A 2,000-family retained Phase-1 corpus with frozen provenance and independent replay
 - A hash-locked 1.7B local base checkpoint and isolated CUDA/PEFT dependency stack
 - Deterministic one-step model-arm exports and a no-truncation tokenizer audit
 - Matched joint multi-record and factorized closed-loop exploratory plumbing
@@ -296,8 +303,8 @@ It does **not** yet provide:
 - [x] Joint-naive, joint-consistency, and factorized smoke data interfaces
 - [x] Exact local checkpoint/dependency lock, token audit, and one-step LoRA plumbing smoke
 - [x] Matched joint multi-record and factorized closed-loop exploratory plumbing
-- [ ] Unconditional external acceptance of the exact v3 corpus hashes
-- [ ] Retained Phase-1 corpus
+- [x] Unconditional external acceptance of the exact v3 corpus hashes
+- [x] Retained Phase-1 corpus
 - [ ] Frozen Phase-2 baseline table
 - [ ] Retained local small-model pilot
 - [ ] Locked confirmation
