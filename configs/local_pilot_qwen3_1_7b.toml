@@ -1,0 +1,50 @@
+version = "0.1-exploratory"
+status = "smoke_only_external_acceptance_pending"
+
+[model]
+model_id = "Qwen/Qwen3-1.7B-Base"
+revision = "ea980cb0a6c2ae4b936e82123acc929f1cec04c1"
+license = "Apache-2.0"
+trust_remote_code = false
+local_dir = "models/qwen3-1.7b-base-ea980cb0"
+
+[runtime]
+device = "cuda"
+dtype = "float16"
+attention_implementation = "sdpa"
+seed = 20260716
+max_sequence_tokens = 3072
+gradient_checkpointing = true
+max_peak_memory_fraction = 0.95
+
+[data]
+source_phase1_dir = "data/generated/phase1_v3_smoke"
+output_dir = "data/generated/phase3_internal/arms"
+horizon_mode = "one_step"
+
+[lora]
+r = 8
+alpha = 16
+dropout = 0.0
+target_modules = [
+  "q_proj",
+  "k_proj",
+  "v_proj",
+  "o_proj",
+  "gate_proj",
+  "up_proj",
+  "down_proj",
+]
+
+[smoke]
+arm = "joint_naive"
+max_records = 1
+optimizer_steps = 1
+learning_rate = 0.0001
+save_adapter = false
+
+[governance]
+scope = "exploratory_v3_smoke_only"
+authorizes_retained_training = false
+authorizes_confirmation = false
+external_acceptance_required = true
