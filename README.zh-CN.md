@@ -301,6 +301,7 @@ models/
 - [x] 对精确 v3 语料哈希的无条件外部接受
 - [x] retained Phase-1 语料
 - [x] 冻结 Phase-2 retained-v2 baseline 表与模型臂导出
+- [x] retained one-step 严格 schema convergence gate
 - [ ] retained 本地小模型 pilot
 - [ ] 锁定 confirmation
 - [ ] 可选服务器规模实验

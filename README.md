@@ -51,6 +51,9 @@ This project does not attempt to train a universal human value system. Instead, 
 - The hash-locked Phase-2 retained-v2 baseline/export stage now passes over all 2,000 families.
   Its value-free destination schema repair restores cross-environment Static parse coverage to
   `1.0`; the superseded v1 cross-environment result remains preserved and invalidated.
+- A frozen retained-discovery schema gate trained `joint_naive` for 64 local LoRA updates and
+  achieved 16/16 strict parser successes on 16 unique balanced development families. This unlocks
+  slot-level objective implementation, not a retained arm-quality claim.
 - Generated data, models, caches, secret nonces, and experiment artifacts are intentionally ignored by Git.
 
 ## Motivation

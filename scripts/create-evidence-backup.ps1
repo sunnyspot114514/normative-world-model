@@ -24,7 +24,10 @@ $EvidencePaths = @(
     "data\generated\phase2_retained",
     "artifacts\phase2_retained",
     "data\generated\phase2_retained_v2",
-    "artifacts\phase2_retained_v2"
+    "artifacts\phase2_retained_v2",
+    "data\generated\phase3_retained_schema_gate",
+    "artifacts\phase3_retained_schema_gate",
+    "runs\phase3_retained_schema_gate"
 )
 
 New-Item -ItemType Directory -Path $ResolvedDestination | Out-Null

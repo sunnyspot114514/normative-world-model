@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "run_kind": "phase3_retained_discovery_schema_gate",
+  "git_head_before_execution": "c6ad17d2a7591a1412231c3ea0657c6b1220ddf2",
+  "scope": "retained_discovery_schema_convergence_only",
+  "confirmation_status": "RESERVED_NOT_GENERATED",
+  "scientific_arm_comparison": false,
+  "result_sha256": "1b6e6626a7d39e067457dfcb0a23846c6076311ffdf458f64464718ade4201f0",
+  "input_locks": {
+    "configs/phase3_retained_schema_gate.toml": "50ec7279d0335bac324cb92964016804fbc8a5c3ea708d87342e2bf867e49e8d",
+    "configs/phase3_retained_schema_gate_dataset_lock.json": "8d7d35f4ac17eaf86432d20128b5b8f33b4fc24c212a6e5d5fb66c64cf3ea9ab",
+    "artifacts/phase3_retained_schema_gate/arm_data_manifest.json": "518cbcbef3c1c6c6a155b508cc19f4b8c3d89ad36b0c7a0d7c72e1c6f94743db",
+    "artifacts/phase3_retained_schema_gate/token_length_audit.json": "52472c3d35e903b94ddef14d296c6c5654beb93e977f9ff8af1cf5cc050cea7a"
+  },
+  "adapter_files": {
+    "runs/phase3_retained_schema_gate/joint_naive/adapter_config.json": "bd3d4f5d1860155e710953dd1f9919e8ef65a6a9efac84a14c923bfc0c876680",
+    "runs/phase3_retained_schema_gate/joint_naive/adapter_model.safetensors": "a5c5dcc3fcf370acc97be39220071146bf613757cb41a54628aab7c600ad4621",
+    "runs/phase3_retained_schema_gate/joint_naive/README.md": "9223eedd4648e7e5d72d89703421e48cfdde1cab357bbf2ef2b751cc56524937"
+  },
+  "training": {
+    "optimizer_steps": 64,
+    "unique_training_scenarios": 64,
+    "prompt_tokens_seen": 74597,
+    "target_tokens_seen": 35292,
+    "loss_first": 1.2099133729934692,
+    "loss_last": 0.14258311688899994,
+    "development_supervised_loss_mean": 0.15196550358086824,
+    "peak_allocated_fraction": 0.630540278484232,
+    "wall_clock_seconds": 130.66063170006964
+  },
+  "generation": {
+    "attempts": 16,
+    "unique_scenarios": 16,
+    "strict_parse_rate": 1.0,
+    "mean_physical_field_f1": 0.36250000000000004,
+    "mean_event_field_f1": 0.6947115384615384,
+    "normative_accuracy": 0.125
+  },
+  "next_action": "implement_and_freeze_slot_level_consistency"
+}
