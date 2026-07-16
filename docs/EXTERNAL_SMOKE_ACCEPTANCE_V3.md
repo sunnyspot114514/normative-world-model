@@ -38,3 +38,4 @@ Acceptance is invalid if:
 External acceptance unlocks only retained discovery generation under the same schema, seed,
 dynamics, oracles, renderer revision, and gates. It does not unlock confirmation, change practical
 margins, or turn exploratory smoke results into retained findings.
+

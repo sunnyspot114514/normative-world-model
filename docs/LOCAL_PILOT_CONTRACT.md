@@ -1,6 +1,6 @@
 # Local small-model pilot contract
 
-Status: **exploratory smoke preparation; external Phase-1 acceptance pending**
+Status: **exploratory multi-record plumbing complete; external Phase-1 acceptance pending**
 
 ## Checkpoint lock
 
@@ -81,11 +81,25 @@ The local stack is ready for an exploratory multi-record pilot only if:
 - Snapshot revision resolution: PASS.
 - `model.safetensors`: 3,441,185,608 bytes,
   SHA-256 `6df85b39330e5a425ee36253d0f894e4387e4f0a15b9c53cb467d668e6b3a841`.
-- One-step joint token range: 726 to 868; no record exceeds the 3,072-token cap.
-- One-step LoRA smoke: 726 tokens, finite loss, one optimizer step, 8,619,154,432 peak allocated
-  bytes out of 12,884,377,600 device bytes (`0.6690`), PASS.
+- One-step joint token range: 725 to 867; no record exceeds the 3,072-token cap.
+- One-step LoRA smoke: 725 tokens, finite loss, one optimizer step, 8,589,488,128 peak allocated
+  bytes out of 12,884,377,600 device bytes (`0.6667`), PASS.
 - Full stored-rollout diagnostic: 1,521 tokens and 16,359,308,800 peak allocated bytes, exceeding
   physical device memory through WDDM shared-memory behavior, RESOURCE FAIL.
 
 These values establish local feasibility for one-step plumbing only. They are not model-quality
 results and do not authorize a retained pilot.
+
+## Multi-record internal result
+
+The corrected matched joint smoke uses identical 32-pair batches, LoRA initialization, optimizer
+updates, and token exposure for `joint_naive` and `joint_consistency`. Both train within physical
+VRAM. Their four-pair development teacher-forced losses are nearly identical, while sampled free
+generation still fails the strict schema gate.
+
+The local consistency term is a gold-factual-token log-probability proxy used only to validate
+paired optimization and memory. It is not the retained slot-level JS/Huber loss. Factorized
+closed-loop plumbing is implemented and correctly refuses to substitute gold factual context when
+the factual generation is unparsable.
+
+See `PHASE3_INTERNAL_PILOT.md` for the recorded budgets, diagnostics, and no-server decision.

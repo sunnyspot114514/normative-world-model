@@ -4,7 +4,12 @@ import copy
 import json
 import unittest
 
-from normative_world_model.model_output import parse_model_output
+from normative_world_model.model_output import (
+    combine_factorized_output,
+    parse_factual_output,
+    parse_model_output,
+    parse_normative_output,
+)
 
 
 def target() -> dict:
@@ -40,6 +45,45 @@ def target() -> dict:
 
 
 class ModelOutputParserTests(unittest.TestCase):
+    def test_factorized_components_parse_and_combine(self) -> None:
+        expected = target()
+        expected["rollout"] = []
+        factual_payload = {
+            "physical_delta": expected["physical_delta"],
+            "event_record": expected["event_record"],
+            "rollout": [],
+        }
+        factual, factual_error = parse_factual_output(
+            json.dumps(factual_payload),
+            expected,
+        )
+        normative, normative_error = parse_normative_output(
+            json.dumps(
+                {
+                    "normative_decision": "allow",
+                    "escalation_required": False,
+                }
+            )
+        )
+        self.assertIsNone(factual_error)
+        self.assertIsNone(normative_error)
+        self.assertIsNotNone(factual)
+        self.assertIsNotNone(normative)
+        combined = combine_factorized_output(factual, normative)
+        self.assertEqual(combined.one_step.normative_decision, "allow")
+        self.assertEqual(
+            combined.one_step.physical_delta,
+            expected["physical_delta"],
+        )
+
+    def test_factorized_normative_parser_rejects_inconsistent_flag(self) -> None:
+        parsed, error = parse_normative_output(
+            '{"normative_decision":"escalate",'
+            '"escalation_required":false}'
+        )
+        self.assertIsNone(parsed)
+        self.assertEqual(error, "decision_consistency")
+
     def test_exact_json_and_single_json_fence_are_accepted(self) -> None:
         payload = target()
         plain = parse_model_output(json.dumps(payload), payload)
@@ -73,6 +117,23 @@ class ModelOutputParserTests(unittest.TestCase):
         wrong_type["physical_delta"]["count_delta"] = "1"
         self.assertEqual(
             parse_model_output(json.dumps(wrong_type), target()).error_code,
+            "type_error",
+        )
+        wrong_list_item = target()
+        wrong_list_item["physical_delta"] = {
+            "count_delta": 1,
+            "persistent_flags_added": [{"garbage": 1}],
+        }
+        expected = target()
+        expected["physical_delta"] = {
+            "count_delta": 1,
+            "persistent_flags_added": [],
+        }
+        self.assertEqual(
+            parse_model_output(
+                json.dumps(wrong_list_item),
+                expected,
+            ).error_code,
             "type_error",
         )
 

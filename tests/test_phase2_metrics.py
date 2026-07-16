@@ -10,6 +10,7 @@ from normative_world_model.phase2_metrics import (
     evaluate_rollout_gate,
     information_diagnostics,
     normative_stratum,
+    oracle_fixture_metrics_are_perfect,
     score_evaluator_pair,
     score_factual_twin,
     score_fields,
@@ -68,6 +69,12 @@ def parsed(target: dict):
 
 
 class Phase2MetricTests(unittest.TestCase):
+    def test_oracle_fixture_gate_requires_exactly_one(self) -> None:
+        self.assertTrue(oracle_fixture_metrics_are_perfect([1.0, 1, True]))
+        self.assertFalse(
+            oracle_fixture_metrics_are_perfect([1.0, 0.01, 1.0])
+        )
+
     def test_exact_output_receives_full_one_step_and_rollout_credit(self) -> None:
         target = output_target()
         prediction = parsed(target)

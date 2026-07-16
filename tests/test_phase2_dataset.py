@@ -91,6 +91,73 @@ class Phase2DatasetTests(unittest.TestCase):
                 for cell in manifest["matrix"].values()
             )
         )
+        self.assertEqual(
+            manifest["support_population"],
+            "destination_development_families",
+        )
+        self.assertTrue(
+            all(
+                report["scenario_count"] == 1
+                for report in manifest["environment_support"].values()
+            )
+        )
+
+    def test_transfer_support_cannot_be_borrowed_from_training_rows(self) -> None:
+        evaluations = {
+            "harm_averse": {"decision": "reject", "reason": "weighted_score"},
+            "efficiency_tolerant": {
+                "decision": "allow",
+                "reason": "weighted_score",
+            },
+            "procedure_preserving": {
+                "decision": "allow",
+                "reason": "weighted_score",
+            },
+            "autonomy_preserving": {
+                "decision": "reject",
+                "reason": "weighted_score",
+            },
+        }
+        rows = []
+        for environment in ("game", "organization"):
+            for split, sign in (("train", -0.2), ("development", 0.2)):
+                rows.append(
+                    {
+                        "scenario_id": f"{environment}-{split}",
+                        "environment": environment,
+                        "split": split,
+                        "primary": {
+                            "policy_result": {"hard_violations": []},
+                            "event_record": {
+                                "impact_vector": {
+                                    dimension: sign
+                                    for dimension in (
+                                        "safety",
+                                        "privacy",
+                                        "autonomy",
+                                        "trust",
+                                        "efficiency",
+                                        "fairness",
+                                        "commitment",
+                                    )
+                                }
+                            },
+                            "evaluations": evaluations,
+                        },
+                    }
+                )
+        manifest = build_transfer_manifest(
+            rows,
+            minimum_dimension_sign_fraction=0.25,
+        )
+        self.assertEqual(manifest["status"], "UNIDENTIFIED")
+        self.assertTrue(
+            all(
+                report["scenario_count"] == 1
+                and report["insufficient_dimension_sign_cells"]
+                for report in manifest["environment_support"].values()
+            )
+        )
 
 
 if __name__ == "__main__":

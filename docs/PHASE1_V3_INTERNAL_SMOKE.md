@@ -82,8 +82,13 @@ confirmation findings:
 | game | `.534 / .333` | `.528 / .468` | `.540 / .540` | `.546 / .549` |
 | organization | `.576 / .333` | `.570 / .432` | `.509 / .502` | `.516 / .515` |
 
-The static-envelope accuracy is recomputed inside every scenario-family bootstrap replicate. The
-organization majority accuracy is visibly inflated by the reject-class prevalence, so later
+These decision-only accuracy values are retained as diagnostics. The repaired Phase-2 Static
+envelope composes every decision baseline with an evaluator-blind factual predictor and is
+recomputed from scenario-macro `joint_pair_success` inside every bootstrap replicate. On this smoke
+corpus the complete exact-field Static envelope is `0.0` in both input conditions; that value is an
+exploratory baseline result, not permission to weaken the frozen `0.05` practical margin.
+
+The organization majority accuracy is visibly inflated by the reject-class prevalence, so later
 reports must retain balanced accuracy and mechanism/profile strata rather than relying on aggregate
 accuracy.
 

@@ -132,7 +132,25 @@ The current smoke generator provides chained H1/H2/H3 targets. The locked model 
 H1/H3/H5. Until an H5 target exists under an accepted retained protocol, the H5 gate is reported as
 `UNIDENTIFIED`, never inferred from H3.
 
-## 7. Four-way transfer
+## 7. Static envelope estimand
+
+Every Static arm must emit a complete one-step `physical_delta`, `event_record`, and normative
+decision. Static outputs pass through the same strict parser and evaluator-pair scorer as trained
+model outputs. The envelope is therefore computed from scenario-macro `joint_pair_success`, never
+from decision-classification accuracy. Classification accuracy and balanced accuracy remain
+diagnostics only.
+
+The exploratory implementation composes evaluator-blind one-neighbor and seven-neighbor fieldwise
+factual predictors with each prespecified decision baseline. Both receive only the declared
+structured or natural-language scenario input and never evaluator values. The stronger fieldwise
+diagnostic improves component F1 but still has zero all-field exact joint success on the v3 smoke
+development population.
+
+The primary smoke Static envelope pools the two within-environment train-to-development cells,
+including declared composition holdouts. Cross-environment A-to-B and B-to-A cells are a separate
+transfer analysis and cannot silently replace the primary OOD population.
+
+## 8. Four-way transfer
 
 The manifest contains all eight cells:
 
@@ -148,7 +166,7 @@ Training uses source-environment `train` families; evaluation uses destination-e
 overlap. Each destination environment must retain the preregistered impact-dimension × sign support;
 otherwise its transfer result is `UNIDENTIFIED`.
 
-## 8. Internal harness result
+## 9. Internal harness result
 
 `scripts/run-phase2-internal-check.py` exercised the contract against the exact v3 revision-1 smoke
 targets:

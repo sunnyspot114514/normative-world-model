@@ -14,3 +14,11 @@ if ($LASTEXITCODE -ne 0) { throw "compileall failed with exit code $LASTEXITCODE
 if ($LASTEXITCODE -ne 0) { throw "unit tests failed with exit code $LASTEXITCODE" }
 & $VenvPython -m normative_world_model check-isolation
 if ($LASTEXITCODE -ne 0) { throw "isolation audit failed with exit code $LASTEXITCODE" }
+
+$V3Manifest = Join-Path $ProjectRoot "artifacts\phase1_v3_smoke\provenance_manifest.json"
+if (Test-Path -LiteralPath $V3Manifest) {
+    & (Join-Path $PSScriptRoot "check-phase1-v3-smoke.ps1")
+    if ($LASTEXITCODE -ne 0) {
+        throw "Phase-1 V3 frozen smoke audit failed with exit code $LASTEXITCODE"
+    }
+}

@@ -89,7 +89,9 @@ Estimated effort: 1–2 working days.
 Tasks:
 
 1. Implement separate physical-delta, event-record, pair, rollout, runtime, and compute metrics.
-2. Run majority, rule-only, bag-of-words/TF-IDF, direct static classification, and prompt-only baselines.
+2. Run majority, structured-rule, and grouped word/character TF-IDF decision baselines, each
+   composed with an evaluator-blind static factual predictor and scored on the same
+   `joint_pair_success` estimand as model arms. Decision-only accuracy remains diagnostic.
 3. Freeze scenario-level aggregation and paired bootstrap procedures.
 
 Implemented internal infrastructure now includes a strict JSON parser, paired structured/NL
@@ -108,8 +110,9 @@ Exit criterion: pair metrics distinguish “physical/event records invariant but
 
 ## Phase 3 — local small-model pilot
 
-Status: **exact 1.7B checkpoint, dependency lock, one-step exports, token audit, and one-step LoRA
-plumbing smoke complete; multi-record pilot waits for external Phase-1 acceptance**
+Status: **exact 1.7B checkpoint, dependency lock, one-step exports, token audit, matched joint
+multi-record plumbing, and factorized closed-loop plumbing complete on exploratory smoke; retained
+pilot waits for external Phase-1 acceptance**
 
 Estimated effort: 2–5 working days after the harness is stable.
 
@@ -198,8 +201,9 @@ These are not part of the minimum paper:
 1. Keep the exact v3 smoke corpora and manifest byte-frozen while external review is unavailable.
 2. Preserve the completed, self-contained v3 external-review bundle and request unconditional
    acceptance of its exact corpus and manifest hashes when the reviewer returns.
-3. Implement the paired joint-consistency loss and the factorized train/evaluation loop on the
-   already verified one-step local view; keep all results exploratory.
+3. Replace the local gold-token consistency proxy/free-generation bottleneck with a schema-native
+   slot objective or strict constrained decoding, then rerun a target-token-matched exploratory
+   joint/factorized comparison.
 4. If and only if external acceptance passes, generate the full
    1,000-family-per-environment retained corpus without changing schema, generator, oracle, gates,
    or seed.

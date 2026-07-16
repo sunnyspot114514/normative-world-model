@@ -8,6 +8,8 @@ from normative_world_model.model_arms import (
     build_factorized_normative_records,
     build_joint_records,
     evaluator_visibility_failures,
+    factorized_normative_input_text,
+    recompute_factorized_policy_result,
 )
 from normative_world_model.phase1_v3 import generate_v3_environment_families
 
@@ -70,6 +72,35 @@ class ModelArmDatasetTests(unittest.TestCase):
         )
         self.assertEqual(joint[0]["horizon_mode"], "one_step")
         self.assertEqual(factual[0]["horizon_mode"], "one_step")
+
+    def test_factorized_policy_recomputation_matches_primary_oracle(self) -> None:
+        family = generate_v3_environment_families("game", 1, 804)[0]
+        recomputed = recompute_factorized_policy_result(
+            family["model_input"],
+            family["primary"]["event_record"],
+        )
+        self.assertEqual(
+            recomputed,
+            family["primary"]["policy_result"],
+        )
+
+    def test_factorized_normative_prompt_matches_exported_record(self) -> None:
+        family = generate_v3_environment_families("organization", 1, 805)[0]
+        records = build_factorized_normative_records([family])
+        record = records[0]
+        factual_context = {
+            "event_record": family["primary"]["event_record"],
+            "policy_result": family["primary"]["policy_result"],
+        }
+        self.assertEqual(
+            record["input_text"],
+            factorized_normative_input_text(
+                factual_context,
+                family["evaluator_twins"][record["profile_id"]],
+                condition=record["input_condition"],
+                profile_variant=record["profile_surface_variant"],
+            ),
+        )
 
 
 if __name__ == "__main__":

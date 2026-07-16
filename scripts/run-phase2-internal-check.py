@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import json
 from collections import Counter, defaultdict
-from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +19,7 @@ from normative_world_model.phase2_metrics import (
     evaluate_anti_gaming_gate,
     information_diagnostics,
     normative_stratum,
+    oracle_fixture_metrics_are_perfect,
     score_evaluator_pair,
     score_factual_twin,
     score_leakage,
@@ -271,25 +271,26 @@ def run_internal_check(
         failures.append("exact target outputs did not parse")
     if forbidden_prompt_rows:
         failures.append("a Phase-2 prompt contains a forbidden target field")
-    if any(
-        not math_value
-        for name, math_value in (
-            (
-                "physical correctness",
-                _mean(pair_values["physical_consistent_and_correct"]),
-            ),
-            (
-                "event correctness",
-                _mean(pair_values["event_consistent_and_correct"]),
-            ),
-            (
-                "normative pair accuracy",
-                normative_pair_accuracy,
-            ),
-            ("joint pair success", _mean(pair_values["joint_pair_success"])),
-            ("changed field F1", changed_field_f1),
-            ("physical twin sensitivity", physical_twin_sensitivity),
-        )
+    oracle_fixture_metrics = (
+        (
+            "physical correctness",
+            _mean(pair_values["physical_consistent_and_correct"]),
+        ),
+        (
+            "event correctness",
+            _mean(pair_values["event_consistent_and_correct"]),
+        ),
+        (
+            "normative pair accuracy",
+            normative_pair_accuracy,
+        ),
+        ("joint pair success", _mean(pair_values["joint_pair_success"])),
+        ("changed field F1", changed_field_f1),
+        ("physical twin sensitivity", physical_twin_sensitivity),
+    )
+    if not oracle_fixture_metrics_are_perfect(
+        math_value
+        for _, math_value in oracle_fixture_metrics
     ):
         failures.append("oracle-perfect harness metric is below one")
     if _mean(pair_values["physical_delta_leak"]) != 0.0:

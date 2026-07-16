@@ -5,8 +5,9 @@ from __future__ import annotations
 import json
 import math
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Any
 
 from .comparators import (
     continuous_equal,
@@ -74,6 +75,15 @@ class ChangedFieldScore:
     target_physical_sensitive: bool
     predicted_changed_field_count: int
     target_changed_field_count: int
+
+
+def oracle_fixture_metrics_are_perfect(values: Iterable[float]) -> bool:
+    """Require every oracle-fixture metric to equal one, not merely be nonzero."""
+
+    return all(
+        math.isclose(float(value), 1.0, rel_tol=0.0, abs_tol=1e-12)
+        for value in values
+    )
 
 
 def prediction_from_target(target: dict[str, Any]) -> Prediction:

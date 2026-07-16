@@ -1,6 +1,6 @@
 # Model-arm data contract
 
-Status: **exploratory smoke exports implemented; no model has been trained**
+Status: **exploratory smoke exports and local plumbing implemented; no retained model trained**
 
 The three scientific arms share the same scenario families, splits, presentation surfaces, output
 schema, and evaluation harness. The exports are deterministic gzip JSONL files under ignored
@@ -32,8 +32,10 @@ prefix before the normative fields. Canonical source JSON remains key-sorted; on
 is specialized for the decoder consistency objective.
 
 Each joint record also carries `factual_prefix_text` and `normative_suffix_text`. Their exact
-concatenation must equal `target_text`; the tokenizer encodes them separately so factual logit
-positions are defined without substring search or BPE boundary guessing.
+concatenation must equal `target_text`. The tokenizer encodes the complete target exactly once and
+uses its offset mapping to locate the declared character boundary. If one token spans the closing
+factual brace and the following comma, that constant schema token belongs to the factual logit span;
+the target token sequence remains identical to ordinary full-target tokenization.
 
 ## Factorized arm
 
@@ -115,3 +117,8 @@ Later training configurations must report:
 Matching only row counts is insufficient because the factorized arm has two components and the joint
 arms emit a larger schema. Primary comparisons match unique scenario families and total target-token
 budget; update-count and compute-matched analyses are secondary diagnostics.
+
+The first internal factorized run is explicitly excluded from arm comparison because its two
+component budgets were not yet matched to the corrected joint target-token exposure. The matched
+joint smoke, by contrast, uses byte-identical selected record pairs and token counts across
+`joint_naive` and `joint_consistency`.

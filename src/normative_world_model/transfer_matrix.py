@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import hashlib
 from collections import Counter
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 ENVIRONMENT_ALIASES = {"A": "game", "B": "organization"}
 INPUT_CONDITIONS = ("structured", "natural_language")
@@ -143,7 +144,11 @@ def build_transfer_manifest(
                 }
     support = {
         environment: _environment_support(
-            environment_rows,
+            [
+                row
+                for row in environment_rows
+                if row["split"] == "development"
+            ],
             minimum_dimension_sign_fraction,
         )
         for environment, environment_rows in by_environment.items()
@@ -161,6 +166,7 @@ def build_transfer_manifest(
             else "UNIDENTIFIED"
         ),
         "effective_unit": "scenario_family",
+        "support_population": "destination_development_families",
         "matrix": cells,
         "environment_support": support,
         "unidentified_environments": unidentified,

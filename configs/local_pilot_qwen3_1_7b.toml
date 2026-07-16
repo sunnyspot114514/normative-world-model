@@ -43,6 +43,16 @@ optimizer_steps = 1
 learning_rate = 0.0001
 save_adapter = false
 
+[pilot]
+optimizer_steps = 4
+max_train_items = 8
+learning_rate = 0.0001
+consistency_proxy_lambda = 0.10
+generation_records = 1
+generation_max_new_tokens = 384
+teacher_forced_eval_items = 4
+output_dir = "runs/phase3_internal/multirecord"
+
 [governance]
 scope = "exploratory_v3_smoke_only"
 authorizes_retained_training = false

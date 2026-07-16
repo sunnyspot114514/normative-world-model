@@ -36,3 +36,4 @@ Revision 1 may change only the rendering of action identifiers into grammatical 
 phrases and the audits that reject the revision-0 patterns. It consumes one of the two v3 generator
 revision slots. No scientific threshold, typed source field, dynamics, oracle, label, split, or
 confirmation content may change.
+

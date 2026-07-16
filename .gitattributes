@@ -1,0 +1,6 @@
+* text=auto eol=lf
+docs/EXTERNAL_SMOKE_ACCEPTANCE_V3.md whitespace=-blank-at-eof
+docs/INTERNAL_REVIEW_PROTOCOL.md whitespace=-blank-at-eof
+docs/PHASE1_V2_INTERNAL_REVIEW.md whitespace=-blank-at-eof
+docs/PHASE1_V3_REVISION0_INTERNAL_REVIEW.md whitespace=-blank-at-eof
+scripts/run-phase1-v3-smoke.py whitespace=-blank-at-eof

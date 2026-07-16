@@ -21,6 +21,10 @@ TOP_LEVEL_REQUIRED = {
 }
 TOP_LEVEL_OPTIONAL = {"confidence"}
 ROLLOUT_KEYS = {"horizon", "physical_delta", "event_record"}
+LIST_ELEMENT_EXEMPLARS = {
+    ("physical_delta", "durable_objects_added"): "",
+    ("physical_delta", "persistent_flags_added"): "",
+}
 _FENCE = re.compile(
     r"\A\s*```(?:json)?\s*\n(?P<body>.*)\n```\s*\Z",
     re.IGNORECASE | re.DOTALL,
@@ -38,6 +42,19 @@ class RolloutPrediction:
 class ParsedModelOutput:
     one_step: Prediction
     rollout: dict[int, RolloutPrediction]
+
+
+@dataclass(frozen=True)
+class ParsedFactualOutput:
+    physical_delta: dict[str, Any]
+    event_record: dict[str, Any]
+    rollout: dict[int, RolloutPrediction]
+
+
+@dataclass(frozen=True)
+class ParsedNormativeOutput:
+    normative_decision: str
+    escalation_required: bool
 
 
 @dataclass(frozen=True)
@@ -95,7 +112,16 @@ def _validate_shape(
     if isinstance(exemplar, list):
         if not isinstance(value, list):
             raise OutputValidationError("type_error", f"{label} must be a list")
-        element_exemplar = exemplar[0] if exemplar else None
+        element_exemplar = (
+            exemplar[0]
+            if exemplar
+            else LIST_ELEMENT_EXEMPLARS.get((component, *path))
+        )
+        if value and element_exemplar is None:
+            raise OutputValidationError(
+                "list_element_schema",
+                f"{label} has no declared element schema",
+            )
         if element_exemplar is not None:
             for index, item in enumerate(value):
                 _validate_shape(
@@ -283,3 +309,82 @@ def parse_model_output(
             error_detail=error.detail,
         )
     return ParseResult(ok=True, output=output)
+
+
+def parse_factual_output(
+    text: str,
+    expected: dict[str, Any],
+) -> tuple[ParsedFactualOutput | None, str | None]:
+    """Parse the evaluator-blind component of the factorized arm."""
+
+    try:
+        payload = json.loads(_unwrap(text))
+    except json.JSONDecodeError:
+        return None, "invalid_json"
+    required = {"physical_delta", "event_record", "rollout"}
+    if not isinstance(payload, dict) or set(payload) != required:
+        return None, "top_level_keys"
+    try:
+        _validate_shape(
+            payload["physical_delta"],
+            expected["physical_delta"],
+            component="physical_delta",
+        )
+        _validate_shape(
+            payload["event_record"],
+            expected["event_record"],
+            component="event_record",
+        )
+        if payload["rollout"] != [] or expected.get("rollout", []) != []:
+            raise OutputValidationError(
+                "rollout_horizons",
+                "factorized local pilot currently requires an empty rollout",
+            )
+    except OutputValidationError as error:
+        return None, error.code
+    return (
+        ParsedFactualOutput(
+            physical_delta=payload["physical_delta"],
+            event_record=payload["event_record"],
+            rollout={},
+        ),
+        None,
+    )
+
+
+def parse_normative_output(
+    text: str,
+) -> tuple[ParsedNormativeOutput | None, str | None]:
+    """Parse the normative-only component of the factorized arm."""
+
+    try:
+        payload = json.loads(_unwrap(text))
+    except json.JSONDecodeError:
+        return None, "invalid_json"
+    required = {"normative_decision", "escalation_required"}
+    if not isinstance(payload, dict) or set(payload) != required:
+        return None, "top_level_keys"
+    decision = payload["normative_decision"]
+    escalation = payload["escalation_required"]
+    if decision not in DECISIONS:
+        return None, "decision_value"
+    if not isinstance(escalation, bool):
+        return None, "type_error"
+    if escalation != (decision == "escalate"):
+        return None, "decision_consistency"
+    return ParsedNormativeOutput(decision, escalation), None
+
+
+def combine_factorized_output(
+    factual: ParsedFactualOutput,
+    normative: ParsedNormativeOutput,
+) -> ParsedModelOutput:
+    return ParsedModelOutput(
+        one_step=Prediction(
+            physical_delta=factual.physical_delta,
+            event_record=factual.event_record,
+            normative_decision=normative.normative_decision,
+            escalation_required=normative.escalation_required,
+        ),
+        rollout=factual.rollout,
+    )

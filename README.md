@@ -34,12 +34,12 @@ This project does not attempt to train a universal human value system. Instead, 
   reruns.
 - External review is temporarily unavailable. Internal PASS permits exploratory Phase-2
   infrastructure and smoke-scale baselines, but cannot unlock retained generation.
-- Cheap static baselines and scenario-family cluster bootstrap intervals are implemented; their v3
-  smoke results are explicitly exploratory.
+- Cheap Static baselines now emit complete factual and normative outputs and are scored on the same
+  `joint_pair_success` estimand as model arms; their v3 smoke results remain exploratory.
 - The Phase-2 parser, metric, and transfer harness passes an oracle-fixture check over all 14,400
   v3 smoke presentations. This validates the harness, not a learned model.
 - The exact `Qwen/Qwen3-1.7B-Base` revision is cached locally with file hashes. A one-step,
-  726-token joint LoRA optimizer smoke passes on the RTX 3060 at 66.9% peak allocated CUDA memory.
+  725-token joint LoRA optimizer smoke passes on the RTX 3060 at 66.7% peak allocated CUDA memory.
   A full-rollout target was separately retained as a failed resource diagnostic because it relied
   on WDDM oversubscription.
 - The full retained corpus, confirmation corpus, trained adapters/checkpoints, and training runs
@@ -180,6 +180,7 @@ See:
 - [Phase-1 v3 internal smoke record](docs/PHASE1_V3_INTERNAL_SMOKE.md)
 - [Phase-1 v3 revision-0 internal rejection](docs/PHASE1_V3_REVISION0_INTERNAL_REVIEW.md)
 - [Internal review protocol](docs/INTERNAL_REVIEW_PROTOCOL.md)
+- [Phase-3 internal one-step pilot](docs/PHASE3_INTERNAL_PILOT.md)
 - [Phase-1 v2 internal rejection](docs/PHASE1_V2_INTERNAL_REVIEW.md)
 - [External audit adjudication](docs/EXTERNAL_AUDIT_ADJUDICATION.md)
 - [V3 external smoke acceptance contract](docs/EXTERNAL_SMOKE_ACCEPTANCE_V3.md)
@@ -223,6 +224,11 @@ Prepare the optional isolated local-model stack and run the one-step training sm
   --data-dir .\data\generated\phase3_internal\arms `
   --report .\artifacts\phase3_internal\token_length_audit_one_step.json
 .\.venv\Scripts\python.exe .\scripts\run-local-lora-smoke.py
+.\.venv\Scripts\python.exe .\scripts\run-local-multirecord-pilot.py `
+  --arms joint_naive joint_consistency `
+  --optimizer-steps 32 `
+  --max-train-items 32 `
+  --generation-records 0
 ```
 
 Generated content is written under:
@@ -254,13 +260,14 @@ The repository currently provides:
 - Hash-bound external acceptance before retained generation
 - A hash-locked 1.7B local base checkpoint and isolated CUDA/PEFT dependency stack
 - Deterministic one-step model-arm exports and a no-truncation tokenizer audit
+- Matched joint multi-record and factorized closed-loop exploratory plumbing
 - Standard-library unit tests and Windows isolation scripts
 
 It does **not** yet provide:
 
 - A committed generated training or confirmation corpus
 - Trained language-model checkpoints
-- Joint-versus-factorized model results
+- Retained or conclusive joint-versus-factorized model results
 - Cross-environment model-transfer results
 - Runtime intervention results
 - Claims about universal values or general moral reasoning
@@ -288,10 +295,11 @@ It does **not** yet provide:
 - [x] Deterministic self-contained v3 external-review bundle
 - [x] Joint-naive, joint-consistency, and factorized smoke data interfaces
 - [x] Exact local checkpoint/dependency lock, token audit, and one-step LoRA plumbing smoke
+- [x] Matched joint multi-record and factorized closed-loop exploratory plumbing
 - [ ] Unconditional external acceptance of the exact v3 corpus hashes
 - [ ] Retained Phase-1 corpus
 - [ ] Frozen Phase-2 baseline table
-- [ ] Local small-model pilot
+- [ ] Retained local small-model pilot
 - [ ] Locked confirmation
 - [ ] Optional server-scale study
 - [ ] Proposal/commit Runtime evaluation

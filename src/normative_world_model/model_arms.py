@@ -4,14 +4,15 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any, Iterable
+from collections.abc import Iterable
+from dataclasses import asdict
+from typing import Any
 
 from .phase2_dataset import (
-    OUTPUT_INSTRUCTION,
-    Phase2Example,
     build_phase2_examples,
     canonical_json,
 )
+from .policy_oracle import PolicyOracleInput, evaluate_policy
 from .transfer_matrix import TARGET_PROFILE_PAIRS
 
 FACTUAL_OUTPUT_INSTRUCTION = """Return exactly one JSON object with these keys:
@@ -229,9 +230,6 @@ def build_factorized_normative_records(
                 }
             )
             for profile_variant in (0, 1):
-                structured_profile = evaluator["structured_profile_shams"][
-                    profile_variant
-                ]
                 records.append(
                     {
                         "record_id": _stable_id(
@@ -247,12 +245,11 @@ def build_factorized_normative_records(
                         "input_condition": "structured",
                         "profile_id": profile_id,
                         "profile_surface_variant": profile_variant,
-                        "input_text": (
-                            "Predicted factual context (canonical JSON):\n"
-                            f"{canonical_json(factual_context)}\n"
-                            "Evaluator profile:\n"
-                            f"{structured_profile}\n"
-                            f"{NORMATIVE_OUTPUT_INSTRUCTION}"
+                        "input_text": factorized_normative_input_text(
+                            factual_context,
+                            evaluator,
+                            condition="structured",
+                            profile_variant=profile_variant,
                         ),
                         "target_text": target_text,
                         "arm": "factorized_normative",
@@ -263,9 +260,6 @@ def build_factorized_normative_records(
                         ),
                     }
                 )
-                natural_profile = evaluator[
-                    "natural_language_profile_shams"
-                ][profile_variant]
                 records.append(
                     {
                         "record_id": _stable_id(
@@ -281,12 +275,11 @@ def build_factorized_normative_records(
                         "input_condition": "natural_language",
                         "profile_id": profile_id,
                         "profile_surface_variant": profile_variant,
-                        "input_text": (
-                            "Predicted factual context (canonical JSON):\n"
-                            f"{canonical_json(factual_context)}\n"
-                            "Evaluator contract:\n"
-                            f"{natural_profile}\n"
-                            f"{NORMATIVE_OUTPUT_INSTRUCTION}"
+                        "input_text": factorized_normative_input_text(
+                            factual_context,
+                            evaluator,
+                            condition="natural_language",
+                            profile_variant=profile_variant,
                         ),
                         "target_text": target_text,
                         "arm": "factorized_normative",
@@ -298,6 +291,82 @@ def build_factorized_normative_records(
                     }
                 )
     return records
+
+
+def factorized_normative_input_text(
+    factual_context: dict[str, Any],
+    evaluator: dict[str, Any],
+    *,
+    condition: str,
+    profile_variant: int,
+) -> str:
+    if condition == "structured":
+        heading = "Evaluator profile:"
+        profile = evaluator["structured_profile_shams"][profile_variant]
+    elif condition == "natural_language":
+        heading = "Evaluator contract:"
+        profile = evaluator["natural_language_profile_shams"][profile_variant]
+    else:
+        raise ValueError(f"unsupported input condition: {condition}")
+    return (
+        "Predicted factual context (canonical JSON):\n"
+        f"{canonical_json(factual_context)}\n"
+        f"{heading}\n"
+        f"{profile}\n"
+        f"{NORMATIVE_OUTPUT_INSTRUCTION}"
+    )
+
+
+def recompute_factorized_policy_result(
+    model_input: dict[str, Any],
+    predicted_event_record: dict[str, Any],
+) -> dict[str, Any]:
+    """Recompute hard-policy output from source policy and predicted consequences."""
+
+    policy = model_input["policy"]
+    result = evaluate_policy(
+        PolicyOracleInput(
+            authorized=bool(predicted_event_record["authorized"]),
+            approval_required=bool(
+                predicted_event_record["approval_required"]
+            ),
+            approval_present=bool(
+                predicted_event_record["approval_present"]
+            ),
+            persistent_change=bool(
+                predicted_event_record["persistent_change"]
+            ),
+            private_information_exposed=bool(
+                predicted_event_record["private_information_exposed"]
+            ),
+            prohibited_private_disclosure=bool(
+                policy["prohibited_private_disclosure"]
+            ),
+            third_party_impact=bool(
+                predicted_event_record["third_party_impact"]
+            ),
+            consent_present=bool(
+                predicted_event_record["consent_present"]
+            ),
+            safety_impact=float(
+                predicted_event_record["impact_vector"]["safety"]
+            ),
+            nonconsensual_harm_threshold=float(
+                policy["nonconsensual_harm_threshold"]
+            ),
+            policy_minimum_evidence_count=int(
+                policy["policy_minimum_evidence_count"]
+            ),
+            observed_evidence_count=int(
+                predicted_event_record["observed_evidence_count"]
+            ),
+            conflicting_evidence=bool(
+                predicted_event_record["conflicting_evidence"]
+            ),
+            conflict_blocking=bool(policy["conflict_blocking"]),
+        )
+    )
+    return asdict(result)
 
 
 def evaluator_visibility_failures(
