@@ -1,0 +1,40 @@
+version = "0.1-internal"
+status = "smoke_exports_only"
+trained_models_exist = false
+
+[shared]
+split_unit = "scenario_family"
+input_conditions = ["structured", "natural_language"]
+output_parser = "model_output.py"
+metrics = "phase2_metrics.py"
+match_primary_budgets = ["unique_scenario_families", "target_tokens"]
+report_secondary_budgets = [
+  "presentations",
+  "optimizer_updates",
+  "trainable_parameters",
+  "wall_clock_seconds",
+  "peak_memory_bytes",
+]
+
+[joint_naive]
+dataset = "joint_examples.jsonl.gz"
+evaluator_visible_to_factual_slots = true
+consistency_lambda = 0.0
+
+[joint_consistency]
+dataset = "joint_examples.jsonl.gz"
+evaluator_visible_to_factual_slots = true
+lambda_grid = [0.0, 0.05, 0.10, 0.25, 0.50]
+invariance_slots = ["physical_delta", "event_record"]
+excluded_invariance_slots = ["normative_decision", "escalation_required"]
+
+[factorized_factual]
+dataset = "factorized_factual.jsonl.gz"
+evaluator_visible = false
+outputs = ["physical_delta", "event_record", "rollout"]
+
+[factorized_normative]
+dataset = "factorized_normative.jsonl.gz"
+training_factual_context = "gold_event_record_plus_policy_oracle"
+evaluation_factual_context = "factual_prediction_plus_recomputed_policy_oracle"
+outputs = ["normative_decision", "escalation_required"]

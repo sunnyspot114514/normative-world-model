@@ -40,7 +40,9 @@ Exit criterion: the predicate/profile attack review finds no unresolved causal a
 
 ## Phase 1 — simulator and dataset generator
 
-Status: **revision 2 smoke PASS (600 families); conditional findings resolved; refreshed manifest re-acceptance required before retained generation**
+Status: **revision 2 and v3 revision 0 internally rejected; preregistration-v3 revision-1 smoke
+passed all three internal review paths; external acceptance still required before retained
+generation**
 
 Estimated effort: 2–4 working days.
 
@@ -58,21 +60,29 @@ Deliverables:
 - At least 1,000 scenario families per environment for discovery/smoke auditing.
 - Dataset card, provenance manifest, and split audit report.
 
-The invalidated v1, revision-0, and revision-1 corpora and source snapshots remain archived.
-Revision 2 is the final allowed generator revision. Its smoke artifacts use
-`data/generated/phase1_revision2_smoke/` and `artifacts/phase1_revision2_smoke/`. The retained
-revision-2 paths remain absent until the compact audit bundle and, where needed, exact raw rows pass
-external review. Confirmation remains ungenerated; only a salted commitment and paired-presentation
-contract are reserved.
+The invalidated v1 and v2 corpora and source snapshots remain archived. Revision 2 is preserved
+unchanged after internal review found systematic natural-language grammar defects. Preregistration
+v3 resets only the renderer and grammar gates. Revision 0 was additionally archived after
+deterministic readable sampling found malformed action phrases missed by machine gates. Revision 1
+consumes the first v3 repair slot and changes only action-identifier presentation plus its audits.
+Its current smoke artifacts use `data/generated/phase1_v3_smoke/` and
+`artifacts/phase1_v3_smoke/`; revision-0 artifacts use the corresponding
+`phase1_v3_revision0_smoke/` paths, and historical revision-2 artifacts remain under their original
+paths. The v3 retained paths remain absent until the exact raw corpus hashes and provenance manifest
+receive unconditional external acceptance. Confirmation remains ungenerated; only a new salted
+commitment and paired-presentation contract are reserved.
 
 Exit criterion: deterministic replay produces identical targets; no `scenario_id` or paraphrase
 family crosses splits; both environments pass the discretionary-density contract; direct-token,
 conditional-association, grouped TF-IDF, affine/depth-three nontriviality, natural-language
 richness, actor-intervention, next-state, and three-step rollout gates pass. A chance AUC with
-constant features is an explicit failure. At most two v2 schema revisions are allowed before
-stopping for redesign.
+constant features is an explicit failure. V3 allows at most two generator revisions before stopping
+for redesign. Internal review cannot satisfy the external-acceptance exit condition.
 
 ## Phase 2 — metrics and cheap baselines
+
+Status: **evaluation harness complete on v3 smoke; retained baseline/result freeze waits for
+external acceptance**
 
 Estimated effort: 1–2 working days.
 
@@ -81,6 +91,12 @@ Tasks:
 1. Implement separate physical-delta, event-record, pair, rollout, runtime, and compute metrics.
 2. Run majority, rule-only, bag-of-words/TF-IDF, direct static classification, and prompt-only baselines.
 3. Freeze scenario-level aggregation and paired bootstrap procedures.
+
+Implemented internal infrastructure now includes a strict JSON parser, paired structured/NL
+presentation builder, correctness-aware leakage correction, changed-field and information
+anti-gaming diagnostics, rollout scoring, mechanism/margin strata, shared scenario-cluster
+bootstrap, and all eight A/B transfer cells. The oracle-fixture self-check covers 14,400 smoke
+presentations. It is an integrity result, not evidence about a trained model.
 
 Deliverables:
 
@@ -91,6 +107,9 @@ Deliverables:
 Exit criterion: pair metrics distinguish “physical/event records invariant but judgment unresponsive” from “judgment responsive but transition/event record distorted”; no headline result is reducible to a class-imbalance or template baseline.
 
 ## Phase 3 — local small-model pilot
+
+Status: **exact 1.7B checkpoint, dependency lock, one-step exports, token audit, and one-step LoRA
+plumbing smoke complete; multi-record pilot waits for external Phase-1 acceptance**
 
 Estimated effort: 2–5 working days after the harness is stable.
 
@@ -176,11 +195,15 @@ These are not part of the minimum paper:
 
 ## Immediate next actions
 
-1. Obtain short external re-acceptance of the refreshed manifest after verifying the implemented
-   per-environment Gate C and clarified oracle/hash contracts; the raw JSONL hashes are unchanged.
-2. If and only if it passes, generate the full 1,000-family-per-environment retained corpus without
-   changing schema, generator, oracle, gates, or seed.
-3. Verify retained provenance, then freeze comparator v2.1 against that manifest.
-4. Implement and run Phase-2 cheap baselines and scenario-cluster bootstrap intervals.
-5. If smoke fails, trigger the preregistered stop and begin a new preregistration version; revision 2
-   has no repair revision remaining.
+1. Keep the exact v3 smoke corpora and manifest byte-frozen while external review is unavailable.
+2. Preserve the completed, self-contained v3 external-review bundle and request unconditional
+   acceptance of its exact corpus and manifest hashes when the reviewer returns.
+3. Implement the paired joint-consistency loss and the factorized train/evaluation loop on the
+   already verified one-step local view; keep all results exploratory.
+4. If and only if external acceptance passes, generate the full
+   1,000-family-per-environment retained corpus without changing schema, generator, oracle, gates,
+   or seed.
+5. Verify retained provenance, then freeze comparator v2.1 and the retained baseline table before a
+   local small-model pilot.
+6. If v3 external review finds another blocking generator defect, use the preregistered v3 revision
+   budget or stop for a new preregistration; never bypass the retained lock.

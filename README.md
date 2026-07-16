@@ -16,17 +16,34 @@ This project does not attempt to train a universal human value system. Instead, 
 - Two surface-distinct environments share one frozen normative predicate layer:
   - a narrative game state machine;
   - an organizational-agent simulator.
-- The Phase-1 revision-2 smoke corpus contains 300 scenario families per environment and passes every local gate.
-- Gate C now passes independently in both environments:
+- Revision 2 is preserved as an internally rejected smoke artifact after full-corpus review found
+  systematic natural-language grammar defects.
+- V3 revision 0 was also archived after deterministic readable sampling found malformed action
+  phrases missed by the machine gates.
+- Preregistration-v3 revision 1 changes only controlled-language action rendering and its audits.
+  Its smoke corpus contains 300 scenario families per environment and passes native,
+  package-independent, and deterministic readable-sample review.
+- V3 Gate C passes independently in both environments:
 
 | environment | maximum word/character macro AUC | 95% cluster upper bound | frozen gate |
 |---|---:|---:|---|
-| game | `0.4743` | `0.5047` | **PASS** |
-| organization | `0.5153` | `0.5699` | **PASS** |
+| game | `0.4942` | `0.5220` | **PASS** |
+| organization | `0.4818` | `0.5110` | **PASS** |
 
-- The two raw smoke JSONL files are byte-stable across same-seed reruns.
-- External-audit conditions have been implemented. The refreshed provenance manifest awaits unconditional re-acceptance before retained generation can unlock.
-- The full retained corpus, confirmation corpus, model weights, and training runs have not been generated.
+- The two v3 raw smoke JSONL files and confirmation reservation are byte-stable across same-seed
+  reruns.
+- External review is temporarily unavailable. Internal PASS permits exploratory Phase-2
+  infrastructure and smoke-scale baselines, but cannot unlock retained generation.
+- Cheap static baselines and scenario-family cluster bootstrap intervals are implemented; their v3
+  smoke results are explicitly exploratory.
+- The Phase-2 parser, metric, and transfer harness passes an oracle-fixture check over all 14,400
+  v3 smoke presentations. This validates the harness, not a learned model.
+- The exact `Qwen/Qwen3-1.7B-Base` revision is cached locally with file hashes. A one-step,
+  726-token joint LoRA optimizer smoke passes on the RTX 3060 at 66.9% peak allocated CUDA memory.
+  A full-rollout target was separately retained as a failed resource diagnostic because it relied
+  on WDDM oversubscription.
+- The full retained corpus, confirmation corpus, trained adapters/checkpoints, and training runs
+  have not been generated.
 - Generated data, models, caches, secret nonces, and experiment artifacts are intentionally ignored by Git.
 
 ## Motivation
@@ -55,12 +72,19 @@ configs/
   evaluator_profiles.toml         # Four deterministic evaluator profiles
   normative_predicates.toml       # Shared A/B ontology and generator gates
   preregistration.toml            # Machine-readable thresholds and stop rules
+  preregistration_v3.toml         # Renderer-reset seeds, locks, and inherited gates
 
 docs/
   NORMATIVE_PREDICATE_CONTRACT.md  # Cross-environment predicate contract
   EVALUATOR_PROFILES.md            # Two-layer N oracle and exact semantics
   LEAKAGE_AUDIT_SPEC.md            # Per-environment generator-exit audits
   METRIC_COMPARATOR_V2_1.md        # Shared correctness/invariance comparator
+  INTERNAL_REVIEW_PROTOCOL.md      # Temporary internal discovery-review boundary
+  PHASE1_V3_INTERNAL_SMOKE.md      # Hash-bound v3 internal smoke record
+  PHASE1_V3_REVISION0_INTERNAL_REVIEW.md # Archived readable-review failure
+  EXTERNAL_SMOKE_ACCEPTANCE_V3.md  # V3 hash-bound retained-generation lock
+  PHASE2_EVALUATION_CONTRACT.md     # Parser, metrics, anti-gaming, transfer
+  MODEL_ARM_DATA_CONTRACT.md        # Joint/factorized data and visibility
   EXTERNAL_SMOKE_ACCEPTANCE.md     # Hash-bound retained-generation lock
   EXTERNAL_AUDIT_ADJUDICATION.md   # Accepted findings and corrected claims
 
@@ -73,11 +97,25 @@ src/normative_world_model/
   audits.py                         # Density, leakage, integrity, and baseline gates
   comparators.py                    # v2.1 numeric comparison contract
   metrics.py                        # Paired factual/normative metrics
+  baselines.py                      # Exploratory static baselines
+  bootstrap.py                      # Scenario-family cluster bootstrap
+  model_output.py                   # Strict model-output parser
+  phase2_dataset.py                 # Paired structured/NL presentations
+  phase2_metrics.py                 # Leakage, rollout, and anti-gaming metrics
+  transfer_matrix.py                # A→A, B→B, A→B, B→A manifests
+  model_arms.py                     # Joint/factorized deterministic records
 
 scripts/
   setup.ps1                         # Project-local Python setup
   check.ps1                         # Unit tests and isolation audit
   check-phase1-smoke.ps1            # Smoke provenance verifier
+  check-phase1-v3-smoke.ps1         # Native plus independent v3 verifier
+  independent-smoke-audit.py        # Package-independent full-corpus recomputation
+  select-internal-review-sample.py  # Deterministic readable-review selector
+  run-phase2-baselines.py           # Exploratory smoke baseline runner
+  run-phase2-internal-check.py      # End-to-end evaluation-harness check
+  export-phase2-arm-data.py         # Compressed smoke datasets for model arms
+  build-v3-external-audit-bundle.py # Self-contained compressed v3 review bundle
   build-smoke-audit-bundle.py       # Compact external-audit bundle builder
 
 tests/
@@ -113,9 +151,11 @@ The primary engineering comparison is:
 
 The scientific question is whether a joint model can learn internal separation. The factorized arm answers the separate engineering question of whether modular architecture is sufficient for reliable invariance.
 
-## Phase-1 Smoke Result
+## Phase-1 Internal Smoke Result
 
-The revision-2 smoke run uses 600 total scenario families and does not generate confirmation examples.
+The preregistration-v3 revision-1 smoke run uses 600 total scenario families and does not generate
+confirmation examples. Revision 2 and v3 revision 0 remain archived as internally rejected rather
+than being repaired in place.
 
 Locally reproduced checks include:
 
@@ -130,14 +170,20 @@ Locally reproduced checks include:
 - per-environment word/character TF-IDF leakage gates;
 - exact Decimal oracle-boundary tests;
 - source, corpus, report, and bundle provenance hashes.
+- a second full-corpus audit that imports no `normative_world_model` package code.
+- a deterministic, coverage-augmented 36-row readable review.
 
 The raw corpus remains local. Repository documents record the protocol and hashes, not the generated JSONL contents.
 
 See:
 
-- [Phase-1 revision-2 smoke record](docs/PHASE1_REVISION2_SMOKE.md)
+- [Phase-1 v3 internal smoke record](docs/PHASE1_V3_INTERNAL_SMOKE.md)
+- [Phase-1 v3 revision-0 internal rejection](docs/PHASE1_V3_REVISION0_INTERNAL_REVIEW.md)
+- [Internal review protocol](docs/INTERNAL_REVIEW_PROTOCOL.md)
+- [Phase-1 v2 internal rejection](docs/PHASE1_V2_INTERNAL_REVIEW.md)
 - [External audit adjudication](docs/EXTERNAL_AUDIT_ADJUDICATION.md)
-- [External smoke acceptance contract](docs/EXTERNAL_SMOKE_ACCEPTANCE.md)
+- [V3 external smoke acceptance contract](docs/EXTERNAL_SMOKE_ACCEPTANCE_V3.md)
+- [Historical v2 external smoke acceptance contract](docs/EXTERNAL_SMOKE_ACCEPTANCE.md)
 
 ## Quick Start
 
@@ -158,13 +204,25 @@ Run the repository checks:
 .\scripts\check.ps1
 ```
 
-Generate the local revision-2 smoke corpus:
+Generate and independently check the local v3 smoke corpus:
 
 ```powershell
 . .\scripts\project-env.ps1
-.\.venv\Scripts\python.exe -m normative_world_model phase1-smoke --families 300
-.\.venv\Scripts\python.exe .\scripts\build-smoke-audit-bundle.py
-.\scripts\check-phase1-smoke.ps1
+.\.venv\Scripts\python.exe .\scripts\run-phase1-v3-smoke.py --families 300
+.\scripts\check-phase1-v3-smoke.ps1
+.\.venv\Scripts\python.exe .\scripts\run-phase2-baselines.py
+```
+
+Prepare the optional isolated local-model stack and run the one-step training smoke:
+
+```powershell
+.\scripts\setup-model.ps1
+.\.venv\Scripts\python.exe .\scripts\prepare-local-model.py
+.\.venv\Scripts\python.exe .\scripts\export-local-pilot-data.py
+.\.venv\Scripts\python.exe .\scripts\audit-phase2-token-lengths.py `
+  --data-dir .\data\generated\phase3_internal\arms `
+  --report .\artifacts\phase3_internal\token_length_audit_one_step.json
+.\.venv\Scripts\python.exe .\scripts\run-local-lora-smoke.py
 ```
 
 Generated content is written under:
@@ -194,6 +252,8 @@ The repository currently provides:
 - Per-environment leakage and nontriviality gates
 - A shared v2.1 numeric comparator
 - Hash-bound external acceptance before retained generation
+- A hash-locked 1.7B local base checkpoint and isolated CUDA/PEFT dependency stack
+- Deterministic one-step model-arm exports and a no-truncation tokenizer audit
 - Standard-library unit tests and Windows isolation scripts
 
 It does **not** yet provide:
@@ -212,13 +272,23 @@ It does **not** yet provide:
 - [x] Actor/evaluator value separation
 - [x] Deterministic policy and normative oracles
 - [x] Uncertainty reachability analysis
-- [x] Revision-2 paired-family generator
+- [x] Preserve revision-2 as an internally rejected smoke artifact
+- [x] Preserve v3 revision 0 after readable review rejected malformed action phrases
+- [x] Preregistration-v3 revision-1 renderer repair and paired-family generator
 - [x] Natural-language and structured-input audits
 - [x] Causal twin and rollout integrity gates
 - [x] Per-environment Gate C
 - [x] External full-corpus conditional audit
 - [x] Resolve external-audit conditions
-- [ ] Unconditional acceptance of refreshed provenance manifest
+- [x] Independent internal full-corpus audit
+- [x] Deterministic coverage-augmented readable review
+- [x] Exploratory static baselines and cluster bootstrap
+- [x] Strict output parser and oracle-fixture Phase-2 harness
+- [x] Paired leakage, changed-field, rollout, anti-gaming, and transfer metrics
+- [x] Deterministic self-contained v3 external-review bundle
+- [x] Joint-naive, joint-consistency, and factorized smoke data interfaces
+- [x] Exact local checkpoint/dependency lock, token audit, and one-step LoRA plumbing smoke
+- [ ] Unconditional external acceptance of the exact v3 corpus hashes
 - [ ] Retained Phase-1 corpus
 - [ ] Frozen Phase-2 baseline table
 - [ ] Local small-model pilot
@@ -247,6 +317,9 @@ The repository is designed not to contaminate sibling projects:
 - [Joint-consistency objective](docs/JOINT_CONSISTENCY_OBJECTIVE.md)
 - [Leakage audit specification](docs/LEAKAGE_AUDIT_SPEC.md)
 - [Metric comparator v2.1](docs/METRIC_COMPARATOR_V2_1.md)
+- [Phase-2 evaluation contract](docs/PHASE2_EVALUATION_CONTRACT.md)
+- [Model-arm data contract](docs/MODEL_ARM_DATA_CONTRACT.md)
+- [Local small-model pilot contract](docs/LOCAL_PILOT_CONTRACT.md)
 
 ## License
 
