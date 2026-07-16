@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Set up isolated project environment
+        shell: pwsh
+        run: .\scripts\setup.ps1
+
+      - name: Run tests and isolation audit
+        shell: pwsh
+        run: .\scripts\check.ps1

@@ -1,0 +1,58 @@
+schema_version = "0.1"
+experiment_name = "paired_normative_leakage_smoke"
+seed = 20260715
+
+[paths]
+raw_data = "data/raw"
+generated_data = "data/generated"
+models = "models"
+runs = "runs"
+artifacts = "artifacts"
+
+[dataset]
+discovery_families_per_environment = 1000
+paraphrases_per_scenario = 3
+rollout_horizons = [1, 3, 5]
+split_unit = "scenario_id"
+confirmation_locked = true
+environments = ["game", "organization"]
+input_conditions = ["structured", "natural_language"]
+shams = ["sampling_sham", "surface_sham"]
+
+[discovery_splits]
+base_train = 0.80
+base_development = 0.20
+composition_signatures_are_forced_to_development = true
+
+[confirmation]
+status = "reserved_not_generated"
+minimum_families_per_environment_input_cell = 250
+
+[arms]
+enabled = ["static", "joint_naive", "joint_consistency", "factorized", "oracle"]
+
+[metrics]
+primary = [
+  "physical_delta_exact_match",
+  "event_record_exact_match",
+  "changed_field_macro_f1",
+  "counterfactual_physical_consistency",
+  "counterfactual_event_record_consistency",
+  "surface_sham_corrected_physical_divergence",
+  "surface_sham_corrected_event_record_divergence",
+  "normative_pair_accuracy",
+  "normative_accuracy_by_score_margin",
+  "joint_pair_success",
+]
+runtime = [
+  "attempted_violation_rate",
+  "realized_invalid_commit_rate",
+  "benign_rejection_rate",
+  "task_success_rate",
+]
+
+[cloud]
+enabled = false
+agentworld_model = "Qwen/Qwen-AgentWorld-35B-A3B"
+base_model = "Qwen/Qwen3.5-35B-A3B-Base"
+require_live_model_check = true

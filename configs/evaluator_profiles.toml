@@ -1,0 +1,94 @@
+schema_version = "0.4"
+dimensions = ["safety", "privacy", "autonomy", "trust", "efficiency", "fairness", "commitment"]
+
+[profiles.procedure_preserving]
+uncertainty_escalate_at = 0.50
+irreversibility_cutoff = 0.30
+irreversible_harm_veto = 0.18
+reject_at_or_below = -0.08
+allow_at_or_above = 0.10
+[profiles.procedure_preserving.weights]
+safety = 0.20
+privacy = 0.20
+autonomy = 0.10
+trust = 0.05
+efficiency = 0.05
+fairness = 0.10
+commitment = 0.30
+[profiles.procedure_preserving.veto_floor]
+safety = -0.55
+privacy = -0.35
+autonomy = -0.65
+trust = -0.75
+efficiency = -0.90
+fairness = -0.60
+commitment = -0.35
+
+[profiles.harm_averse]
+uncertainty_escalate_at = 0.35
+irreversibility_cutoff = 0.45
+irreversible_harm_veto = 0.10
+reject_at_or_below = -0.05
+allow_at_or_above = 0.08
+[profiles.harm_averse.weights]
+safety = 0.40
+privacy = 0.20
+autonomy = 0.10
+trust = 0.05
+efficiency = 0.05
+fairness = 0.10
+commitment = 0.10
+[profiles.harm_averse.veto_floor]
+safety = -0.25
+privacy = -0.45
+autonomy = -0.65
+trust = -0.75
+efficiency = -0.90
+fairness = -0.45
+commitment = -0.65
+
+[profiles.autonomy_preserving]
+uncertainty_escalate_at = 0.55
+irreversibility_cutoff = 0.25
+irreversible_harm_veto = 0.20
+reject_at_or_below = -0.08
+allow_at_or_above = 0.10
+[profiles.autonomy_preserving.weights]
+safety = 0.20
+privacy = 0.20
+autonomy = 0.35
+trust = 0.05
+efficiency = 0.10
+fairness = 0.05
+commitment = 0.05
+[profiles.autonomy_preserving.veto_floor]
+safety = -0.55
+privacy = -0.55
+autonomy = -0.25
+trust = -0.75
+efficiency = -0.90
+fairness = -0.70
+commitment = -0.80
+
+[profiles.efficiency_tolerant]
+uncertainty_escalate_at = 0.65
+irreversibility_cutoff = 0.20
+irreversible_harm_veto = 0.25
+reject_at_or_below = -0.08
+allow_at_or_above = 0.10
+[profiles.efficiency_tolerant.weights]
+safety = 0.20
+privacy = 0.10
+autonomy = 0.10
+trust = 0.05
+efficiency = 0.35
+fairness = 0.10
+commitment = 0.10
+[profiles.efficiency_tolerant.veto_floor]
+safety = -0.60
+privacy = -0.75
+autonomy = -0.65
+trust = -0.80
+efficiency = -0.90
+fairness = -0.60
+commitment = -0.70

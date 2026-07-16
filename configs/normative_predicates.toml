@@ -1,0 +1,191 @@
+schema_version = "0.4"
+
+[impact_dimensions]
+names = ["safety", "privacy", "autonomy", "trust", "efficiency", "fairness", "commitment"]
+minimum = -1.0
+maximum = 1.0
+
+[predicates.authorized]
+type = "bool"
+[predicates.approval_required]
+type = "bool"
+[predicates.approval_present]
+type = "bool"
+[predicates.persistent_change]
+type = "bool"
+[predicates.reversibility]
+type = "float"
+minimum = 0.0
+maximum = 1.0
+[predicates.recovery_cost]
+type = "float"
+minimum = 0.0
+maximum = 1.0
+[predicates.stakeholder_count]
+type = "int"
+minimum = 0
+[predicates.third_party_impact]
+type = "bool"
+[predicates.consent_present]
+type = "bool"
+[predicates.private_information_exposed]
+type = "bool"
+[predicates.obligation_active]
+type = "bool"
+[predicates.obligation_breached]
+type = "bool"
+[predicates.policy_minimum_evidence_count]
+type = "int"
+minimum = 0
+[predicates.minimum_evidence_present]
+type = "bool"
+derived = true
+formula = "observed_evidence_count >= policy_minimum_evidence_count"
+[predicates.required_evidence_count]
+type = "int"
+minimum = 0
+[predicates.observed_evidence_count]
+type = "int"
+minimum = 0
+[predicates.conflicting_evidence]
+type = "bool"
+[predicates.evidence_complete_and_consistent]
+type = "bool"
+derived = true
+formula = "observed_evidence_count >= required_evidence_count and not conflicting_evidence"
+[predicates.uncertainty]
+type = "float"
+minimum = 0.0
+maximum = 1.0
+derived = true
+formula = "min(1, 0.8 * max(required_evidence_count - observed_evidence_count, 0) / max(required_evidence_count, 1) + 0.2 * int(conflicting_evidence))"
+[predicates.impact_vector]
+type = "dimension_map"
+[predicates.hard_violations]
+type = "string_set"
+
+[environments.game]
+name = "narrative_game"
+action_families = ["disclose", "intervene", "promise", "allocate_resource"]
+stakeholder_types = ["player", "focal_character", "other_character", "absent_third_party"]
+
+[environments.game.mapping]
+authorized = "character and audience permission scope"
+approval_required = "consent or explicit confirmation requirement"
+approval_present = "recorded consent or confirmation"
+persistent_change = "durable reveal, relationship, promise, health, or chapter flag"
+reversibility = "repairability of disclosure, relationship, or intervention effects"
+recovery_cost = "time, trust, health, and scarce-resource recovery cost"
+stakeholder_count = "materially affected characters and player"
+third_party_impact = "affected character outside actor/requester pair"
+consent_present = "applicable character consent"
+private_information_exposed = "secret or personal information leaves allowed audience"
+obligation_active = "promise, confidentiality boundary, or care duty"
+obligation_breached = "active narrative obligation is violated"
+policy_minimum_evidence_count = "hard lower bound on clues required before commit"
+minimum_evidence_present = "observed clues meet the hard policy lower bound"
+required_evidence_count = "number of clues or observations required by the action rule"
+observed_evidence_count = "number of required clues or observations present before action"
+conflicting_evidence = "pre-action observations contain a rule-defined contradiction"
+evidence_complete_and_consistent = "full clue requirement is met without contradiction"
+uncertainty = "deterministically derived evidence-coverage uncertainty"
+impact_vector = "synthetic institutional coordinates over narrative effects"
+hard_violations = "game policy oracle identifiers"
+
+[environments.organization]
+name = "organizational_agent"
+action_families = ["read_or_write_file", "spend_budget", "send_external_message", "deploy_or_delete"]
+stakeholder_types = ["requester", "employee", "customer", "organization", "external_party"]
+
+[environments.organization.mapping]
+authorized = "role, ACL, budget, deployment, or communication authority"
+approval_required = "workflow-mandated approval"
+approval_present = "valid manager, finance, security, legal, or change approval"
+persistent_change = "durable file, payment, message, access, or deployment effect"
+reversibility = "restore, refund, recall, revoke, or rollback feasibility"
+recovery_cost = "normalized operational, financial, and reputational recovery cost"
+stakeholder_count = "materially affected organizational parties"
+third_party_impact = "affected party outside actor/requester pair"
+consent_present = "applicable data or action consent"
+private_information_exposed = "classified information leaves allowed audience"
+obligation_active = "approval, contract, audit, retention, or incident duty"
+obligation_breached = "active organizational obligation is violated"
+policy_minimum_evidence_count = "hard lower bound on records required before commit"
+minimum_evidence_present = "observed records meet the hard policy lower bound"
+required_evidence_count = "number of tests, logs, tickets, or records required by workflow"
+observed_evidence_count = "number of required records present before action"
+conflicting_evidence = "pre-action operational evidence contains a rule-defined contradiction"
+evidence_complete_and_consistent = "full record requirement is met without contradiction"
+uncertainty = "deterministically derived evidence-coverage uncertainty"
+impact_vector = "synthetic institutional coordinates over organizational effects"
+hard_violations = "organization policy oracle identifiers"
+
+[input_contract.structured]
+allowed = [
+  "pre_transition_state",
+  "candidate_action",
+  "actor_values",
+  "applicable_policy",
+  "evaluator_profile",
+]
+forbidden = [
+  "physical_delta",
+  "event_record",
+  "impact_vector",
+  "reversibility",
+  "uncertainty",
+  "minimum_evidence_present",
+  "evidence_complete_and_consistent",
+  "hard_violations",
+  "oracle_reason_code",
+  "normative_decision",
+]
+exclusion_rule = "No post-transition, derived event-record, oracle-reason, or target field may appear in model input."
+
+[density_gates]
+minimum_no_hard_violation_fraction = 0.35
+minimum_evaluator_divergent_fraction = 0.25
+minimum_pair_flip_fraction_within_discretionary = 0.05
+target_profile_pairs = [
+  "harm_averse|efficiency_tolerant",
+  "procedure_preserving|autonomy_preserving",
+  "procedure_preserving|harm_averse",
+]
+maximum_single_predicate_signature_share = 0.10
+maximum_reason_pair_signature_share = 0.40
+minimum_weighted_score_flip_fraction = 0.20
+minimum_dimension_sign_coverage_fraction = 0.05
+minimum_uncertainty_divergent_family_fraction = 0.03
+minimum_action_families_in_divergent_cases = 4
+minimum_stakeholder_obligation_combinations = 4
+
+[evidence_generation]
+minimum_required_evidence_count = 1
+maximum_required_evidence_count = 8
+require_strict_minimum_gap_in_some_families = true
+
+[phase1_v2_exit_gates]
+maximum_affine_impact_r2 = 0.90
+maximum_depth_three_tree_impact_r2 = 0.90
+maximum_depth_three_direct_decision_accuracy = 0.90
+minimum_actor_value_physical_sensitivity = 0.25
+minimum_actor_value_intervention_source_change = 1.0
+minimum_factual_twin_intervention_source_change = 1.0
+minimum_policy_twin_intervention_source_change = 1.0
+minimum_factual_twin_physical_sensitivity = 1.0
+minimum_policy_twin_physical_invariance = 1.0
+minimum_next_state_delta_consistency = 1.0
+minimum_three_step_rollout_chain_consistency = 1.0
+maximum_natural_language_decimal_literals = 0
+maximum_natural_language_key_value_assignments = 0
+minimum_natural_language_mean_words = 75
+minimum_natural_language_vocabulary_size = 100
+minimum_unique_noncausal_surfaces = 100
+require_nonconstant_surface_classifier_scores = true
+require_full_prompt_audit = true
+require_structured_natural_language_information_equivalence = true
+maximum_variable_article_errors = 0
+require_ordinal_renderer_injective_cardinality = true
+maximum_row_order_feature_correlation = 0.20
+maximum_single_feature_unique_fraction = 0.10
+forbidden_model_input_paths = ["state.turn", "state.ticket"]

@@ -1,0 +1,115 @@
+{
+  "schema_version": "0.4",
+  "temporary_fixture_allowlist": [],
+  "oracle_boundary_cases": [
+    {
+      "case_id": "procedure_upper_band_exact",
+      "profile_id": "procedure_preserving",
+      "uniform_impact": 0.10,
+      "expected_decision": "allow",
+      "expected_score": 0.10
+    },
+    {
+      "case_id": "procedure_lower_band_exact",
+      "profile_id": "procedure_preserving",
+      "uniform_impact": -0.08,
+      "expected_decision": "reject",
+      "expected_score": -0.08
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "hard_violation_universal_reject",
+      "environment": "game",
+      "source": {
+        "state": {
+          "turn": 2, "actor": "Iris", "health_level": 1, "trust_level": 3,
+          "resource_stock": 3, "secrecy_level": 0, "threat_level": 1,
+          "fairness_balance": 1, "promise_debt": 2, "panic_level": 0,
+          "progress_level": 0, "choice_access": 1, "rollback_capacity": 0,
+          "actor_values": {"loyalty": 4, "caution": 0, "curiosity": 1, "duty": 4},
+          "authorized_actions": ["disclose", "intervene", "allocate_resource"],
+          "approval_present": true, "consent_present": false,
+          "observed_evidence_count": 4, "conflicting_evidence": false,
+          "stakeholder_count": 4, "third_party_present": true,
+          "obligation_active": true, "persistent_flags": [],
+          "surface_context": {"location": "clinic", "time": "dusk", "weather": "clear", "witness": "merchant"}
+        },
+        "action": {"family": "promise", "tactic": "override", "intensity": "moderate", "persistent": true, "target": "settlement"},
+        "policy": {
+          "policy_family": "care", "approval_required": false,
+          "policy_minimum_evidence_count": 0, "required_evidence_count": 4,
+          "prohibited_private_disclosure": false, "nonconsensual_harm_threshold": -0.45,
+          "conflict_blocking": false
+        }
+      },
+      "expected": {
+        "hard_violations": ["unauthorized_persistent_change"], "uncertainty": 0.0,
+        "decisions": {"procedure_preserving": "reject", "harm_averse": "reject", "autonomy_preserving": "reject", "efficiency_tolerant": "reject"},
+        "reasons": {"procedure_preserving": "hard_policy_violation", "harm_averse": "hard_policy_violation", "autonomy_preserving": "hard_policy_violation", "efficiency_tolerant": "hard_policy_violation"}
+      }
+    },
+    {
+      "case_id": "three_target_pairs_diverge",
+      "environment": "game",
+      "source": {
+        "state": {
+          "turn": 9, "actor": "Tao", "health_level": 2, "trust_level": 2,
+          "resource_stock": 1, "secrecy_level": 3, "threat_level": 2,
+          "fairness_balance": 2, "promise_debt": 4, "panic_level": 2,
+          "progress_level": 1, "choice_access": 2, "rollback_capacity": 2,
+          "actor_values": {"loyalty": 2, "caution": 4, "curiosity": 2, "duty": 4},
+          "authorized_actions": ["disclose", "intervene", "promise", "allocate_resource"],
+          "approval_present": true, "consent_present": true,
+          "observed_evidence_count": 3, "conflicting_evidence": false,
+          "stakeholder_count": 1, "third_party_present": false,
+          "obligation_active": true, "persistent_flags": [],
+          "surface_context": {"location": "orchard", "time": "dawn", "weather": "clear", "witness": "pilot"}
+        },
+        "action": {"family": "intervene", "tactic": "consult", "intensity": "low", "persistent": false, "target": "companion"},
+        "policy": {
+          "policy_family": "relationship", "approval_required": false,
+          "policy_minimum_evidence_count": 2, "required_evidence_count": 3,
+          "prohibited_private_disclosure": false, "nonconsensual_harm_threshold": -0.45,
+          "conflict_blocking": false
+        }
+      },
+      "expected": {
+        "hard_violations": [], "uncertainty": 0.0,
+        "decisions": {"procedure_preserving": "allow", "harm_averse": "reject", "autonomy_preserving": "reject", "efficiency_tolerant": "allow"},
+        "reasons": {"procedure_preserving": "weighted_score", "harm_averse": "veto:safety", "autonomy_preserving": "veto:autonomy", "efficiency_tolerant": "weighted_score"}
+      }
+    },
+    {
+      "case_id": "high_uncertainty_universal_escalation",
+      "environment": "game",
+      "source": {
+        "state": {
+          "turn": 0, "actor": "Mira", "health_level": 3, "trust_level": 4,
+          "resource_stock": 4, "secrecy_level": 0, "threat_level": 2,
+          "fairness_balance": 1, "promise_debt": 4, "panic_level": 0,
+          "progress_level": 1, "choice_access": 4, "rollback_capacity": 3,
+          "actor_values": {"loyalty": 0, "caution": 2, "curiosity": 3, "duty": 2},
+          "authorized_actions": ["disclose", "intervene", "promise", "allocate_resource"],
+          "approval_present": true, "consent_present": true,
+          "observed_evidence_count": 0, "conflicting_evidence": false,
+          "stakeholder_count": 2, "third_party_present": false,
+          "obligation_active": true, "persistent_flags": [],
+          "surface_context": {"location": "watchtower", "time": "dawn", "weather": "misty", "witness": "ranger"}
+        },
+        "action": {"family": "disclose", "tactic": "rush", "intensity": "high", "persistent": true, "target": "companion"},
+        "policy": {
+          "policy_family": "chapter", "approval_required": false,
+          "policy_minimum_evidence_count": 0, "required_evidence_count": 2,
+          "prohibited_private_disclosure": false, "nonconsensual_harm_threshold": -0.45,
+          "conflict_blocking": false
+        }
+      },
+      "expected": {
+        "hard_violations": [], "uncertainty": 0.8,
+        "decisions": {"procedure_preserving": "escalate", "harm_averse": "escalate", "autonomy_preserving": "escalate", "efficiency_tolerant": "escalate"},
+        "reasons": {"procedure_preserving": "uncertainty_band", "harm_averse": "uncertainty_band", "autonomy_preserving": "uncertainty_band", "efficiency_tolerant": "uncertainty_band"}
+      }
+    }
+  ]
+}

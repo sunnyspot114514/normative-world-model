@@ -1,0 +1,39 @@
+# Local Python environment and bytecode
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Secrets and local overrides
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Project-local caches and temporary files
+.cache/
+.tmp/
+
+# Data and experiment products stay local
+data/raw/**
+!data/raw/README.md
+data/generated/**
+!data/generated/README.md
+models/**
+!models/README.md
+runs/**
+!runs/README.md
+artifacts/**
+!artifacts/README.md
+
+# Common editor and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
