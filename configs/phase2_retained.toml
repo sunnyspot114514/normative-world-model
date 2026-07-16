@@ -1,0 +1,41 @@
+version = "1.0-retained"
+status = "frozen_before_phase2_retained_baseline"
+run_kind = "phase2_retained_discovery"
+source_data_dir = "data/generated/phase1_discovery_v3"
+source_artifact_dir = "artifacts/phase1_v3"
+output_data_dir = "data/generated/phase2_retained/arms"
+output_artifact_dir = "artifacts/phase2_retained"
+families_per_environment = 1000
+total_families = 2000
+smoke_overlap_families_per_environment = 300
+confirmation_status = "RESERVED_NOT_GENERATED"
+retained_discovery_is_independent_confirmation = false
+
+[source_hashes]
+phase1_provenance_manifest = "71884458cce25d58311ab982e062e1d490dc5505e613de002da426228bab1d3e"
+phase1_exit_report = "268fc0aca0cc134991238baa258ae5c2a0707796276b6da620d3c3436685195b"
+game_jsonl = "c0bc4e55e0a4fd1d016accc6583e9ffb97c79db1c97d3de329a792019ab3155d"
+organization_jsonl = "e459a38f5259981b1eec5ccf99e8699e9330e49127bd2df62902bfc3411b0f02"
+confirmation_reservation = "f26e5b70338e7a8ee45d5ec4329221de5cb4b199cab40dd547c3b9f4753c5d27"
+external_acceptance = "3374b05aa41b800e79af2b82f82e770f4cdd65c8440eff644202a155766d5949"
+phase1_source_lock = "d621a5ad7ce3c75881f8250126240d28fe0a2b70e56e6519e7460656f685ee23"
+
+[bootstrap]
+samples = 5000
+confidence_level = 0.95
+seed = 20260916
+effective_unit = "scenario_family"
+
+[exports]
+include_stored_rollout = true
+joint_views = ["joint_naive", "joint_consistency"]
+factorized_views = ["factorized_factual", "factorized_normative"]
+gzip_mtime = 0
+
+[governance]
+phase1_retained_required = true
+phase1_smoke_default_forbidden = true
+overwrite_existing_outputs = false
+confirmation_generation_authorized = false
+model_training_authorized = false
+h5_rollout_status = "UNIDENTIFIED"

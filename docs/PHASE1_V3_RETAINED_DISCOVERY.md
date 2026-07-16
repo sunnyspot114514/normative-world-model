@@ -91,3 +91,7 @@ ephemeral audit report SHA-256 was
   horizon information begins at `rollout[1]`.
 - The retained corpus now unlocks the frozen Phase-2 baseline computation, not
   confirmation generation or retained model claims.
+- All 300 externally reviewed smoke families per environment occur unchanged in
+  the retained corpus. Retained discovery is therefore a population extension,
+  not an independent replication; only confirmation can provide the locked
+  independent test.
