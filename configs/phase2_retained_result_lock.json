@@ -1,0 +1,46 @@
+{
+  "status": "PASS",
+  "run_kind": "phase2_retained_discovery_v2",
+  "git_head_before_execution": "b3010c91505a7fbadb8502a3166f49b4ec41f57c",
+  "family_count": 2000,
+  "environment_counts": {
+    "game": 1000,
+    "organization": 1000
+  },
+  "confirmation_status": "RESERVED_NOT_GENERATED",
+  "h5_rollout_status": "UNIDENTIFIED",
+  "model_training_authorized_by_phase2": false,
+  "phase2_v1_cross_environment_status": "INVALIDATED_BEFORE_MODEL_TRAINING",
+  "hashes": {
+    "artifacts/phase2_retained_v2/provenance_manifest.json": "691abf856e88a5e9e27f040e77c6c3df62ebd0472c582a0a3f5e7ff2fbf898b0",
+    "artifacts/phase2_retained_v2/static_baselines.json": "7ed0a743d1a1928ecea0beedf9b14874175834b8cd56df23a4831262b077ac29",
+    "artifacts/phase2_retained_v2/evaluation_harness.json": "0ba4303fab422cffb63f4a41b7cf6f9d933bb55084d054fa1a92a33dc73745ac",
+    "artifacts/phase2_retained_v2/arm_data_manifest.json": "9fcc03f58eee00e1b71f5fce27ac6548d2533ad653aa782eb12adf1055170b8f",
+    "artifacts/phase2_retained_v2/transfer_manifest.json": "a56bfade6708bf3f716c2ffcbd6f3abcd5ec620a3eeb0b93db09c36e6b9c415e",
+    "data/generated/phase2_retained_v2/arms/joint_examples.jsonl.gz": "bfe421a733d92c009c4e37a2326a6c0cf3eb05ba4a997ab90d549bfad3513660",
+    "data/generated/phase2_retained_v2/arms/factorized_factual.jsonl.gz": "8874b833ade61e0bb677947b381dffd1e8e1ade0a5cf968d0e1f1a91610ef4ec",
+    "data/generated/phase2_retained_v2/arms/factorized_normative.jsonl.gz": "9f348dbb352aa3b2e6f974fe571e3657513e544268eedccc00fced14ffca83b2"
+  },
+  "cross_environment_checks": {
+    "A->B:natural_language": {
+      "parse_complete": 1.0,
+      "event_field_f1_max": 0.6253590807532716,
+      "normative_pair_accuracy_max": 0.49930843706777317
+    },
+    "A->B:structured": {
+      "parse_complete": 1.0,
+      "event_field_f1_max": 0.5301627832748165,
+      "normative_pair_accuracy_max": 0.5034578146611342
+    },
+    "B->A:natural_language": {
+      "parse_complete": 1.0,
+      "event_field_f1_max": 0.6291931752458069,
+      "normative_pair_accuracy_max": 0.4385964912280702
+    },
+    "B->A:structured": {
+      "parse_complete": 1.0,
+      "event_field_f1_max": 0.5520532099479467,
+      "normative_pair_accuracy_max": 0.4385964912280702
+    }
+  }
+}

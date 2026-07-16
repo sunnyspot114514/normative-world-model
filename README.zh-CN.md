@@ -300,7 +300,7 @@ models/
 - [x] 匹配的 joint 多记录与 factorized 闭环探索性管线
 - [x] 对精确 v3 语料哈希的无条件外部接受
 - [x] retained Phase-1 语料
-- [ ] 冻结 Phase-2 baseline 表
+- [x] 冻结 Phase-2 retained-v2 baseline 表与模型臂导出
 - [ ] retained 本地小模型 pilot
 - [ ] 锁定 confirmation
 - [ ] 可选服务器规模实验

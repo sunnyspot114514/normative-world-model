@@ -48,6 +48,9 @@ This project does not attempt to train a universal human value system. Instead, 
   on WDDM oversubscription.
 - The retained Phase-1 corpus has been generated locally. The confirmation corpus, trained
   adapters/checkpoints, and retained training runs have not been generated.
+- The hash-locked Phase-2 retained-v2 baseline/export stage now passes over all 2,000 families.
+  Its value-free destination schema repair restores cross-environment Static parse coverage to
+  `1.0`; the superseded v1 cross-environment result remains preserved and invalidated.
 - Generated data, models, caches, secret nonces, and experiment artifacts are intentionally ignored by Git.
 
 ## Motivation
@@ -305,7 +308,7 @@ It does **not** yet provide:
 - [x] Matched joint multi-record and factorized closed-loop exploratory plumbing
 - [x] Unconditional external acceptance of the exact v3 corpus hashes
 - [x] Retained Phase-1 corpus
-- [ ] Frozen Phase-2 baseline table
+- [x] Frozen Phase-2 retained-v2 baseline table and model-arm exports
 - [ ] Retained local small-model pilot
 - [ ] Locked confirmation
 - [ ] Optional server-scale study
