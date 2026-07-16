@@ -1,0 +1,41 @@
+{
+  "status": "PASS",
+  "scope": "retained_discovery_schema_convergence_only",
+  "family_count": 2000,
+  "horizon_mode": "one_step",
+  "max_sequence_tokens": 3072,
+  "maximum_observed_total_tokens": 968,
+  "factorized_factual_evaluator_visibility_failure_count": 0,
+  "hashes": {
+    "artifacts/phase3_retained_schema_gate/arm_data_manifest.json": "518cbcbef3c1c6c6a155b508cc19f4b8c3d89ad36b0c7a0d7c72e1c6f94743db",
+    "artifacts/phase3_retained_schema_gate/token_length_audit.json": "52472c3d35e903b94ddef14d296c6c5654beb93e977f9ff8af1cf5cc050cea7a",
+    "data/generated/phase3_retained_schema_gate/arms/joint_one_step.jsonl.gz": "37d86044f7495261ce325062539826f21ce566cc126888551762dba84162fdca",
+    "data/generated/phase3_retained_schema_gate/arms/factorized_factual_one_step.jsonl.gz": "172c73578bdb684f21ef24e7a9f00e8d2a184c90fbf6b8e703985d30d379d5ac",
+    "data/generated/phase3_retained_schema_gate/arms/factorized_normative.jsonl.gz": "9f348dbb352aa3b2e6f974fe571e3657513e544268eedccc00fced14ffca83b2"
+  },
+  "selection": {
+    "development_bucket_counts": {
+      "game|autonomy_preserving": 2,
+      "game|efficiency_tolerant": 2,
+      "game|harm_averse": 2,
+      "game|procedure_preserving": 2,
+      "organization|autonomy_preserving": 2,
+      "organization|efficiency_tolerant": 2,
+      "organization|harm_averse": 2,
+      "organization|procedure_preserving": 2
+    },
+    "development_generation_count": 16,
+    "development_record_order_sha256": "2c9f24aa3bc8450f696b6623254dd9f7250a5ee378061f0d2c4ac17a33eaf06c",
+    "development_scenario_count": 16,
+    "training_pair_count": 64,
+    "training_pair_order_sha256": "3a382963209cabd42f8a1f0323e6c157d50b4e42ffed6ab8a84d31f0e5a1bcc5",
+    "training_pair_type_counts": {
+      "semantic_evaluator": 32,
+      "surface_sham": 32
+    },
+    "training_prompt_tokens_once": 74597,
+    "training_target_tokens_once": 35292,
+    "unique_training_scenario_count": 64
+  },
+  "confirmation_status": "RESERVED_NOT_GENERATED"
+}

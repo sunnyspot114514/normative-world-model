@@ -1,0 +1,80 @@
+version = "0.1-retained-schema-gate"
+status = "frozen_before_retained_schema_gate"
+run_kind = "phase3_retained_discovery_schema_gate"
+
+[model]
+model_id = "Qwen/Qwen3-1.7B-Base"
+revision = "ea980cb0a6c2ae4b936e82123acc929f1cec04c1"
+license = "Apache-2.0"
+trust_remote_code = false
+local_dir = "models/qwen3-1.7b-base-ea980cb0"
+
+[runtime]
+device = "cuda"
+dtype = "float16"
+attention_implementation = "sdpa"
+seed = 20260717
+max_sequence_tokens = 3072
+gradient_checkpointing = true
+max_peak_memory_fraction = 0.95
+
+[data]
+source_phase1_dir = "data/generated/phase1_discovery_v3"
+output_dir = "data/generated/phase3_retained_schema_gate/arms"
+horizon_mode = "one_step"
+arm_manifest = "artifacts/phase3_retained_schema_gate/arm_data_manifest.json"
+token_audit = "artifacts/phase3_retained_schema_gate/token_length_audit.json"
+dataset_lock = "configs/phase3_retained_schema_gate_dataset_lock.json"
+
+[source_hashes]
+phase1_game_jsonl = "c0bc4e55e0a4fd1d016accc6583e9ffb97c79db1c97d3de329a792019ab3155d"
+phase1_organization_jsonl = "e459a38f5259981b1eec5ccf99e8699e9330e49127bd2df62902bfc3411b0f02"
+phase1_provenance = "71884458cce25d58311ab982e062e1d490dc5505e613de002da426228bab1d3e"
+phase2_result_lock = "d5b04d5b91cc008861a0b08269498342381eaeabd46899ecc4b9e16d8d5af21d"
+phase2_provenance = "691abf856e88a5e9e27f040e77c6c3df62ebd0472c582a0a3f5e7ff2fbf898b0"
+model_snapshot_manifest = "54c4b1d47ad10f4b62f956f6be5780e6cb85d331fc488fe0382120173669939b"
+model_requirements = "014a50fb11bd52c972ff63649aa8c676e936b15d74084a38a9a99345504a325e"
+confirmation_reservation = "f26e5b70338e7a8ee45d5ec4329221de5cb4b199cab40dd547c3b9f4753c5d27"
+
+[lora]
+r = 8
+alpha = 16
+dropout = 0.0
+target_modules = [
+  "q_proj",
+  "k_proj",
+  "v_proj",
+  "o_proj",
+  "gate_proj",
+  "up_proj",
+  "down_proj",
+]
+
+[pilot]
+optimizer_steps = 64
+max_train_items = 64
+learning_rate = 0.0001
+consistency_proxy_lambda = 0.0
+generation_records = 16
+generation_max_new_tokens = 768
+teacher_forced_eval_items = 16
+output_dir = "runs/phase3_retained_schema_gate"
+report = "artifacts/phase3_retained_schema_gate/schema_gate_result.json"
+
+[gate]
+arm = "joint_naive"
+minimum_generation_attempts = 16
+minimum_strict_parse_rate = 0.25
+require_finite_training_loss = true
+require_resource_status_pass = true
+failure_action = "stop_before_retained_arm_comparison"
+
+[governance]
+scope = "retained_discovery_schema_convergence_only"
+authorizes_retained_schema_gate_training = true
+authorizes_retained_arm_comparison = false
+authorizes_confirmation = false
+confirmation_status = "RESERVED_NOT_GENERATED"
+consistency_objective_status = "NOT_APPLICABLE_JOINT_NAIVE_ONLY"
+h5_rollout_status = "UNIDENTIFIED"
+server_rental_authorized = false
