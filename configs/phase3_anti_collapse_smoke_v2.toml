@@ -1,0 +1,55 @@
+version = "2.0-single-variable-schedule-redesign"
+status = "frozen_before_phase3_anti_collapse_smoke_v2"
+run_kind = "phase3_retained_discovery_anti_collapse_smoke_v2"
+scope = "retained_discovery_engineering_only"
+
+[base_contract]
+comparison_config = "configs/phase3_retained_arm_comparison.toml"
+comparison_config_sha256 = "5898fa625b0289b827cb205c228c4a026cbc3564e2399c48640a396b422d2b88"
+selection_lock = "configs/phase3_retained_arm_selection_lock.json"
+selection_lock_sha256 = "b1ccaf4d9f062ea9c4ec2e67c14db3e6328ebc64dd120ca263737b4a3c159624"
+v1_input_lock = "configs/phase3_anti_collapse_smoke_lock.json"
+v1_input_lock_sha256 = "f975c7456b9ad3890f24cf2f5783641cc58b5dbe94da79196299d19148c64286"
+v1_result_lock = "configs/phase3_anti_collapse_smoke_result_lock.json"
+v1_result_lock_sha256 = "0a595b7be8d62a61a183bb4404af152c011adf4b5c5ba2c90e89a0519e865c27"
+v1_runner = "scripts/run-phase3-anti-collapse-smoke.py"
+v1_runner_sha256 = "8bec1f96a476625705c600ccf79ff5d77d20512d50d27bc751fe709e7e3f871b"
+
+[single_change]
+field = "optimization.smoke_optimizer_steps"
+v1_value = 256
+v2_value = 1024
+rationale = "match_the_already_frozen_formal_joint_arm_budget_after_v1_failed_to_separate_training_labels"
+
+[unchanged]
+training_pair_count = 128
+training_pair_order_sha256 = "fb545c19a920a0f8ecb81514a977c9b3ac14a3516357f1b59cbe6cb63057ad16"
+model_initialization_seed = 2026071705
+consistency_lambda = 0.0
+model = "Qwen/Qwen3-1.7B-Base"
+model_revision = "ea980cb0a6c2ae4b936e82123acc929f1cec04c1"
+architecture = "prompt_final_hidden_state_slot_heads"
+objective = "schema_native_macro_ce_bce_huber_scale"
+thresholds = "byte_identical_to_phase3_retained_arm_comparison.anti_collapse_smoke"
+
+[evaluation]
+seed = 2026071710
+records_per_bucket = 1
+records = 48
+balance_dimensions = ["environment", "input_condition", "decision", "profile"]
+exclude_schema_gate_development = true
+exclude_v1_smoke_development = true
+exclude_reserved_formal_development = true
+selection_lock = "configs/phase3_anti_collapse_smoke_v2_selection_lock.json"
+
+[governance]
+v1_status_remains = "BLOCKED"
+same_v1_evaluation_reused = false
+formal_arm_comparison_authorized_only_after_v2_pass = true
+formal_arm_comparison_started = false
+confirmation_generation_authorized = false
+confirmation_status = "RESERVED_NOT_GENERATED"
+practical_margins_changed = false
+h5_rollout_status = "UNIDENTIFIED"
+server_rental_authorized = false
+failure_action = "stop_before_formal_arm_comparison"

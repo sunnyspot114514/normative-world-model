@@ -1,0 +1,34 @@
+{
+  "base_config_sha256": "5898fa625b0289b827cb205c228c4a026cbc3564e2399c48640a396b422d2b88",
+  "base_selection_lock_sha256": "b1ccaf4d9f062ea9c4ec2e67c14db3e6328ebc64dd120ca263737b4a3c159624",
+  "checks": {
+    "base_selection_lock_pass": true,
+    "base_selection_lock_rebuilt_formal": true,
+    "base_selection_lock_rebuilt_v1": true,
+    "confirmation_absent": true,
+    "v2_has_48_balanced_records": true,
+    "v2_is_disjoint_from_all_prior_development": true,
+    "v2_scenarios_are_unique": true
+  },
+  "confirmation_status": "RESERVED_NOT_GENERATED",
+  "excluded": {
+    "reserved_formal": 96,
+    "schema_gate": 16,
+    "v1_smoke": 48
+  },
+  "joint_data_sha256": "37d86044f7495261ce325062539826f21ce566cc126888551762dba84162fdca",
+  "seed": 2026071710,
+  "selector_sha256": "07ee10a8ffa18a6ab34d041b4dbe158ff67ed5bf867f943b2d3cacff6782e971",
+  "status": "PASS",
+  "v2_config_sha256": "df19bd58ba1c7f85dd8dd7a73a5ac3f33702ce991d659e7f750a340fea07b945",
+  "v2_evaluation": {
+    "bucket_count": 48,
+    "bucket_counts_sha256": "c6e756d3cee47008f1b0204ccf288aa01bcbd9cd292db423c58ad406d47d4bd1",
+    "count": 48,
+    "maximum_bucket_count": 1,
+    "minimum_bucket_count": 1,
+    "order_sha256": "84a368bfc228fc5eecdc58d2aa3e187f9c09d199a00cbe8a0478c2c239fa13c6",
+    "unique_scenario_count": 48
+  },
+  "version": "2.0-disjoint-anti-collapse-selection"
+}
