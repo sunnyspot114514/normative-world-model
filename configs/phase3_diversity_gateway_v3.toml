@@ -1,5 +1,5 @@
-version = "3.0-diversity-confound-adjudication"
-status = "frozen_before_phase3_diversity_gateway_v3"
+version = "3.1-diversity-confound-adjudication-gate-repair"
+status = "frozen_before_phase3_diversity_gateway_v3_revision_1"
 run_kind = "phase3_retained_discovery_diversity_gateway_v3"
 scope = "retained_discovery_engineering_only"
 
@@ -71,22 +71,31 @@ gateway_and_fallback_disjoint = true
 selection_lock = "configs/phase3_diversity_gateway_v3_selection_lock.json"
 
 [gate]
-minimum_loss_window_improvement_fraction = 0.20
+fixed_training_probe_pairs = 32
+minimum_fixed_probe_loss_improvement_fraction = 0.20
 minimum_normative_accuracy = 0.40
+minimum_normative_recall_per_class = 0.20
 maximum_single_predicted_decision_share = 0.85
 impact_activity_absolute_threshold = 0.05
 minimum_rows_with_nonzero_impact_fraction = 0.50
 minimum_nonempty_physical_delta_fraction = 0.50
-minimum_event_mae_improvement_over_zero = 0.02
+minimum_event_mae_improvement_over_training_constant = 0.02
+minimum_physical_field_f1_improvement_over_training_constant = 0.02
+minimum_event_field_f1_improvement_over_training_constant = 0.02
 require_strict_schema_coverage = 1.0
 maximum_peak_memory_fraction = 0.95
 all_checks_are_blocking = true
-thresholds_match_original_anti_collapse_gate = true
+original_thresholds_weakened = false
+gate_strengthening_frozen_before_v3_outputs = true
+training_constant_conditioning = "environment_only"
+categorical_constant = "typed_mode_with_slot_inventory_order_tie_break"
+set_constant = "include_member_when_training_frequency_is_at_least_one_half"
+continuous_constant = "training_median"
 
 [additional_diagnostics]
 blocking = false
-report_normative_recall_per_class = true
-report_event_mae_against_training_slot_median = true
+report_online_first_last_loss_windows = true
+report_event_mae_against_zero = true
 report_active_categorical_slot_constant_fraction = true
 report_physical_and_event_field_macro_f1 = true
 report_train_and_evaluation_metrics_separately = true
@@ -98,8 +107,35 @@ threshold_reinterpretation_after_execution = false
 gateway_evaluation_may_select_hyperparameters = false
 formal_evaluation_remains_unopened = true
 
+[execution]
+runner = "scripts/run-phase3-diversity-gateway-v3.py"
+input_lock = "configs/phase3_diversity_gateway_v3_input_lock.json"
+result = "artifacts/phase3_diversity_gateway_v3/result.json"
+run_directory = "runs/phase3_diversity_gateway_v3"
+training_requires_clean_committed_bound_inputs = true
+result_is_preserved_for_pass_and_blocked_outcomes = true
+
+[training_only_headroom]
+script = "scripts/audit-phase3-training-headroom.py"
+split_seed = 2026071713
+holdout_fraction_per_environment = 0.20
+model = "extra_trees_regressor_400_estimators"
+development_or_confirmation_targets_visible = false
+role = "diagnostic_not_a_gateway_success_gate"
+observed_status = "partial_headroom"
+failure_interpretation = "v3_failure_blocks_this_model_path_but_is_not_attributed_to_architecture_alone"
+
+[formal_promotion_requirements]
+gateway_pass_is_necessary_not_sufficient = true
+reuse_exact_gateway_adapter_without_retraining = true
+require_adapter_and_head_sha256_binding = true
+require_exact_training_sequence_and_optimizer_semantics_certificate = true
+require_predicted_event_normative_oracle_redecode_diagnostic = true
+oracle_redecode_role = "required_claim_boundary_diagnostic_not_a_replacement_for_joint_pair_success"
+formal_runner_and_all_three_arm_mappings_must_be_frozen_before_formal_evaluation = true
+
 [fallback_v4]
-status = "reserved_not_authorized_until_v3_blocked"
+status = "design_sketch_only_not_an_authorized_fallback"
 evaluation_population = "fallback_reservation"
 training_pairs = 1024
 optimizer_steps = 1024
@@ -123,8 +159,8 @@ maximum_single_predicted_decision_share = 0.85
 minimum_event_mae_improvement_over_training_slot_median = 0.02
 minimum_event_mae_improvement_over_zero = 0.02
 require_strict_schema_coverage = 1.0
-failure_action = "record_local_small_model_path_as_engineering_null"
-pass_action = "authorize_a_new_hash_bound_three_arm_implementation_lock_using_v4_for_every_arm"
+failure_action = "record_v3_architecture_as_blocked_and_stop"
+pass_action = "none_until_a_separate_complete_v4_implementation_and_three_arm_mapping_are_frozen"
 mechanism_attribution = "not_claimed_because_v4_changes_representation_continuous_objective_and_normative_weighting_together"
 
 [governance]
@@ -137,3 +173,6 @@ practical_margins_changed = false
 h5_rollout_status = "UNIDENTIFIED"
 server_rental_authorized = false
 no_training_authorized_by_this_design_file_alone = true
+development_selection_is_cryptographically_blinded = false
+development_selection_is_reconstructible_from_local_data = true
+allowed_population_claim = "precommitted_unopened_not_blind"

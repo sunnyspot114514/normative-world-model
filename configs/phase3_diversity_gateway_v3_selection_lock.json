@@ -39,7 +39,7 @@
     "order_sha256": "64bc85b6d52174f4357c803e5ccf7fad269476a6af42e5e51a368a7550ef4a86",
     "unique_scenario_count": 1024
   },
-  "gateway_config_sha256": "eb223a9b3124b486b9dd4436614b350b6112d230e707069e68dbb0cd554a3156",
+  "gateway_config_sha256": "841e44ce0ae1282d368491ceaef3d71789b8b8f93d3b17a9b6119dc94496e238",
   "gateway_evaluation": {
     "bucket_count": 48,
     "bucket_counts_sha256": "c6e756d3cee47008f1b0204ccf288aa01bcbd9cd292db423c58ad406d47d4bd1",
@@ -58,5 +58,5 @@
   "selector_sha256": "07ee10a8ffa18a6ab34d041b4dbe158ff67ed5bf867f943b2d3cacff6782e971",
   "status": "PASS",
   "v2_selection_lock_sha256": "8510c241c1e071f9ca0966b152f60cce389d7373852bfe7bddbb646d015570a3",
-  "version": "3.0-diversity-gateway-selection-lock"
+  "version": "3.1-diversity-gateway-selection-lock"
 }

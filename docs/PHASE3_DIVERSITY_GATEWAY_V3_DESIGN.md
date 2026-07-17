@@ -1,8 +1,14 @@
 # Phase 3 diversity gateway v3 and predeclared representation fallback
 
-Status: **FROZEN DESIGN; NOT EXECUTED**. This document authorizes selection
+Status: **FROZEN DESIGN REVISION 1; NOT EXECUTED**. This document authorizes selection
 construction and implementation review only. Training requires a separately
 hash-bound runner and input lock.
+
+Revision 1 was frozen before any V3 training or evaluation. It repairs four
+internal-review findings in the original `bda99ec` design: incomparable online
+loss windows, a constant-baseline false-pass route, an overclaimed blind
+population, and premature V4/formal authorization. The earlier commit remains
+historical evidence and is not rewritten.
 
 ## Why a third engineering gate is justified
 
@@ -47,16 +53,35 @@ are not a paired causal estimate. V3 is an adequacy adjudication under the same
 balanced gate, not a claim that diversity alone explains an exact change in
 accuracy.
 
-All original anti-collapse thresholds remain blocking. Additional per-class
-recall, train-median MAE, constant-slot, and train/evaluation-gap diagnostics
-are reported but cannot change the V3 verdict. This preserves the original
-gate while making a misleading pass easier to recognize.
+The original online first/last loss comparison is diagnostic only because V3
+uses different examples at the beginning and end of its one pass. The blocking
+learning check instead measures the same first 32 training pairs before and
+after training, without gradients, and requires a 20% loss reduction.
 
-If V3 passes, its adapter may be promoted to the formal joint-naive arm only if
-the runner proves that model initialization, input order, optimizer semantics,
-objective, and output bytes are exactly the formal contract. No retraining or
-hyperparameter selection may use the V3 evaluation labels. The reserved formal
-96-record evaluation remains unopened until that proof passes.
+The held-out gate is strengthened before V3 outputs are observed. Every
+normative class must have recall at least 0.20. Factual predictions are compared
+with an environment-conditioned training-only constant: typed modes for
+categorical slots, majority membership for set slots, and medians for
+continuous slots. V3 must improve continuous event MAE, physical field F1, and
+event field F1 by at least 0.02 each. The former zero-event baseline remains a
+diagnostic because a constant median already beats it on the frozen training
+distribution.
+
+A training-only table-model positive control was run without accessing any
+development or confirmation target. Extra Trees reached holdout macro R2
+0.4196; a disclosed post-result HistGradientBoosting sensitivity reached
+0.7348, with several derived evidence/reversibility fields near 1.0 but
+autonomy below zero. This establishes partial, not universal, learnable
+headroom. It does not change the V3 gate. A V3 failure blocks this local model
+path but cannot be attributed to architecture alone.
+
+If V3 passes, it only becomes a candidate formal joint-naive artifact. Promotion
+requires hashes for the exact adapter and heads, a certificate covering model
+initialization, input order and optimizer semantics, and reuse without
+retraining. The formal runner must also provide an oracle re-decode diagnostic
+checking whether the learned normative decision agrees with applying the frozen
+N oracle to the predicted event record. All three formal arm mappings must be
+frozen before the formal 96-record population is opened.
 
 If V3 fails any blocking check, the present representation is stopped. More
 epochs, a different learning rate, or a new threshold on the V3 population are
@@ -64,8 +89,12 @@ not allowed.
 
 ## V4 fallback, frozen before V3 is observed
 
-The fallback is reserved now so that a V3 failure cannot drive population or
-architecture shopping. It is not authorized unless V3 is BLOCKED.
+The population is reserved now, but V4 is only a design sketch. It is not an
+authorized fallback and is not described as frozen implementation. A V3 failure
+records the current architecture as BLOCKED and stops. V4 cannot run or unlock
+a three-arm comparison until a separate contract freezes executable code,
+factorized factual/normative mappings, consistency losses, budgets, tests, and
+an input lock.
 
 The prompt receives a fixed suffix with three ordinary-text query markers.
 Physical, event, and normative heads consume the hidden state at their own
@@ -94,18 +123,18 @@ mean, cap at 2.0, and renormalize once more to exposure-weighted mean one. The
 counts come only from the frozen training labels; no evaluation labels are
 used. Other categorical and set losses remain unchanged.
 
-V4 uses 1,024 unique pairs once and a second, already reserved 48-record blind
+The sketch uses 1,024 unique pairs once and a second, already reserved 48-record
+precommitted but unopened
 development population. In addition to the original gate, every normative
 class must have recall at least 0.20 and continuous event MAE must beat the
 training-slot-median constant baseline by at least 0.02. A V4 failure terminates
 the local Qwen3-1.7B path as an engineering null; it does not authorize a fifth
 diagnostic population.
 
-V4 deliberately changes representation, continuous regression, and normative
+The V4 sketch deliberately changes representation, continuous regression, and normative
 class weighting together. It is an engineering rescue, so a pass cannot be
-attributed to any one of those changes. A pass authorizes a new hash-bound arm
-implementation contract in which all scientific arms use V4; mixing V3 and V4
-adapters in one comparison is forbidden.
+attributed to any one of those changes. It currently authorizes neither a run
+nor a three-arm comparison; mixing V3 and V4 adapters remains forbidden.
 
 ## Governance boundary
 
@@ -115,3 +144,5 @@ adapters in one comparison is forbidden.
 - H5 remains `UNIDENTIFIED`.
 - No server rental is authorized.
 - No practical margin or scientific success criterion changes here.
+- Development selections are reconstructible from local labeled data. They are
+  called precommitted and unopened, not cryptographically blind.

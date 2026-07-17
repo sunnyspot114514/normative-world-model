@@ -154,7 +154,7 @@ def build_lock() -> dict[str, Any]:
     if not all(checks.values()):
         raise RuntimeError(f"gateway selection checks failed: {checks}")
     return {
-        "version": "3.0-diversity-gateway-selection-lock",
+        "version": "3.1-diversity-gateway-selection-lock",
         "status": "PASS",
         "gateway_config_sha256": _sha256(CONFIG_PATH),
         "base_config_sha256": _sha256(BASE_CONFIG_PATH),

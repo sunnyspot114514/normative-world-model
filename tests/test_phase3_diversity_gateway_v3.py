@@ -26,6 +26,12 @@ class PhaseThreeDiversityGatewayV3Tests(unittest.TestCase):
                 / "configs/phase3_diversity_gateway_v3_selection_lock.json"
             ).read_text(encoding="utf-8")
         )
+        cls.input_lock = json.loads(
+            (
+                ROOT
+                / "configs/phase3_diversity_gateway_v3_input_lock.json"
+            ).read_text(encoding="utf-8")
+        )
 
     def test_historical_inputs_are_hash_bound_and_v2_remains_blocked(self) -> None:
         contract = self.gateway["base_contract"]
@@ -79,7 +85,7 @@ class PhaseThreeDiversityGatewayV3Tests(unittest.TestCase):
     def test_fallback_is_predeclared_but_not_authorized(self) -> None:
         fallback = self.gateway["fallback_v4"]
         self.assertEqual(
-            fallback["status"], "reserved_not_authorized_until_v3_blocked"
+            fallback["status"], "design_sketch_only_not_an_authorized_fallback"
         )
         self.assertEqual(fallback["minimum_normative_recall_per_class"], 0.20)
         self.assertEqual(
@@ -90,6 +96,40 @@ class PhaseThreeDiversityGatewayV3Tests(unittest.TestCase):
             self.gateway["governance"][
                 "no_training_authorized_by_this_design_file_alone"
             ]
+        )
+        self.assertEqual(
+            self.gateway["governance"]["allowed_population_claim"],
+            "precommitted_unopened_not_blind",
+        )
+
+    def test_repaired_gate_and_execution_inputs_are_frozen(self) -> None:
+        gate = self.gateway["gate"]
+        self.assertEqual(gate["fixed_training_probe_pairs"], 32)
+        self.assertEqual(gate["minimum_normative_recall_per_class"], 0.20)
+        self.assertEqual(
+            gate["minimum_event_mae_improvement_over_training_constant"],
+            0.02,
+        )
+        self.assertEqual(
+            gate[
+                "minimum_physical_field_f1_improvement_over_training_constant"
+            ],
+            0.02,
+        )
+        self.assertEqual(
+            self.input_lock["status"],
+            "FROZEN_BEFORE_GATEWAY_V3_REVISION_1",
+        )
+        local_only = set(
+            self.input_lock["locally_regenerated_or_ignored_paths"]
+        )
+        for relative, expected in self.input_lock["bound_hashes"].items():
+            path = ROOT / relative
+            if relative in local_only and not path.is_file():
+                continue
+            self.assertEqual(_sha256(path), expected)
+        self.assertFalse(
+            self.input_lock["governance"]["v4_automatic_fallback_authorized"]
         )
 
 

@@ -1,0 +1,57 @@
+{
+  "bound_hashes": {
+    "artifacts/phase3_internal/model_snapshot_manifest.json": "54c4b1d47ad10f4b62f956f6be5780e6cb85d331fc488fe0382120173669939b",
+    "artifacts/phase3_training_headroom.json": "e5a7b3a49d7e1ab0fbbab980351943e01c33796168ea9fb58a389d7570f65bfe",
+    "configs/phase3_anti_collapse_smoke_result_lock.json": "0a595b7be8d62a61a183bb4404af152c011adf4b5c5ba2c90e89a0519e865c27",
+    "configs/phase3_anti_collapse_smoke_v2.toml": "df19bd58ba1c7f85dd8dd7a73a5ac3f33702ce991d659e7f750a340fea07b945",
+    "configs/phase3_anti_collapse_smoke_v2_result_lock.json": "0ed940262e32b1e4eadebd3ac8af8755b53743631efee8c6feb9fe3c3010f9ca",
+    "configs/phase3_anti_collapse_smoke_v2_selection_lock.json": "8510c241c1e071f9ca0966b152f60cce389d7373852bfe7bddbb646d015570a3",
+    "configs/phase3_diversity_gateway_v3.toml": "841e44ce0ae1282d368491ceaef3d71789b8b8f93d3b17a9b6119dc94496e238",
+    "configs/phase3_diversity_gateway_v3_selection_lock.json": "31528001934784f5d45184790cf48675e664b8aceb99ceee4fd55da692ad8d42",
+    "configs/phase3_retained_arm_comparison.toml": "5898fa625b0289b827cb205c228c4a026cbc3564e2399c48640a396b422d2b88",
+    "configs/phase3_retained_arm_selection_lock.json": "b1ccaf4d9f062ea9c4ec2e67c14db3e6328ebc64dd120ca263737b4a3c159624",
+    "configs/phase3_slot_inventory.json": "a1f1677ca77a2557c4d796484b3b84a42e486c1d0811686143dca90c23718f9d",
+    "data/generated/phase1_discovery_v3/confirmation_reservation.json": "f26e5b70338e7a8ee45d5ec4329221de5cb4b199cab40dd547c3b9f4753c5d27",
+    "data/generated/phase3_retained_schema_gate/arms/joint_one_step.jsonl.gz": "37d86044f7495261ce325062539826f21ce566cc126888551762dba84162fdca",
+    "requirements-audit.txt": "9d790a87f155134acc0d102efa4b6af644565fabc1aabf96f84882fede486add",
+    "requirements-model.txt": "014a50fb11bd52c972ff63649aa8c676e936b15d74084a38a9a99345504a325e",
+    "scripts/audit-phase3-training-headroom.py": "0138a1fd2ef0d2d214f7e0205250a304edf2f3d6760802f5cc9d5ac4ef2f9358",
+    "scripts/build-phase3-diversity-gateway-v3-selection-lock.py": "2735826bc3c274032f39785c88f797b949bf2e4e2aac7b3bfc932b0ca640d60a",
+    "scripts/run-phase3-anti-collapse-smoke.py": "8bec1f96a476625705c600ccf79ff5d77d20512d50d27bc751fe709e7e3f871b",
+    "scripts/run-phase3-diversity-gateway-v3.py": "829697e38944bd80b13d9100497e0137470dbf16109f373e6b27b50e063750bc",
+    "src/normative_world_model/comparators.py": "f1c4f8d4dfc148939e4389997219d47ebf651d534804433da1e0775fd0f326c4",
+    "src/normative_world_model/local_pilot.py": "01f0c99224442cec5d51676b53376575dc88ad265d37047b45ab07fd5c93183f",
+    "src/normative_world_model/model_output.py": "c48f2b79e41aeaaa97dafd26bf2f86b34815485a079947be9b2c7d75c1efb4e2",
+    "src/normative_world_model/phase2_metrics.py": "dd3c8c7c8a1b18abd8291b271fb40a9ddb05d70438f608554cb5d0861a496d24",
+    "src/normative_world_model/phase3_comparison.py": "07ee10a8ffa18a6ab34d041b4dbe158ff67ed5bf867f943b2d3cacff6782e971",
+    "src/normative_world_model/phase3_gateway.py": "f794bcd6a15cb5ea9fa706faa2d4ffd268e2f45978dd2dcf77455f92bfc1a3fa",
+    "src/normative_world_model/phase3_schema_gate.py": "36ec912c5bdfe5eef1a8d5c978c0dea8e46c89bd8fc2aa56570cc4213f676883",
+    "src/normative_world_model/slot_objective.py": "66390a3a23f4aa63f9b6fe923ae6c5f708bbf599c1ceb1674480e34ff7d3e261"
+  },
+  "confirmation_status": "RESERVED_NOT_GENERATED",
+  "development_population_claim": "PRECOMMITTED_UNOPENED_NOT_CRYPTOGRAPHICALLY_BLIND",
+  "formal_arm_comparison_started": false,
+  "gateway_evaluation_order_sha256": "e62a5d12c6bcf0c8bb249d8f1844a7ff499960be7483aba962e5d814372da47f",
+  "governance": {
+    "blocked_result_is_preserved": true,
+    "formal_evaluation_may_not_be_opened_by_gateway": true,
+    "v1_status_remains": "BLOCKED",
+    "v2_status_remains": "BLOCKED",
+    "v4_automatic_fallback_authorized": false
+  },
+  "locally_regenerated_or_ignored_paths": [
+    "artifacts/phase3_internal/model_snapshot_manifest.json",
+    "artifacts/phase3_training_headroom.json",
+    "data/generated/phase1_discovery_v3/confirmation_reservation.json",
+    "data/generated/phase3_retained_schema_gate/arms/joint_one_step.jsonl.gz"
+  ],
+  "status": "FROZEN_BEFORE_GATEWAY_V3_REVISION_1",
+  "training": {
+    "consistency_lambda": 0.0,
+    "fixed_probe_pairs": 32,
+    "optimizer_steps": 1024,
+    "unique_pairs": 1024
+  },
+  "training_order_sha256": "64bc85b6d52174f4357c803e5ccf7fad269476a6af42e5e51a368a7550ef4a86",
+  "version": "3.1-gateway-v3-execution-input-lock"
+}
