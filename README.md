@@ -61,6 +61,10 @@ This project does not attempt to train a universal human value system. Instead, 
   event MAE was worse than the zero predictor. A single-change 1024-step v2 removed single-class
   collapse but also remained **BLOCKED** (0.2917 normative accuracy; event MAE 0.5163 versus
   zero-predictor 0.3534). The formal three-arm comparison was not started.
+- A repaired v3 diversity gateway then trained on 1,024 unique pairs once. It improved physical F1
+  and continuous event MAE but remained **BLOCKED**: normative accuracy was `0.3958`, escalate
+  recall `0.0625`, and event field F1 `0.4599` versus the training-constant baseline's `0.5192`.
+  Formal evaluation, V4, and confirmation remain unopened or unauthorized.
 - Generated data, models, caches, secret nonces, and experiment artifacts are intentionally ignored by Git.
 
 ## Motivation

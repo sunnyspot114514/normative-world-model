@@ -1,0 +1,32 @@
+{
+  "confirmation_status": "RESERVED_NOT_GENERATED",
+  "formal_arm_comparison_started": false,
+  "gate_checks": {
+    "decision_not_collapsed": true,
+    "deterministic_prefix_replay": true,
+    "event_f1_beats_training_constant": false,
+    "event_mae_beats_training_constant": false,
+    "fixed_probe_loss_improvement": true,
+    "impact_not_collapsed": true,
+    "normative_accuracy": false,
+    "normative_recall_per_class": false,
+    "physical_f1_beats_training_constant": true,
+    "physical_not_empty": true,
+    "resource_status": true,
+    "strict_schema_coverage": true
+  },
+  "git_head_before_execution": "bd1a383dc19e8af055259190ba9abc29f191e748",
+  "input_lock_sha256": "ea338b2b3a2ff8e7cc40829d0027b38fc1b695c0e4c6e6492c58f494ef0d4040",
+  "result_sha256": "d18a26757e9b910808e9d78eecefece7c2ab39fadcd6d3ea22a27c402dc6efd6",
+  "run_files": {
+    "runs/phase3_diversity_gateway_v3/adapter/README.md": "9110cba974692a3493d53b06a721a26608920859a8d23dc43f811cca55266448",
+    "runs/phase3_diversity_gateway_v3/adapter/adapter_config.json": "98d55c3d82f632eca93aa5e2085d214798a0b26e4c84c60047881fcdc0a2086d",
+    "runs/phase3_diversity_gateway_v3/adapter/adapter_model.safetensors": "7254d1e30f278c3f363e2dcc01fe1d0dd2544ebd0bfdd663d0b6518c546be3c0",
+    "runs/phase3_diversity_gateway_v3/slot_heads.safetensors": "03ea96fdf808f4403a225e0fcb373e06a33b38f23582082df1b37770fd848194"
+  },
+  "scientific_arm_comparison": false,
+  "status": "BLOCKED",
+  "v1_status_preserved": "BLOCKED",
+  "v2_status_preserved": "BLOCKED",
+  "version": "3.1-diversity-gateway-result-lock"
+}
