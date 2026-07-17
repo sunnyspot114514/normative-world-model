@@ -147,6 +147,11 @@ Exit criterion: results either clear the preregistered practical threshold or ar
 
 ## Phase 5 — short server scale study
 
+Status: **draft inference-only protocol started; no population selection,
+model download, rental, or execution authorized**. The draft is
+`docs/PHASE5_SCALE_INFERENCE_PROTOCOL_DRAFT.md` with a non-executable config
+at `configs/phase5_scale_inference_draft.toml`.
+
 Estimated compute: begin with an inference-only rental; authorize training only after reviewing that result.
 
 Questions:
@@ -200,7 +205,14 @@ These are not part of the minimum paper:
 
 ## Immediate next actions
 
-1. Preserve and independently verify the V4 `BLOCKED` result, exact adapter,
+The V4 preservation check is complete. A two-round Kimi K3/Codex model
+cross-review found no blocking defect, independently reproduced the raw-row
+metrics and hash chain, and recorded its disposition under
+`external_reviews/2026-07-18_phase3-v4_kimi-k3/`. This is not a human external
+audit. The first report's bound-input count is corrected to 26/26; the frozen
+result and its five failed checks are unchanged.
+
+1. Preserve the independently verified V4 `BLOCKED` result, exact adapter,
    role-query heads, training-transform contract, row predictions, and execution
    commit. Do not relax or reinterpret its five failed checks.
 2. Stop the local Qwen3-1.7B training path. Do not add epochs, tune learning
@@ -208,4 +220,7 @@ These are not part of the minimum paper:
 3. Treat the completed local sequence as an engineering null, not as a
    joint-consistency/factorized result or a claim about larger world models.
 4. Keep confirmation `RESERVED_NOT_GENERATED`, server rental stopped, and H5
-   `UNIDENTIFIED`. Any scale study requires a separate protocol and authority.
+   `UNIDENTIFIED`. The next permitted action is to draft a separate scale-study
+   protocol with full transitive execution locking and row-derived verification.
+   Drafting does not authorize model download, server rental, training, formal
+   evaluation, or confirmation generation.

@@ -1,0 +1,128 @@
+version = "0.1-scale-inference-draft"
+status = "DRAFT_NOT_FROZEN"
+run_kind = "phase5_matched_checkpoint_inference_exploratory"
+scope = "retained_discovery_scale_diagnostic_only"
+
+[authorization]
+protocol_drafting = true
+population_selection = false
+model_download = false
+server_rental = false
+performance_inference = false
+training = false
+formal_evaluation = false
+confirmation_generation = false
+maximum_spend_usd = 0
+
+[claim_boundary]
+primary_claim = "matched_checkpoint_family_difference_consistent_with_world_model_training"
+independent_confirmation = false
+causal_training_stage_attribution = false
+v4_rerun = false
+local_qwen3_1_7b_path_reopened = false
+agentworld_differs_from_base_by = ["CPT", "SFT", "RL"]
+
+[models.agentworld]
+model_id = "Qwen/Qwen-AgentWorld-35B-A3B"
+observed_revision_2026_07_18 = "60d2b0434a53d2e62a7c00a489586815d94ebffb"
+frozen_revision = ""
+declared_base_model = "Qwen/Qwen3.5-35B-A3B-Base"
+
+[models.base]
+model_id = "Qwen/Qwen3.5-35B-A3B-Base"
+observed_revision_2026_07_18 = "0f0813072d2358973511097385626f21fcb6d422"
+frozen_revision = ""
+
+[source]
+joint_examples = "data/generated/phase2_retained_v2/arms/joint_examples.jsonl.gz"
+joint_examples_sha256 = "bfe421a733d92c009c4e37a2326a6c0cf3eb05ba4a997ab90d549bfad3513660"
+split = "development"
+confirmation_status = "RESERVED_NOT_GENERATED"
+formal_population_opened = false
+
+[selection]
+status = "NOT_BUILT"
+seed = 2026071802
+scenario_families = 96
+discretionary_flip_families = 72
+hard_policy_invariant_families = 24
+environments = ["game", "organization"]
+profiles_per_family = 2
+input_conditions = ["structured", "natural_language"]
+surface_variants = ["canonical", "surface_sham"]
+presentations_per_family = 8
+serialization_modes = ["native_package", "common_base_serialization"]
+requests_per_checkpoint = 1536
+without_replacement = true
+exclude_all_prior_phase3_populations = true
+selection_failure_policy = "STOP_WITHOUT_RELAXATION"
+
+[runtime]
+engine = "vllm"
+engine_version = "UNFROZEN"
+container_digest = "UNFROZEN"
+native_endpoint = "/v1/chat/completions"
+common_serialization_endpoint = "/v1/completions"
+language_model_only = true
+reasoning_parser = "qwen3"
+native_agentworld_reasoning_enabled = true
+native_base_reasoning_enabled = false
+common_serialization_reasoning_enabled = false
+common_serialization_tokenizer = "base"
+common_serialization_rendered_client_side = true
+require_identical_common_serialized_token_ids = true
+store_recomputed_prompt_token_ids_per_row = true
+guided_final_json = true
+temperature = 0.0
+top_p = 1.0
+completions_per_request = 1
+request_seed = 2026071803
+maximum_model_length = 8192
+maximum_generated_tokens = 2048
+truncation_allowed = false
+same_container_and_hardware_for_both_checkpoints = true
+tensor_parallel_size = 0
+retryable_failures = ["transport_error", "server_5xx"]
+maximum_retries = 1
+retry_reuses_request_id_body_and_seed = true
+
+[metrics]
+aggregation_unit = "scenario_family"
+bootstrap_resamples = 10000
+physical_field_f1 = true
+event_field_f1 = true
+event_continuous_mae = true
+surface_sham_corrected_evaluator_leakage = true
+paired_factual_accuracy = true
+normative_accuracy = true
+normative_recall_per_class = true
+discretionary_flip_pair_accuracy = true
+hard_policy_invariant_pair_accuracy = true
+cost_and_latency = true
+summary_must_be_rederived_from_rows = true
+report_serialization_modes_separately = true
+primary_contrast_serialization_mode = "common_base_serialization"
+
+[margins]
+minimum_physical_f1_advantage = 0.05
+minimum_event_f1_advantage = 0.05
+minimum_event_mae_reduction = 0.03
+minimum_factual_advantages_required = 2
+require_directional_bootstrap_interval_excludes_zero = true
+maximum_agentworld_corrected_leakage = 0.05
+maximum_agentworld_leakage_increase_over_base = 0.03
+maximum_flip_pair_accuracy_degradation = 0.03
+minimum_normative_recall_per_class = 0.20
+minimum_scale_signal_f1_over_static = 0.05
+minimum_scale_signal_mae_over_static = 0.02
+
+[governance]
+full_project_local_execution_closure_must_be_hash_bound = true
+whole_repository_cleanliness_gate = true
+raw_rows_are_authoritative = true
+result_summary_must_be_independently_recomputed = true
+two_round_review_required_before_freeze = true
+phase4_confirmation_remains_unopened = true
+server_preflight_uses_synthetic_public_prompts_only = true
+remote_allowed_ignored_roots = ["models", ".cache", ".tmp", "runs", "artifacts"]
+allowed_ignored_roots_require_separate_hash_or_provenance_manifests = true

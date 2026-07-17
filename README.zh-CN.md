@@ -308,7 +308,10 @@ models/
 - [x] retained Phase-1 语料
 - [x] 冻结 Phase-2 retained-v2 baseline 表与模型臂导出
 - [x] retained one-step 严格 schema convergence gate
-- [ ] retained 本地小模型 pilot
+- [x] 完整保留四轮本地 Qwen3-1.7B 工程门槛的 `BLOCKED` 结果并终止该路径
+- [x] 完成 Kimi K3/Codex 对 V4 保存记录的两轮模型交叉审计
+- [x] 完成 Phase-5 匹配规模推理协议草案，尚未授权执行
+- [ ] retained 本地三臂模型比较（未启动；本地路径已终止）
 - [ ] 锁定 confirmation
 - [ ] 可选服务器规模实验
 - [ ] proposal/commit Runtime 评估
@@ -337,6 +340,8 @@ models/
 - [Phase-2 评测合同](docs/PHASE2_EVALUATION_CONTRACT.md)
 - [模型臂数据合同](docs/MODEL_ARM_DATA_CONTRACT.md)
 - [本地小模型 pilot 合同](docs/LOCAL_PILOT_CONTRACT.md)
+- [Phase-5 规模推理协议草案](docs/PHASE5_SCALE_INFERENCE_PROTOCOL_DRAFT.md)
+- [Phase-3 V4 模型交叉审计归档](external_reviews/2026-07-18_phase3-v4_kimi-k3/README.md)
 
 ## 许可证
 
