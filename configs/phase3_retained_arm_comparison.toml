@@ -1,0 +1,126 @@
+version = "1.0-schema-native-slot-heads"
+status = "frozen_before_phase3_anti_collapse_smoke"
+run_kind = "phase3_retained_discovery_one_step_arm_comparison"
+scope = "retained_discovery_only"
+
+[model]
+model_id = "Qwen/Qwen3-1.7B-Base"
+revision = "ea980cb0a6c2ae4b936e82123acc929f1cec04c1"
+local_dir = "models/qwen3-1.7b-base-ea980cb0"
+trust_remote_code = false
+dtype = "float16"
+attention_implementation = "sdpa"
+device = "cuda"
+
+[architecture]
+representation = "prompt_final_hidden_state_slot_heads"
+output_mode = "deterministic_json_from_slot_predictions"
+slot_inventory = "configs/phase3_slot_inventory.json"
+slot_inventory_sha256 = "a1f1677ca77a2557c4d796484b3b84a42e486c1d0811686143dca90c23718f9d"
+objective_implementation = "src/normative_world_model/slot_objective.py"
+objective_implementation_sha256 = "66390a3a23f4aa63f9b6fe923ae6c5f708bbf599c1ceb1674480e34ff7d3e261"
+joint_naive_and_consistency_heads_identical = true
+escalation_required_is_derived = true
+free_text_generation_is_primary = false
+
+[data]
+joint = "data/generated/phase3_retained_schema_gate/arms/joint_one_step.jsonl.gz"
+factorized_factual = "data/generated/phase3_retained_schema_gate/arms/factorized_factual_one_step.jsonl.gz"
+factorized_normative = "data/generated/phase3_retained_schema_gate/arms/factorized_normative.jsonl.gz"
+selection_lock = "configs/phase3_retained_arm_selection_lock.json"
+horizon_mode = "one_step"
+max_prompt_tokens = 1536
+
+[source_hashes]
+joint = "37d86044f7495261ce325062539826f21ce566cc126888551762dba84162fdca"
+factorized_factual = "172c73578bdb684f21ef24e7a9f00e8d2a184c90fbf6b8e703985d30d379d5ac"
+factorized_normative = "9f348dbb352aa3b2e6f974fe571e3657513e544268eedccc00fced14ffca83b2"
+model_snapshot_manifest = "54c4b1d47ad10f4b62f956f6be5780e6cb85d331fc488fe0382120173669939b"
+schema_gate_result_lock = "b9b10b26c8cc14f6488dcade284ed5c74501fe161ba7160be938ceece6bdace9"
+estimand_amendment = "0e4788464be46d0290dc3cbd851a037733028330225c00de4a9b440c5543666c"
+selector_implementation = "07ee10a8ffa18a6ab34d041b4dbe158ff67ed5bf867f943b2d3cacff6782e971"
+
+[selection]
+pair_seed = 2026071702
+smoke_evaluation_seed = 2026071703
+formal_evaluation_seed = 2026071704
+smoke_training_pairs = 128
+formal_training_pairs = 1024
+smoke_evaluation_records_per_bucket = 1
+formal_evaluation_records_per_bucket = 2
+exclude_schema_gate_development_families = true
+exclude_smoke_development_from_formal_development = true
+one_training_pair_per_scenario_family = true
+pair_balance_dimensions = ["pair_type", "environment", "input_condition", "profile_signature"]
+evaluation_balance_dimensions = ["environment", "input_condition", "decision", "profile"]
+
+[optimization]
+seed = 2026071705
+joint_optimizer_steps = 1024
+factorized_factual_optimizer_steps = 2048
+factorized_normative_optimizer_steps = 1024
+smoke_optimizer_steps = 256
+lora_learning_rate = 0.0001
+head_learning_rate = 0.001
+weight_decay = 0.01
+gradient_clip_norm = 1.0
+gradient_checkpointing = true
+deterministic_algorithms = true
+cudnn_benchmark = false
+batch_pairs = 1
+maximum_peak_memory_fraction = 0.95
+
+[lora]
+r = 8
+alpha = 16
+dropout = 0.0
+target_modules = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+
+[budget]
+primary_match = "scenario_presentation_and_supervised_slot_exposure"
+joint_records_per_pair = 2
+factorized_factual_exposures_per_pair = 2
+factorized_normative_records_per_pair = 2
+joint_naive_and_consistency_byte_identical_inputs = true
+factorized_factual_evaluator_visibility = "physically_absent"
+factorized_compute_is_reported_not_forced_equal = true
+required_compute_diagnostics = ["prompt_tokens", "optimizer_steps", "wall_clock_seconds", "peak_allocated_bytes", "trainable_parameters"]
+
+[lambda_selection]
+grid = [0.00, 0.05, 0.10, 0.25, 0.50]
+selection_population = "formal_development_only"
+rule = "largest_factual_consistency_improvement_among_configs_passing_all_frozen_anti_gaming_and_normative_gates"
+tie_breaker = "smallest_lambda"
+confirmation_may_select_lambda = false
+
+[anti_collapse_smoke]
+arm = "joint_naive"
+training_pairs = 128
+optimizer_steps = 256
+evaluation_records = 48
+minimum_loss_window_improvement_fraction = 0.20
+minimum_normative_accuracy = 0.40
+maximum_single_predicted_decision_share = 0.85
+impact_activity_absolute_threshold = 0.05
+minimum_rows_with_nonzero_impact_fraction = 0.50
+minimum_nonempty_physical_delta_fraction = 0.50
+minimum_event_mae_improvement_over_zero = 0.02
+require_strict_schema_coverage = 1.0
+failure_action = "stop_before_formal_arm_comparison"
+scientific_success_criterion = false
+
+[estimands]
+amendment = "configs/phase3_estimand_amendment.json"
+within_environment = "joint_pair_success"
+cross_environment = "event_normative_pair_success"
+cross_environment_physical = "required_separate_diagnostic"
+static_envelope_absolute_margin = 0.05
+
+[governance]
+practical_margins_changed = false
+confirmation_generation_authorized = false
+confirmation_status = "RESERVED_NOT_GENERATED"
+h5_rollout_status = "UNIDENTIFIED"
+server_rental_authorized = false
+formal_arm_comparison_authorized_only_after_smoke_pass = true
+retained_schema_gate_result_remains_historical = true

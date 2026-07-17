@@ -1,0 +1,31 @@
+{
+  "version": "3.1-transfer-estimand-amendment",
+  "status": "frozen_before_any_retained_scientific_model_comparison",
+  "trigger": "phase2_retained_v1_cross_environment_schema_conformance_failure",
+  "historical_inputs": {
+    "PREREGISTRATION.md": "2f883a60626034d98b129a68440be10816eee0d04d6747910c64dbfa0fbc19cc",
+    "configs/preregistration_v3.toml": "62532313df6a902db704e491907c616dd7f53d0ced3a21e18bcf68c657bc01de",
+    "configs/phase2_retained.toml": "82546d3ad85a312ec07c2464de90e02633b33d79bff19f6d377e9157e3b1bb82",
+    "docs/PHASE2_TRANSFER_SCHEMA_AMENDMENT.md": "2a73973caebe30ba5b95c60d7ba1a44eb6cf1f174f854f14825eff3d9827fcd1",
+    "data/generated/phase1_discovery_v3/confirmation_reservation.json": "f26e5b70338e7a8ee45d5ec4329221de5cb4b199cab40dd547c3b9f4753c5d27"
+  },
+  "cells": {
+    "A->A": "joint_pair_success",
+    "A->B": "event_normative_pair_success",
+    "B->B": "joint_pair_success",
+    "B->A": "event_normative_pair_success"
+  },
+  "cross_environment_physical_delta": "required_separate_diagnostic_not_in_shared_primary",
+  "static_envelope_absolute_margin": 0.05,
+  "require_paired_95_percent_lower_bound_nonnegative": true,
+  "practical_margins_changed": false,
+  "confirmation_population_changed": false,
+  "confirmation_status": "RESERVED_NOT_GENERATED",
+  "model_outputs_seen_before_freeze": false,
+  "governance": {
+    "supersedes_only_the_ambiguous_cross_environment_metric_name": true,
+    "historical_preregistration_remains_immutable": true,
+    "applies_to_retained_discovery_and_unopened_confirmation": true,
+    "authorizes_confirmation_generation": false
+  }
+}

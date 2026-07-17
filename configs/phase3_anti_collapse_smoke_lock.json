@@ -1,0 +1,70 @@
+{
+  "version": "1.0-schema-native-anti-collapse-smoke",
+  "status": "FROZEN_BEFORE_SMOKE",
+  "frozen_date": "2026-07-17",
+  "run_kind": "phase3_retained_discovery_anti_collapse_smoke",
+  "scientific_arm_comparison": false,
+  "bound_hashes": {
+    "configs/phase3_retained_arm_comparison.toml": "5898fa625b0289b827cb205c228c4a026cbc3564e2399c48640a396b422d2b88",
+    "configs/phase3_retained_arm_selection_lock.json": "b1ccaf4d9f062ea9c4ec2e67c14db3e6328ebc64dd120ca263737b4a3c159624",
+    "configs/phase3_slot_inventory.json": "a1f1677ca77a2557c4d796484b3b84a42e486c1d0811686143dca90c23718f9d",
+    "configs/phase3_estimand_amendment.json": "0e4788464be46d0290dc3cbd851a037733028330225c00de4a9b440c5543666c",
+    "docs/PHASE3_ANTI_COLLAPSE_SMOKE.md": "a00a8b46c0d290ee4236d871adcd160a7643805e3a632ebd66d9efc8626650af",
+    "docs/JOINT_CONSISTENCY_OBJECTIVE.md": "d0c211f254d745ff24a4b01c6157363fbbe49fc3e2d7ce93f5b82d334adfee1d",
+    "docs/PHASE3_ESTIMAND_AMENDMENT.md": "d8e8c97d4f6f3a4c2fa47718c59e2b47d477fab5eee31863d570ba3f76b86fec",
+    "scripts/run-phase3-anti-collapse-smoke.py": "8bec1f96a476625705c600ccf79ff5d77d20512d50d27bc751fe709e7e3f871b",
+    "src/normative_world_model/phase3_comparison.py": "07ee10a8ffa18a6ab34d041b4dbe158ff67ed5bf867f943b2d3cacff6782e971",
+    "src/normative_world_model/slot_objective.py": "66390a3a23f4aa63f9b6fe923ae6c5f708bbf599c1ceb1674480e34ff7d3e261",
+    "src/normative_world_model/result_lock.py": "281991cb73d7841d44d986560b30d27a99d3bb0e394dcc564395d6756807099f",
+    "src/normative_world_model/phase3_schema_gate.py": "36ec912c5bdfe5eef1a8d5c978c0dea8e46c89bd8fc2aa56570cc4213f676883",
+    "src/normative_world_model/local_pilot.py": "01f0c99224442cec5d51676b53376575dc88ad265d37047b45ab07fd5c93183f",
+    "src/normative_world_model/model_output.py": "c48f2b79e41aeaaa97dafd26bf2f86b34815485a079947be9b2c7d75c1efb4e2",
+    "src/normative_world_model/phase2_metrics.py": "dd3c8c7c8a1b18abd8291b271fb40a9ddb05d70438f608554cb5d0861a496d24",
+    "src/normative_world_model/phase2_dataset.py": "0f12d087678adf55cec4c759604dd9d907ae518899090baa5ac00b7cf0e87355",
+    "src/normative_world_model/metrics.py": "32d5231418fa835e616fc659c0bd7b0eecab5ecdc32f3a3784e4dd552f191970",
+    "src/normative_world_model/comparators.py": "f1c4f8d4dfc148939e4389997219d47ebf651d534804433da1e0775fd0f326c4",
+    "src/normative_world_model/contracts.py": "be01e462db8c839babc841d4e63fe333b0fdf6bd5f1a3835d265d0d95316445a",
+    "data/generated/phase3_retained_schema_gate/arms/joint_one_step.jsonl.gz": "37d86044f7495261ce325062539826f21ce566cc126888551762dba84162fdca",
+    "data/generated/phase3_retained_schema_gate/arms/factorized_factual_one_step.jsonl.gz": "172c73578bdb684f21ef24e7a9f00e8d2a184c90fbf6b8e703985d30d379d5ac",
+    "data/generated/phase3_retained_schema_gate/arms/factorized_normative.jsonl.gz": "9f348dbb352aa3b2e6f974fe571e3657513e544268eedccc00fced14ffca83b2",
+    "artifacts/phase3_internal/model_snapshot_manifest.json": "54c4b1d47ad10f4b62f956f6be5780e6cb85d331fc488fe0382120173669939b",
+    "requirements-model.txt": "014a50fb11bd52c972ff63649aa8c676e936b15d74084a38a9a99345504a325e",
+    "configs/phase3_retained_schema_gate_result_lock.json": "b9b10b26c8cc14f6488dcade284ed5c74501fe161ba7160be938ceece6bdace9",
+    "data/generated/phase1_discovery_v3/confirmation_reservation.json": "f26e5b70338e7a8ee45d5ec4329221de5cb4b199cab40dd547c3b9f4753c5d27"
+  },
+  "selection": {
+    "smoke_training_pairs": 128,
+    "smoke_training_order_sha256": "fb545c19a920a0f8ecb81514a977c9b3ac14a3516357f1b59cbe6cb63057ad16",
+    "smoke_evaluation_records": 48,
+    "smoke_evaluation_order_sha256": "2b6d7327cfec73931e43d76921186bcd709a7e18b4ccbe8cf4676054244ea161"
+  },
+  "execution": {
+    "model": "Qwen/Qwen3-1.7B-Base",
+    "model_revision": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+    "arm": "joint_naive",
+    "optimizer_steps": 256,
+    "consistency_lambda": 0.0,
+    "deterministic_algorithms": true,
+    "confirmation_read": false
+  },
+  "gate": {
+    "minimum_loss_window_improvement_fraction": 0.2,
+    "minimum_normative_accuracy": 0.4,
+    "maximum_single_predicted_decision_share": 0.85,
+    "impact_activity_absolute_threshold": 0.05,
+    "minimum_rows_with_nonzero_impact_fraction": 0.5,
+    "minimum_nonempty_physical_delta_fraction": 0.5,
+    "minimum_event_mae_improvement_over_zero": 0.02,
+    "require_strict_schema_coverage": 1.0,
+    "maximum_peak_memory_fraction": 0.95
+  },
+  "governance": {
+    "confirmation_status": "RESERVED_NOT_GENERATED",
+    "confirmation_generation_authorized": false,
+    "formal_arm_comparison_authorized_only_after_smoke_pass": true,
+    "practical_margins_changed": false,
+    "h5_rollout_status": "UNIDENTIFIED",
+    "server_rental_authorized": false,
+    "failure_action": "stop_before_formal_arm_comparison"
+  }
+}

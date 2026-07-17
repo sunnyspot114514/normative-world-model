@@ -1,0 +1,61 @@
+{
+  "checks": {
+    "confirmation_absent": true,
+    "schema_and_formal_development_disjoint": true,
+    "schema_and_smoke_development_disjoint": true,
+    "smoke_and_formal_development_disjoint": true,
+    "smoke_pairs_are_formal_prefix": true,
+    "training_and_formal_development_disjoint": true
+  },
+  "config_sha256": "5898fa625b0289b827cb205c228c4a026cbc3564e2399c48640a396b422d2b88",
+  "confirmation_status": "RESERVED_NOT_GENERATED",
+  "formal_evaluation": {
+    "bucket_count": 48,
+    "bucket_counts_sha256": "8109f7a682a95bac50a998f66878e0a96c9b39aec9031ec73c6386fc6d0a3d1d",
+    "count": 96,
+    "maximum_bucket_count": 2,
+    "minimum_bucket_count": 2,
+    "order_sha256": "c280a3e9947cbf91603031624ce4436404ae9c093e44d203c40f9147605584a7",
+    "unique_scenario_count": 96
+  },
+  "formal_training": {
+    "bucket_count": 28,
+    "bucket_counts_sha256": "84c404e8e6724093019a851d924bc660a14faade4bc4f2a4f8f6d516d7143856",
+    "count": 1024,
+    "maximum_bucket_count": 37,
+    "minimum_bucket_count": 36,
+    "order_sha256": "64bc85b6d52174f4357c803e5ccf7fad269476a6af42e5e51a368a7550ef4a86",
+    "unique_scenario_count": 1024
+  },
+  "joint_data_sha256": "37d86044f7495261ce325062539826f21ce566cc126888551762dba84162fdca",
+  "schema_gate_consumed_development": {
+    "count": 16,
+    "scenario_order_sha256": "290e3af70056903d2b2cb5b2d03eeab01f8c573723993a40747f10a69dbe22d5"
+  },
+  "seeds": {
+    "formal_evaluation": 2026071704,
+    "pair": 2026071702,
+    "smoke_evaluation": 2026071703
+  },
+  "selector_sha256": "07ee10a8ffa18a6ab34d041b4dbe158ff67ed5bf867f943b2d3cacff6782e971",
+  "smoke_evaluation": {
+    "bucket_count": 48,
+    "bucket_counts_sha256": "c6e756d3cee47008f1b0204ccf288aa01bcbd9cd292db423c58ad406d47d4bd1",
+    "count": 48,
+    "maximum_bucket_count": 1,
+    "minimum_bucket_count": 1,
+    "order_sha256": "2b6d7327cfec73931e43d76921186bcd709a7e18b4ccbe8cf4676054244ea161",
+    "unique_scenario_count": 48
+  },
+  "smoke_training": {
+    "bucket_count": 28,
+    "bucket_counts_sha256": "2fc9de4b515b2f6a9c02fe3fd1be0b69df15c90b7a60e78777471a8f99157a11",
+    "count": 128,
+    "maximum_bucket_count": 5,
+    "minimum_bucket_count": 4,
+    "order_sha256": "fb545c19a920a0f8ecb81514a977c9b3ac14a3516357f1b59cbe6cb63057ad16",
+    "unique_scenario_count": 128
+  },
+  "status": "PASS",
+  "version": "1.0-schema-native-selection-lock"
+}

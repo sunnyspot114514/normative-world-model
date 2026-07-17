@@ -46,8 +46,9 @@ This project does not attempt to train a universal human value system. Instead, 
   725-token joint LoRA optimizer smoke passes on the RTX 3060 at 66.7% peak allocated CUDA memory.
   A full-rollout target was separately retained as a failed resource diagnostic because it relied
   on WDDM oversubscription.
-- The retained Phase-1 corpus has been generated locally. The confirmation corpus, trained
-  adapters/checkpoints, and retained training runs have not been generated.
+- The retained Phase-1 corpus has been generated locally. The confirmation corpus and the
+  scientific three-arm comparison adapters/checkpoints have not been generated; the only retained
+  discovery adapter is the narrow schema-convergence gate described below.
 - The hash-locked Phase-2 retained-v2 baseline/export stage now passes over all 2,000 families.
   Its value-free destination schema repair restores cross-environment Static parse coverage to
   `1.0`; the superseded v1 cross-environment result remains preserved and invalidated.
@@ -127,6 +128,7 @@ scripts/
   export-phase2-arm-data.py         # Compressed smoke datasets for model arms
   build-v3-external-audit-bundle.py # Self-contained compressed v3 review bundle
   build-smoke-audit-bundle.py       # Compact external-audit bundle builder
+  verify-phase3-retained-schema-gate-result.py # Historical result/adapter/hash verifier
 
 tests/
   test_*.py                         # Contract, oracle, audit, metric, and lock tests

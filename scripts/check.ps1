@@ -8,12 +8,48 @@ if (-not (Test-Path -LiteralPath $VenvPython)) {
     throw "Missing .venv. Run .\scripts\setup.ps1 first."
 }
 
-& $VenvPython -m compileall -q (Join-Path $ProjectRoot "src")
-if ($LASTEXITCODE -ne 0) { throw "compileall failed with exit code $LASTEXITCODE" }
-& $VenvPython -m unittest discover -s (Join-Path $ProjectRoot "tests") -v
-if ($LASTEXITCODE -ne 0) { throw "unit tests failed with exit code $LASTEXITCODE" }
-& $VenvPython -m normative_world_model check-isolation
-if ($LASTEXITCODE -ne 0) { throw "isolation audit failed with exit code $LASTEXITCODE" }
+function Invoke-CheckedPython {
+    param(
+        [Parameter(Mandatory = $true)][string]$Description,
+        [Parameter(Mandatory = $true)][string[]]$Arguments
+    )
+
+    # Windows PowerShell 5.1 turns ordinary native stderr into a terminating
+    # NativeCommandError when ErrorActionPreference is Stop. unittest writes
+    # its normal progress and summary to stderr, so capture both streams while
+    # relying on the process exit code for pass/fail.
+    $PreviousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        $Output = & $VenvPython @Arguments 2>&1
+        $ExitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $PreviousErrorActionPreference
+    }
+    $Output | ForEach-Object {
+        $Text = if ($_ -is [System.Management.Automation.ErrorRecord]) {
+            $_.Exception.Message
+        }
+        else {
+            $_.ToString()
+        }
+        if ($Text) { Write-Host $Text }
+    }
+    if ($ExitCode -ne 0) {
+        throw "$Description failed with exit code $ExitCode"
+    }
+}
+
+Invoke-CheckedPython -Description "compileall" -Arguments @(
+    "-m", "compileall", "-q", (Join-Path $ProjectRoot "src")
+)
+Invoke-CheckedPython -Description "unit tests" -Arguments @(
+    "-m", "unittest", "discover", "-s", (Join-Path $ProjectRoot "tests"), "-v"
+)
+Invoke-CheckedPython -Description "isolation audit" -Arguments @(
+    "-m", "normative_world_model", "check-isolation"
+)
 
 $V3Manifest = Join-Path $ProjectRoot "artifacts\phase1_v3_smoke\provenance_manifest.json"
 if (Test-Path -LiteralPath $V3Manifest) {
@@ -27,4 +63,11 @@ if (Test-Path -LiteralPath $V3Manifest) {
     if ($LASTEXITCODE -ne 0) {
         throw "Phase-1 V3 lifecycle audit failed with exit code $LASTEXITCODE"
     }
+}
+
+$Phase3Result = Join-Path $ProjectRoot "artifacts\phase3_retained_schema_gate\schema_gate_result.json"
+if (Test-Path -LiteralPath $Phase3Result) {
+    Invoke-CheckedPython -Description "Phase-3 schema-gate result audit" -Arguments @(
+        (Join-Path $PSScriptRoot "verify-phase3-retained-schema-gate-result.py")
+    )
 }
