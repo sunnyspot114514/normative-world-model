@@ -1,0 +1,139 @@
+version = "3.0-diversity-confound-adjudication"
+status = "frozen_before_phase3_diversity_gateway_v3"
+run_kind = "phase3_retained_discovery_diversity_gateway_v3"
+scope = "retained_discovery_engineering_only"
+
+[base_contract]
+comparison_config = "configs/phase3_retained_arm_comparison.toml"
+comparison_config_sha256 = "5898fa625b0289b827cb205c228c4a026cbc3564e2399c48640a396b422d2b88"
+comparison_selection_lock = "configs/phase3_retained_arm_selection_lock.json"
+comparison_selection_lock_sha256 = "b1ccaf4d9f062ea9c4ec2e67c14db3e6328ebc64dd120ca263737b4a3c159624"
+v2_config = "configs/phase3_anti_collapse_smoke_v2.toml"
+v2_config_sha256 = "df19bd58ba1c7f85dd8dd7a73a5ac3f33702ce991d659e7f750a340fea07b945"
+v2_selection_lock = "configs/phase3_anti_collapse_smoke_v2_selection_lock.json"
+v2_selection_lock_sha256 = "8510c241c1e071f9ca0966b152f60cce389d7373852bfe7bddbb646d015570a3"
+v2_result_lock = "configs/phase3_anti_collapse_smoke_v2_result_lock.json"
+v2_result_lock_sha256 = "0ed940262e32b1e4eadebd3ac8af8755b53743631efee8c6feb9fe3c3010f9ca"
+
+[adjudicated_confound]
+v2_optimizer_steps = 1024
+v2_unique_training_pairs = 128
+v2_schedule = "formal_prefix_128_repeated_8_times"
+formal_optimizer_steps = 1024
+formal_unique_training_pairs = 1024
+formal_schedule = "formal_1024_unique_pairs_once"
+v2_reject_exposure_fraction = 0.57421875
+formal_reject_exposure_fraction = 0.5703125
+conclusion = "v2_matched_formal_steps_but_not_formal_training_diversity"
+
+[single_change_from_v2]
+field = "training.unique_pair_schedule"
+v2_value = "128_unique_pairs_x_8_epochs"
+v3_value = "1024_unique_pairs_x_1_epoch"
+rationale = "separate_training_population_diversity_from_optimizer_step_budget_before_changing_representation"
+scope = "sole_training_procedure_change; evaluation_population_is_new_only_to_prevent_reuse"
+
+[unchanged_from_v2]
+model = "Qwen/Qwen3-1.7B-Base"
+model_revision = "ea980cb0a6c2ae4b936e82123acc929f1cec04c1"
+model_initialization_seed = 2026071705
+architecture = "prompt_final_hidden_state_slot_heads"
+objective = "schema_native_macro_ce_bce_huber_scale"
+optimizer_steps = 1024
+consistency_lambda = 0.0
+lora_learning_rate = 0.0001
+head_learning_rate = 0.001
+weight_decay = 0.01
+gradient_clip_norm = 1.0
+batch_pairs = 1
+
+[training]
+pair_seed = 2026071702
+unique_pairs = 1024
+optimizer_steps = 1024
+epochs = 1
+sampling_with_replacement = false
+one_pair_per_scenario_family = true
+pair_order = "byte_identical_to_frozen_formal_training_selection"
+first_128_pairs = "byte_identical_to_v1_and_v2_training_prefix"
+
+[evaluation]
+gateway_seed = 2026071711
+fallback_reservation_seed = 2026071712
+records_per_bucket = 1
+records = 48
+balance_dimensions = ["environment", "input_condition", "decision", "profile"]
+exclude_schema_gate_development = true
+exclude_v1_smoke_development = true
+exclude_reserved_formal_development = true
+exclude_v2_smoke_development = true
+gateway_and_fallback_disjoint = true
+selection_lock = "configs/phase3_diversity_gateway_v3_selection_lock.json"
+
+[gate]
+minimum_loss_window_improvement_fraction = 0.20
+minimum_normative_accuracy = 0.40
+maximum_single_predicted_decision_share = 0.85
+impact_activity_absolute_threshold = 0.05
+minimum_rows_with_nonzero_impact_fraction = 0.50
+minimum_nonempty_physical_delta_fraction = 0.50
+minimum_event_mae_improvement_over_zero = 0.02
+require_strict_schema_coverage = 1.0
+maximum_peak_memory_fraction = 0.95
+all_checks_are_blocking = true
+thresholds_match_original_anti_collapse_gate = true
+
+[additional_diagnostics]
+blocking = false
+report_normative_recall_per_class = true
+report_event_mae_against_training_slot_median = true
+report_active_categorical_slot_constant_fraction = true
+report_physical_and_event_field_macro_f1 = true
+report_train_and_evaluation_metrics_separately = true
+
+[decision_rule]
+pass = "authorize_formal_joint_naive_evaluation_only_if_the_gateway_adapter_is_byte_promotable"
+fail = "authorize_only_the_predeclared_v4_representation_fallback"
+threshold_reinterpretation_after_execution = false
+gateway_evaluation_may_select_hyperparameters = false
+formal_evaluation_remains_unopened = true
+
+[fallback_v4]
+status = "reserved_not_authorized_until_v3_blocked"
+evaluation_population = "fallback_reservation"
+training_pairs = 1024
+optimizer_steps = 1024
+representation = "role_query_hidden_states_with_role_specific_mlp_trunks"
+query_suffix = "\n[PHYSICAL_TRANSITION_QUERY]\n[EVENT_RECORD_QUERY]\n[NORMATIVE_DECISION_QUERY]\n"
+query_hidden_location = "last_token_of_each_literal_query_marker"
+query_marker_validation = "each_marker_occurs_exactly_once_and_full_prompt_plus_suffix_is_at_most_1536_tokens"
+role_trunk = "layer_norm_2048_linear_2048x256_gelu_then_slot_heads"
+factual_queries_still_see_evaluator_values = true
+continuous_objective = "training_population_zscore_smooth_l1_without_variance_head"
+continuous_decode = "training_mean_plus_training_std_times_raw_then_clip_to_contract_range"
+continuous_statistics_source = "all_2048_presentations_in_the_frozen_1024_training_pairs_only"
+continuous_statistics = "population_mean_and_max_population_standard_deviation_ddof_zero_or_1e-6_per_slot"
+continuous_smooth_l1_beta_z_units = 0.25
+normative_class_weight = "raw_c=count_c_pow_minus_half; divide_by_exposure_weighted_mean_raw; upper_cap_two_then_renormalize_exposure_weighted_mean_to_one"
+categorical_and_set_objectives_other_than_normative = "unchanged"
+consistency_lambda = 0.0
+minimum_normative_accuracy = 0.40
+minimum_normative_recall_per_class = 0.20
+maximum_single_predicted_decision_share = 0.85
+minimum_event_mae_improvement_over_training_slot_median = 0.02
+minimum_event_mae_improvement_over_zero = 0.02
+require_strict_schema_coverage = 1.0
+failure_action = "record_local_small_model_path_as_engineering_null"
+pass_action = "authorize_a_new_hash_bound_three_arm_implementation_lock_using_v4_for_every_arm"
+mechanism_attribution = "not_claimed_because_v4_changes_representation_continuous_objective_and_normative_weighting_together"
+
+[governance]
+v1_status_remains = "BLOCKED"
+v2_status_remains = "BLOCKED"
+formal_arm_comparison_started = false
+confirmation_generation_authorized = false
+confirmation_status = "RESERVED_NOT_GENERATED"
+practical_margins_changed = false
+h5_rollout_status = "UNIDENTIFIED"
+server_rental_authorized = false
+no_training_authorized_by_this_design_file_alone = true

@@ -1,0 +1,62 @@
+{
+  "base_config_sha256": "5898fa625b0289b827cb205c228c4a026cbc3564e2399c48640a396b422d2b88",
+  "base_selection_lock_sha256": "b1ccaf4d9f062ea9c4ec2e67c14db3e6328ebc64dd120ca263737b4a3c159624",
+  "checks": {
+    "all_development_populations_are_scenario_disjoint": true,
+    "base_selection_lock_pass": true,
+    "confirmation_absent": true,
+    "fallback_has_one_record_in_each_of_48_buckets": true,
+    "first_128_training_pairs_replay_v1_and_v2_prefix": true,
+    "gateway_has_one_record_in_each_of_48_buckets": true,
+    "training_has_1024_unique_scenarios": true,
+    "training_is_disjoint_from_all_development_populations": true,
+    "training_is_frozen_formal_selection": true,
+    "v2_evaluation_rebuilds_its_frozen_binding": true,
+    "v2_selection_lock_pass": true
+  },
+  "confirmation_status": "RESERVED_NOT_GENERATED",
+  "excluded": {
+    "reserved_formal": 96,
+    "schema_gate": 16,
+    "v1_smoke": 48,
+    "v2_smoke": 48
+  },
+  "fallback_reservation": {
+    "bucket_count": 48,
+    "bucket_counts_sha256": "c6e756d3cee47008f1b0204ccf288aa01bcbd9cd292db423c58ad406d47d4bd1",
+    "count": 48,
+    "maximum_bucket_count": 1,
+    "minimum_bucket_count": 1,
+    "order_sha256": "0ee7e5d07c450de7cc221ce819dbf28672736891acc9f06c33df153f00c08ebd",
+    "unique_scenario_count": 48
+  },
+  "formal_training": {
+    "bucket_count": 28,
+    "bucket_counts_sha256": "84c404e8e6724093019a851d924bc660a14faade4bc4f2a4f8f6d516d7143856",
+    "count": 1024,
+    "maximum_bucket_count": 37,
+    "minimum_bucket_count": 36,
+    "order_sha256": "64bc85b6d52174f4357c803e5ccf7fad269476a6af42e5e51a368a7550ef4a86",
+    "unique_scenario_count": 1024
+  },
+  "gateway_config_sha256": "eb223a9b3124b486b9dd4436614b350b6112d230e707069e68dbb0cd554a3156",
+  "gateway_evaluation": {
+    "bucket_count": 48,
+    "bucket_counts_sha256": "c6e756d3cee47008f1b0204ccf288aa01bcbd9cd292db423c58ad406d47d4bd1",
+    "count": 48,
+    "maximum_bucket_count": 1,
+    "minimum_bucket_count": 1,
+    "order_sha256": "e62a5d12c6bcf0c8bb249d8f1844a7ff499960be7483aba962e5d814372da47f",
+    "unique_scenario_count": 48
+  },
+  "joint_data_sha256": "37d86044f7495261ce325062539826f21ce566cc126888551762dba84162fdca",
+  "seeds": {
+    "fallback_reservation": 2026071712,
+    "gateway": 2026071711,
+    "training": 2026071702
+  },
+  "selector_sha256": "07ee10a8ffa18a6ab34d041b4dbe158ff67ed5bf867f943b2d3cacff6782e971",
+  "status": "PASS",
+  "v2_selection_lock_sha256": "8510c241c1e071f9ca0966b152f60cce389d7373852bfe7bddbb646d015570a3",
+  "version": "3.0-diversity-gateway-selection-lock"
+}
