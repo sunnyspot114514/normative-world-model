@@ -1,0 +1,118 @@
+{
+  "base_config_sha256": "5898fa625b0289b827cb205c228c4a026cbc3564e2399c48640a396b422d2b88",
+  "base_selection_lock_sha256": "b1ccaf4d9f062ea9c4ec2e67c14db3e6328ebc64dd120ca263737b4a3c159624",
+  "checks": {
+    "all_normative_classes_have_positive_training_exposure": true,
+    "base_selection_lock_pass": true,
+    "continuous_statistics_cover_every_continuous_slot": true,
+    "continuous_statistics_use_all_2048_presentations": true,
+    "evaluation_has_one_record_in_each_of_48_buckets": true,
+    "evaluation_is_exact_v3_fallback_reservation": true,
+    "normative_weights_have_exposure_weighted_mean_one": true,
+    "training_and_evaluation_are_scenario_disjoint": true,
+    "training_has_1024_unique_scenarios": true,
+    "training_reuses_frozen_formal_selection": true,
+    "v3_selection_lock_pass": true
+  },
+  "confirmation_status": "RESERVED_NOT_GENERATED",
+  "continuous_statistics": {
+    "event_record.impact_vector.autonomy": {
+      "count": 2048,
+      "mean": -0.123046875,
+      "standard_deviation": 0.5675735546959834
+    },
+    "event_record.impact_vector.commitment": {
+      "count": 2048,
+      "mean": -0.0605468720703125,
+      "standard_deviation": 0.34949658519995574
+    },
+    "event_record.impact_vector.efficiency": {
+      "count": 2048,
+      "mean": 0.173828125,
+      "standard_deviation": 0.5772236163494043
+    },
+    "event_record.impact_vector.fairness": {
+      "count": 2048,
+      "mean": -0.110595703125,
+      "standard_deviation": 0.4765369220811089
+    },
+    "event_record.impact_vector.privacy": {
+      "count": 2048,
+      "mean": -0.0836588310546875,
+      "standard_deviation": 0.28876880107229425
+    },
+    "event_record.impact_vector.safety": {
+      "count": 2048,
+      "mean": 0.2373046875,
+      "standard_deviation": 0.5205681250235432
+    },
+    "event_record.impact_vector.trust": {
+      "count": 2048,
+      "mean": -0.1625,
+      "standard_deviation": 0.46233105022267323
+    },
+    "event_record.recovery_cost": {
+      "count": 2048,
+      "mean": 0.530273435546875,
+      "standard_deviation": 0.25707301860640286
+    },
+    "event_record.reversibility": {
+      "count": 2048,
+      "mean": 0.361816427734375,
+      "standard_deviation": 0.27456823153349397
+    },
+    "event_record.uncertainty": {
+      "count": 2048,
+      "mean": 0.1617968759765625,
+      "standard_deviation": 0.2332259252505138
+    }
+  },
+  "continuous_statistics_sha256": "cf023a7066559239342aacbcc9a4297ba9eb44fa612e7cbef962bade30a736c9",
+  "formal_arm_comparison_started": false,
+  "formal_training": {
+    "bucket_count": 28,
+    "bucket_counts_sha256": "84c404e8e6724093019a851d924bc660a14faade4bc4f2a4f8f6d516d7143856",
+    "count": 1024,
+    "maximum_bucket_count": 37,
+    "minimum_bucket_count": 36,
+    "order_sha256": "64bc85b6d52174f4357c803e5ccf7fad269476a6af42e5e51a368a7550ef4a86",
+    "unique_scenario_count": 1024
+  },
+  "joint_data_sha256": "37d86044f7495261ce325062539826f21ce566cc126888551762dba84162fdca",
+  "normative_class_weights": {
+    "counts": {
+      "allow": 488,
+      "escalate": 392,
+      "reject": 1168
+    },
+    "exponent": -0.5,
+    "exposure_weighted_mean": 1.0,
+    "pre_renormalization_cap": 2.0,
+    "weights": {
+      "allow": 1.218796003658602,
+      "escalate": 1.3598715846529892,
+      "reject": 0.7878064118412931
+    }
+  },
+  "normative_class_weights_sha256": "830e39cd1f7c284f22e6394d41fb95fc2e1b1bfea4e17a7982901151868838e7",
+  "seeds": {
+    "evaluation": 2026071712,
+    "training": 2026071702
+  },
+  "selector_sha256": "07ee10a8ffa18a6ab34d041b4dbe158ff67ed5bf867f943b2d3cacff6782e971",
+  "status": "PASS",
+  "v3_config_sha256": "841e44ce0ae1282d368491ceaef3d71789b8b8f93d3b17a9b6119dc94496e238",
+  "v3_selection_lock_sha256": "31528001934784f5d45184790cf48675e664b8aceb99ceee4fd55da692ad8d42",
+  "v4_config_sha256": "290f57fa5298bc9aa8e27671a16eed826b6a0a58b5eb8511526a40d6fafa7d83",
+  "v4_evaluation": {
+    "bucket_count": 48,
+    "bucket_counts_sha256": "c6e756d3cee47008f1b0204ccf288aa01bcbd9cd292db423c58ad406d47d4bd1",
+    "count": 48,
+    "maximum_bucket_count": 1,
+    "minimum_bucket_count": 1,
+    "order_sha256": "0ee7e5d07c450de7cc221ce819dbf28672736891acc9f06c33df153f00c08ebd",
+    "unique_scenario_count": 48
+  },
+  "v4_objective_sha256": "33d58bc6825a3aafb5abec0d4a75c0174d34d2ec0fd121b28dd52317cd4fde5a",
+  "version": "4.0-role-query-selection-lock"
+}

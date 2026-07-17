@@ -1,0 +1,68 @@
+{
+  "bound_hashes": {
+    "artifacts/phase3_diversity_gateway_v3/result.json": "d18a26757e9b910808e9d78eecefece7c2ab39fadcd6d3ea22a27c402dc6efd6",
+    "artifacts/phase3_internal/model_snapshot_manifest.json": "54c4b1d47ad10f4b62f956f6be5780e6cb85d331fc488fe0382120173669939b",
+    "configs/phase3_diversity_gateway_v3.toml": "841e44ce0ae1282d368491ceaef3d71789b8b8f93d3b17a9b6119dc94496e238",
+    "configs/phase3_diversity_gateway_v3_input_lock.json": "ea338b2b3a2ff8e7cc40829d0027b38fc1b695c0e4c6e6492c58f494ef0d4040",
+    "configs/phase3_diversity_gateway_v3_result_lock.json": "21b911286abf27b897ae5ab0c9d476b9702e5f9652478459bda08ec0a388c011",
+    "configs/phase3_diversity_gateway_v3_selection_lock.json": "31528001934784f5d45184790cf48675e664b8aceb99ceee4fd55da692ad8d42",
+    "configs/phase3_representation_gateway_v4.toml": "290f57fa5298bc9aa8e27671a16eed826b6a0a58b5eb8511526a40d6fafa7d83",
+    "configs/phase3_representation_gateway_v4_selection_lock.json": "0df787815cc2f16a4d77bc93515c6b934849b5d22369a3ee69f1cd9cf6e89903",
+    "configs/phase3_retained_arm_comparison.toml": "5898fa625b0289b827cb205c228c4a026cbc3564e2399c48640a396b422d2b88",
+    "configs/phase3_retained_arm_selection_lock.json": "b1ccaf4d9f062ea9c4ec2e67c14db3e6328ebc64dd120ca263737b4a3c159624",
+    "configs/phase3_slot_inventory.json": "a1f1677ca77a2557c4d796484b3b84a42e486c1d0811686143dca90c23718f9d",
+    "data/generated/phase1_discovery_v3/confirmation_reservation.json": "f26e5b70338e7a8ee45d5ec4329221de5cb4b199cab40dd547c3b9f4753c5d27",
+    "data/generated/phase3_retained_schema_gate/arms/joint_one_step.jsonl.gz": "37d86044f7495261ce325062539826f21ce566cc126888551762dba84162fdca",
+    "requirements-model.txt": "014a50fb11bd52c972ff63649aa8c676e936b15d74084a38a9a99345504a325e",
+    "scripts/build-phase3-representation-gateway-v4-selection-lock.py": "ba94ff45e6439733a1812083abb1fb1f28e901aa9d62a5a4b2584dc8609caf01",
+    "scripts/run-phase3-anti-collapse-smoke.py": "8bec1f96a476625705c600ccf79ff5d77d20512d50d27bc751fe709e7e3f871b",
+    "scripts/run-phase3-representation-gateway-v4.py": "2b6ab77d64a617b835c753c89522a1e752c8c4557ce44aa4607c7972cea00537",
+    "src/normative_world_model/gateway_v3_result_lock.py": "76ea753f543bef08ca3a8fea05c1ea09de5ad2ed5b53e9cee4dc8e7a4e61d599",
+    "src/normative_world_model/model_arms.py": "f66b76f25b29e0609b8b1fc687f45e1323174d6f5a681774057c2d73b53dbd4c",
+    "src/normative_world_model/model_output.py": "c48f2b79e41aeaaa97dafd26bf2f86b34815485a079947be9b2c7d75c1efb4e2",
+    "src/normative_world_model/phase2_metrics.py": "dd3c8c7c8a1b18abd8291b271fb40a9ddb05d70438f608554cb5d0861a496d24",
+    "src/normative_world_model/phase3_comparison.py": "07ee10a8ffa18a6ab34d041b4dbe158ff67ed5bf867f943b2d3cacff6782e971",
+    "src/normative_world_model/phase3_gateway.py": "f794bcd6a15cb5ea9fa706faa2d4ffd268e2f45978dd2dcf77455f92bfc1a3fa",
+    "src/normative_world_model/phase3_gateway_v4.py": "33d58bc6825a3aafb5abec0d4a75c0174d34d2ec0fd121b28dd52317cd4fde5a",
+    "src/normative_world_model/phase3_schema_gate.py": "36ec912c5bdfe5eef1a8d5c978c0dea8e46c89bd8fc2aa56570cc4213f676883",
+    "src/normative_world_model/slot_objective.py": "66390a3a23f4aa63f9b6fe923ae6c5f708bbf599c1ceb1674480e34ff7d3e261"
+  },
+  "confirmation_status": "RESERVED_NOT_GENERATED",
+  "continuous_statistics_sha256": "cf023a7066559239342aacbcc9a4297ba9eb44fa612e7cbef962bade30a736c9",
+  "evaluation_order_sha256": "0ee7e5d07c450de7cc221ce819dbf28672736891acc9f06c33df153f00c08ebd",
+  "formal_arm_comparison_started": false,
+  "governance": {
+    "confirmation_generation_authorized": false,
+    "formal_evaluation_may_not_be_opened_by_v4": true,
+    "no_fifth_diagnostic_population": true,
+    "pass_requires_a_separate_formal_runner_freeze": true,
+    "v3_status_remains": "BLOCKED"
+  },
+  "locally_regenerated_or_ignored_paths": [
+    "artifacts/phase3_diversity_gateway_v3/result.json",
+    "artifacts/phase3_internal/model_snapshot_manifest.json",
+    "data/generated/phase1_discovery_v3/confirmation_reservation.json",
+    "data/generated/phase3_retained_schema_gate/arms/joint_one_step.jsonl.gz"
+  ],
+  "marker_audit": {
+    "evaluation_presentation_count": 48,
+    "length_and_query_position_sha256": "06d3ac0aaeec6b10faa1b88a436a9f1a1911259389b8633e3259ef03d8a25845",
+    "maximum_prompt_plus_suffix_tokens": 692,
+    "minimum_prompt_plus_suffix_tokens": 572,
+    "presentation_count": 2096,
+    "reserved_marker_occurrences_in_source": 0,
+    "training_presentation_count": 2048,
+    "truncated_presentations": 0
+  },
+  "normative_class_weights_sha256": "830e39cd1f7c284f22e6394d41fb95fc2e1b1bfea4e17a7982901151868838e7",
+  "selection_lock_sha256": "0df787815cc2f16a4d77bc93515c6b934849b5d22369a3ee69f1cd9cf6e89903",
+  "status": "FROZEN_BEFORE_V4_EXECUTION",
+  "training": {
+    "consistency_lambda": 0.0,
+    "fixed_probe_pairs": 32,
+    "optimizer_steps": 1024,
+    "unique_pairs": 1024
+  },
+  "training_order_sha256": "64bc85b6d52174f4357c803e5ccf7fad269476a6af42e5e51a368a7550ef4a86",
+  "version": "4.0-role-query-execution-input-lock"
+}

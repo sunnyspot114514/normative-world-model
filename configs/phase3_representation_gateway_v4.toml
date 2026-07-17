@@ -1,0 +1,159 @@
+version = "4.0-role-query-engineering-gateway"
+status = "frozen_before_phase3_representation_gateway_v4"
+run_kind = "phase3_retained_discovery_representation_gateway_v4"
+scope = "retained_discovery_engineering_only"
+
+[base_contract]
+comparison_config = "configs/phase3_retained_arm_comparison.toml"
+comparison_config_sha256 = "5898fa625b0289b827cb205c228c4a026cbc3564e2399c48640a396b422d2b88"
+comparison_selection_lock = "configs/phase3_retained_arm_selection_lock.json"
+comparison_selection_lock_sha256 = "b1ccaf4d9f062ea9c4ec2e67c14db3e6328ebc64dd120ca263737b4a3c159624"
+v3_config = "configs/phase3_diversity_gateway_v3.toml"
+v3_config_sha256 = "841e44ce0ae1282d368491ceaef3d71789b8b8f93d3b17a9b6119dc94496e238"
+v3_selection_lock = "configs/phase3_diversity_gateway_v3_selection_lock.json"
+v3_selection_lock_sha256 = "31528001934784f5d45184790cf48675e664b8aceb99ceee4fd55da692ad8d42"
+v3_result_lock = "configs/phase3_diversity_gateway_v3_result_lock.json"
+v3_result_lock_sha256 = "21b911286abf27b897ae5ab0c9d476b9702e5f9652478459bda08ec0a388c011"
+
+[claim_boundary]
+purpose = "one_shot_engineering_adequacy_test_after_v3_blocked"
+scientific_arm_comparison = false
+mechanism_attribution = false
+changed_package = ["role_query_representation", "continuous_zscore_smooth_l1", "normative_class_weighting"]
+v3_thresholds_relaxed = false
+pass_does_not_establish_joint_consistency_or_factorized_advantage = true
+
+[model]
+model_id = "Qwen/Qwen3-1.7B-Base"
+revision = "ea980cb0a6c2ae4b936e82123acc929f1cec04c1"
+initialization_seed = 2026071705
+dtype = "float16"
+device = "cuda"
+
+[representation]
+implementation = "src/normative_world_model/phase3_gateway_v4.py"
+slot_inventory = "configs/phase3_slot_inventory.json"
+hidden_size = 2048
+role_trunk_width = 256
+role_trunk = "layer_norm_linear_gelu"
+physical_query_marker = "\n[PHYSICAL_TRANSITION_QUERY]"
+event_query_marker = "\n[EVENT_RECORD_QUERY]"
+normative_query_marker = "\n[NORMATIVE_DECISION_QUERY]"
+query_role_order = ["physical", "event", "normative"]
+query_location = "last_token_of_each_manually_tokenized_marker_segment"
+marker_source_occurrences_required = 0
+marker_suffix_occurrences_required = 1
+max_prompt_plus_suffix_tokens = 1536
+truncation_allowed = false
+factual_queries_see_evaluator_values = true
+continuous_head_width = 1
+continuous_variance_head = false
+
+[continuous_objective]
+statistics_source = "all_2048_presentations_from_frozen_1024_training_pairs_only"
+mean = "population_mean"
+standard_deviation = "population_standard_deviation_ddof_zero"
+standard_deviation_floor = 0.000001
+loss = "smooth_l1_on_zscore_target"
+smooth_l1_beta_z_units = 0.25
+decode = "training_mean_plus_training_standard_deviation_times_raw_prediction"
+clip_to_slot_contract_range = true
+
+[normative_weighting]
+source = "all_2048_training_presentations_only"
+raw_exponent = -0.5
+first_normalization = "divide_by_exposure_weighted_mean"
+pre_renormalization_cap = 2.0
+second_normalization = "divide_by_exposure_weighted_mean_after_cap"
+applies_only_to_normative_three_way_cross_entropy = true
+reduction = "per_example_weight_then_arithmetic_mean_without_batch_weight_renormalization"
+
+[training]
+pair_seed = 2026071702
+unique_pairs = 1024
+optimizer_steps = 1024
+epochs = 1
+sampling_with_replacement = false
+one_pair_per_scenario_family = true
+pair_order = "byte_identical_to_frozen_formal_training_selection"
+consistency_lambda = 0.0
+lora_learning_rate = 0.0001
+head_learning_rate = 0.001
+weight_decay = 0.01
+gradient_clip_norm = 1.0
+batch_pairs = 1
+
+[evaluation]
+seed = 2026071712
+population = "byte_identical_to_v3_fallback_reservation"
+records_per_bucket = 1
+records = 48
+balance_dimensions = ["environment", "input_condition", "decision", "profile"]
+exclude_all_prior_development_populations = true
+evaluation_may_not_select_hyperparameters = true
+no_fifth_diagnostic_population = true
+selection_lock = "configs/phase3_representation_gateway_v4_selection_lock.json"
+
+[gate]
+fixed_training_probe_pairs = 32
+minimum_fixed_probe_loss_improvement_fraction = 0.20
+minimum_normative_accuracy = 0.40
+minimum_normative_recall_per_class = 0.20
+maximum_single_predicted_decision_share = 0.85
+impact_activity_absolute_threshold = 0.05
+minimum_rows_with_nonzero_impact_fraction = 0.50
+minimum_nonempty_physical_delta_fraction = 0.50
+minimum_event_mae_improvement_over_training_constant = 0.02
+minimum_physical_field_f1_improvement_over_training_constant = 0.02
+minimum_event_field_f1_improvement_over_training_constant = 0.02
+require_strict_schema_coverage = 1.0
+maximum_peak_memory_fraction = 0.95
+all_checks_are_blocking = true
+training_constant_conditioning = "environment_only"
+thresholds_are_byte_equivalent_to_repaired_v3_gate = true
+
+[future_formal_mapping]
+status = "contract_only_not_authorized_for_execution"
+joint_naive = "joint_prompt_to_three_role_queries_with_consistency_lambda_zero"
+joint_consistency = "same_joint_mapping_with_factual_schema_consistency_loss"
+factorized_factual = "evaluator_absent_factual_prompt_to_physical_and_event_role_queries"
+factorized_normative = "predicted_event_record_plus_evaluator_profile_to_normative_role_query"
+factorized_prompt_implementation = "src/normative_world_model/model_arms.py"
+factorized_normative_prompt_function = "factorized_normative_input_text"
+factorized_policy_recompute_function = "recompute_factorized_policy_result"
+training_factorized_normative_context = "gold_event_record"
+evaluation_factorized_normative_context = "factorized_factual_prediction_plus_recomputed_policy_oracle"
+categorical_consistency = "symmetric_jensen_shannon"
+set_consistency = "mean_symmetric_bernoulli_jensen_shannon"
+continuous_consistency = "smooth_l1_between_raw_z_predictions_beta_0.25"
+formal_scenario_and_supervised_slot_exposure_budgets_remain_those_in_base_contract = true
+all_three_mappings_require_separate_hash_bound_runner_before_formal_population_opening = true
+mixing_v3_and_v4_adapters = false
+
+[decision_rule]
+pass = "preserve_candidate_artifact_and_authorize_only_a_separate_formal_runner_freeze"
+fail = "terminate_local_qwen3_1_7b_path_as_engineering_null"
+threshold_reinterpretation_after_execution = false
+additional_epochs_or_learning_rate_search_after_execution = false
+formal_evaluation_remains_unopened = true
+
+[execution]
+runner = "scripts/run-phase3-representation-gateway-v4.py"
+input_lock = "configs/phase3_representation_gateway_v4_input_lock.json"
+result = "artifacts/phase3_representation_gateway_v4/result.json"
+run_directory = "runs/phase3_representation_gateway_v4"
+training_requires_clean_committed_bound_inputs = true
+result_is_preserved_for_pass_and_blocked_outcomes = true
+
+[governance]
+v1_status_remains = "BLOCKED"
+v2_status_remains = "BLOCKED"
+v3_status_remains = "BLOCKED"
+formal_arm_comparison_started = false
+confirmation_generation_authorized = false
+confirmation_status = "RESERVED_NOT_GENERATED"
+practical_margins_changed = false
+h5_rollout_status = "UNIDENTIFIED"
+server_rental_authorized = false
+development_selection_is_cryptographically_blinded = false
+allowed_population_claim = "precommitted_unopened_not_blind"

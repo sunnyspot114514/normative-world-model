@@ -85,3 +85,18 @@ if (Test-Path -LiteralPath $AntiCollapseV2Result) {
         (Join-Path $PSScriptRoot "verify-phase3-anti-collapse-smoke-v2-result.py")
     )
 }
+
+$DiversityGatewayV3Result = Join-Path $ProjectRoot "artifacts\phase3_diversity_gateway_v3\result.json"
+if (Test-Path -LiteralPath $DiversityGatewayV3Result) {
+    Invoke-CheckedPython -Description "Phase-3 diversity-gateway V3 result audit" -Arguments @(
+        "-c",
+        "from pathlib import Path; from normative_world_model.gateway_v3_result_lock import verify_phase3_diversity_gateway_v3_result as v; f=v(Path.cwd()); print({'status':'PASS' if not f else 'FAIL','failures':f}); raise SystemExit(bool(f))"
+    )
+}
+
+$RepresentationGatewayV4Result = Join-Path $ProjectRoot "artifacts\phase3_representation_gateway_v4\result.json"
+if (Test-Path -LiteralPath $RepresentationGatewayV4Result) {
+    Invoke-CheckedPython -Description "Phase-3 representation-gateway V4 result audit" -Arguments @(
+        (Join-Path $PSScriptRoot "verify-phase3-representation-gateway-v4-result.py")
+    )
+}

@@ -112,8 +112,9 @@ Exit criterion: pair metrics distinguish “physical/event records invariant but
 
 ## Phase 3 — local small-model pilot
 
-Status: **both the 256-step smoke and the single-change 1024-step v2 are BLOCKED; formal three-arm
-comparison was not started; confirmation remains RESERVED_NOT_GENERATED**
+Status: **V1, V2, and full-diversity V3 are BLOCKED; the role-query V4 executable
+contract is frozen but not yet executed; formal three-arm comparison was not
+started; confirmation remains RESERVED_NOT_GENERATED**
 
 Estimated effort: 2–5 working days after the harness is stable.
 
@@ -199,17 +200,11 @@ These are not part of the minimum paper:
 
 ## Immediate next actions
 
-1. Preserve and independently verify the BLOCKED anti-collapse result, its exact adapter/head
-   files, input lock, row-level predictions, and execution commit. Do not relax its thresholds or
-   reclassify the run.
-2. Keep the old formal three-arm comparison stopped and confirmation `RESERVED_NOT_GENERATED`.
-3. Treat the final-hidden-state linear slot-head path at the frozen formal budget as an engineering
-   null: v2 removed constant-output collapse but failed normative accuracy and event MAE on a new,
-   scenario-disjoint population.
-4. Do not add steps or tune thresholds against either opened smoke population. Any future attempt
-   must change the representation/objective under a new protocol and new diagnostic data, rather
-   than being described as completion of this comparison.
-5. Keep the formal comparison and server rental stopped unless a separately reviewed redesign has
-   an engineering gate that passes before scientific arm evaluation.
-6. Keep H5 `UNIDENTIFIED`; do not run rollout or confirmation claims until the missing horizon is
-   supplied under a separately accepted protocol.
+1. Verify and commit the V4 config, implementation, deterministic selection lock,
+   marker/token audit, tests, and execution input lock before any optimizer step.
+2. Run the one-shot V4 gate only against its precommitted 48-record fallback
+   reservation; preserve PASS and BLOCKED outcomes identically.
+3. If V4 passes, freeze and review a separate three-arm runner before opening the
+   formal population. If V4 is BLOCKED, terminate the local Qwen3-1.7B path.
+4. Keep confirmation `RESERVED_NOT_GENERATED`, server rental stopped, and H5
+   `UNIDENTIFIED`; V4 itself authorizes none of them.
