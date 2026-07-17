@@ -58,7 +58,9 @@ This project does not attempt to train a universal human value system. Instead, 
   slot-level objective implementation, not a retained arm-quality claim.
 - The subsequent frozen schema-native anti-collapse smoke is preserved as **BLOCKED**: all 48
   balanced development records decoded as `reject`, normative accuracy was `0.3333`, and continuous
-  event MAE was worse than the zero predictor. The formal three-arm comparison was not started.
+  event MAE was worse than the zero predictor. A single-change 1024-step v2 removed single-class
+  collapse but also remained **BLOCKED** (0.2917 normative accuracy; event MAE 0.5163 versus
+  zero-predictor 0.3534). The formal three-arm comparison was not started.
 - Generated data, models, caches, secret nonces, and experiment artifacts are intentionally ignored by Git.
 
 ## Motivation
