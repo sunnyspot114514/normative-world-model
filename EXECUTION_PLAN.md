@@ -112,9 +112,8 @@ Exit criterion: pair metrics distinguish “physical/event records invariant but
 
 ## Phase 3 — local small-model pilot
 
-Status: **retained schema-convergence gate PASS; formal three-arm comparison remains blocked on
-the frozen slot-level objective, executable estimand amendment, matched-budget contract, and
-anti-collapse smoke**
+Status: **schema-native anti-collapse smoke BLOCKED; formal three-arm comparison was not started;
+confirmation remains RESERVED_NOT_GENERATED**
 
 Estimated effort: 2–5 working days after the harness is stable.
 
@@ -200,15 +199,17 @@ These are not part of the minimum paper:
 
 ## Immediate next actions
 
-1. Preserve the accepted v3 corpus, retained Phase-2 v2 result, and Phase-3 schema-gate evidence;
-   keep confirmation `RESERVED_NOT_GENERATED`.
-2. Freeze a versioned executable amendment that maps within-environment cells to
-   `joint_pair_success` and cross-environment cells to `event_normative_pair_success` without
-   rewriting the historical preregistration.
-3. Freeze the exact slot inventory, lambda grid, three-arm family/token budgets, initialization,
-   and factorized two-component accounting.
-4. Implement the declared categorical-JS and numeric-Huber slot objective and pass its unit tests.
-5. Run a small anti-collapse engineering smoke. Proceed to the retained one-step three-arm
-   comparison only if schema coverage, information, and normative-responsiveness checks pass.
+1. Preserve and independently verify the BLOCKED anti-collapse result, its exact adapter/head
+   files, input lock, row-level predictions, and execution commit. Do not relax its thresholds or
+   reclassify the run.
+2. Keep the old formal three-arm comparison stopped and confirmation `RESERVED_NOT_GENERATED`.
+3. Complete post-hoc failure diagnosis using training data and explicitly exploratory diagnostics;
+   do not tune against the 48 development records that decided this gate.
+4. Before any replacement smoke, write a versioned redesign amendment and allocate a new,
+   scenario-disjoint diagnostic population. Freeze any changed selection balance, representation,
+   objective weighting, or optimizer budget before opening that population.
+5. Proceed to a newly versioned formal comparison only if the replacement engineering gate passes;
+   otherwise record the small-model path as a null/engineering failure and stop before renting
+   compute.
 6. Keep H5 `UNIDENTIFIED`; do not run rollout or confirmation claims until the missing horizon is
    supplied under a separately accepted protocol.

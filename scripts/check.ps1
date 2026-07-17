@@ -71,3 +71,10 @@ if (Test-Path -LiteralPath $Phase3Result) {
         (Join-Path $PSScriptRoot "verify-phase3-retained-schema-gate-result.py")
     )
 }
+
+$AntiCollapseResult = Join-Path $ProjectRoot "artifacts\phase3_anti_collapse_smoke\result.json"
+if (Test-Path -LiteralPath $AntiCollapseResult) {
+    Invoke-CheckedPython -Description "Phase-3 anti-collapse smoke result audit" -Arguments @(
+        (Join-Path $PSScriptRoot "verify-phase3-anti-collapse-smoke-result.py")
+    )
+}

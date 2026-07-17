@@ -1,0 +1,61 @@
+{
+  "version": "1.0-schema-native-anti-collapse-smoke-result",
+  "status": "BLOCKED",
+  "run_kind": "phase3_retained_discovery_anti_collapse_smoke",
+  "scientific_arm_comparison": false,
+  "git_head_before_execution": "5dfc599b80ce65f59f01a45949306498f5948386",
+  "confirmation_status": "RESERVED_NOT_GENERATED",
+  "input_lock_sha256": "f975c7456b9ad3890f24cf2f5783641cc58b5dbe94da79196299d19148c64286",
+  "result_sha256": "adc776e6a0c8a0ea083da4ea24dd19da404a9435f165534da10c2129e507e22a",
+  "run_files": {
+    "runs/phase3_anti_collapse_smoke/adapter/README.md": "9110cba974692a3493d53b06a721a26608920859a8d23dc43f811cca55266448",
+    "runs/phase3_anti_collapse_smoke/adapter/adapter_config.json": "b762504c5b498d67f124478183ec0a76bd97b07c38849283be609cd4d19622fa",
+    "runs/phase3_anti_collapse_smoke/adapter/adapter_model.safetensors": "74cccc7b41d78a102b63cdb064e38a965d8f5eb567d6170a5a500f73b8476d72",
+    "runs/phase3_anti_collapse_smoke/slot_heads.safetensors": "2b34bea315aa00d37ab7c095b085c1b25ffba4848220641a7eab7a31da169cd6"
+  },
+  "training": {
+    "optimizer_steps": 256,
+    "unique_training_pairs": 128,
+    "loss_first_window_mean": 6.571615278720856,
+    "loss_last_window_mean": 2.820390734821558,
+    "loss_window_improvement_fraction": 0.5708222993585622,
+    "wall_clock_seconds": 407.4743986999383,
+    "peak_allocated_fraction": 0.31231815869786367
+  },
+  "evaluation": {
+    "records": 48,
+    "strict_schema_coverage": 1.0,
+    "normative_accuracy": 0.3333333333333333,
+    "predicted_decision_counts": {
+      "reject": 48
+    },
+    "maximum_predicted_decision_share": 1.0,
+    "rows_with_nonzero_impact_fraction": 1.0,
+    "nonempty_physical_delta_fraction": 1.0,
+    "event_continuous_mae": 0.3537171270833333,
+    "event_zero_predictor_mae": 0.34600693125000004,
+    "event_mae_improvement_over_zero": -0.0077101958333332665,
+    "mean_physical_field_f1": 0.2708333333333333,
+    "mean_event_field_f1": 0.4086538461538462,
+    "categorical_constant_slot_fraction": 0.8108108108108109
+  },
+  "gate_checks": {
+    "loss_window_improvement": true,
+    "normative_accuracy": false,
+    "decision_not_collapsed": false,
+    "impact_not_collapsed": true,
+    "physical_not_empty": true,
+    "event_mae_beats_zero": false,
+    "strict_schema_coverage": true,
+    "resource_status": true
+  },
+  "governance": {
+    "next_action": "stop_before_formal_arm_comparison",
+    "formal_arm_comparison_started": false,
+    "confirmation_generation_authorized": false,
+    "practical_margins_changed": false,
+    "h5_rollout_status": "UNIDENTIFIED",
+    "server_rental_authorized": false,
+    "same_evaluation_set_may_not_be_used_to_tune_and_repass": true
+  }
+}

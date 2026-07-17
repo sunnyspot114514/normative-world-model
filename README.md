@@ -47,14 +47,18 @@ This project does not attempt to train a universal human value system. Instead, 
   A full-rollout target was separately retained as a failed resource diagnostic because it relied
   on WDDM oversubscription.
 - The retained Phase-1 corpus has been generated locally. The confirmation corpus and the
-  scientific three-arm comparison adapters/checkpoints have not been generated; the only retained
-  discovery adapter is the narrow schema-convergence gate described below.
+  scientific three-arm comparison adapters/checkpoints have not been generated. The retained
+  discovery adapters are limited to the narrow schema gate and the BLOCKED engineering smoke
+  described below.
 - The hash-locked Phase-2 retained-v2 baseline/export stage now passes over all 2,000 families.
   Its value-free destination schema repair restores cross-environment Static parse coverage to
   `1.0`; the superseded v1 cross-environment result remains preserved and invalidated.
 - A frozen retained-discovery schema gate trained `joint_naive` for 64 local LoRA updates and
   achieved 16/16 strict parser successes on 16 unique balanced development families. This unlocks
   slot-level objective implementation, not a retained arm-quality claim.
+- The subsequent frozen schema-native anti-collapse smoke is preserved as **BLOCKED**: all 48
+  balanced development records decoded as `reject`, normative accuracy was `0.3333`, and continuous
+  event MAE was worse than the zero predictor. The formal three-arm comparison was not started.
 - Generated data, models, caches, secret nonces, and experiment artifacts are intentionally ignored by Git.
 
 ## Motivation
