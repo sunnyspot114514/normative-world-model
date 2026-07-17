@@ -1,0 +1,46 @@
+{
+  "files": [
+    {
+      "bytes": 3386,
+      "name": "AUDIT_REQUEST.md",
+      "sha256": "1559b12d5341413e6b8bd5060d5c440b9c68d2981acd2ddc912bd682a9174eb4"
+    },
+    {
+      "bytes": 3882,
+      "name": "CODEX_ROUND1_COUNTER_REVIEW.md",
+      "sha256": "3025a88d4d277b158af5503f2084962e8980c85552c885e676e05f4a3b8ea9a3"
+    },
+    {
+      "bytes": 4066,
+      "name": "FINAL_ADJUDICATION.md",
+      "sha256": "ec78c96c5b2515281a652465533d33426ca564c675f564d10e6090d723cf5ea5"
+    },
+    {
+      "bytes": 15109,
+      "name": "KIMI_K3_AUDIT_REPORT.md",
+      "sha256": "7472ec9444918231868dc54aa9ec55c524a21e367bb993945e814a9186135245"
+    },
+    {
+      "bytes": 7408,
+      "name": "KIMI_K3_ROUND2_REPORT.md",
+      "sha256": "0063f9e87948f631e6fc99d68b2a75e5d54615fa8ba9ccf61903f997eaa93fc8"
+    },
+    {
+      "bytes": 1277,
+      "name": "MODEL_CROSS_REVIEW_DISPOSITION.json",
+      "sha256": "4d2ed3a51608d89fd8764e60d8bdbf0882ee92c92a9887bd3bdaae5dd852e0aa"
+    },
+    {
+      "bytes": 1301,
+      "name": "README.md",
+      "sha256": "8c3015e81fe2f50b101681c75b53c1fddcbbd197316b665aecd3c619c05eed13"
+    },
+    {
+      "bytes": 1689,
+      "name": "ROUND2_AUDIT_REQUEST.md",
+      "sha256": "b01424cb24cd024727a5d58b5e60a06b15b5470a0a73ccc3b56a167d59a13f83"
+    }
+  ],
+  "manifest_scope": "all sibling review files except this manifest",
+  "review_date": "2026-07-18"
+}

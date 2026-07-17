@@ -1,0 +1,33 @@
+{
+  "audit_kind": "two_round_model_cross_review",
+  "audited_result_commit": "e9ef49c",
+  "blocking_findings": [],
+  "confirmation_status": "RESERVED_NOT_GENERATED",
+  "disposition": "ACCEPTED_WITH_NONBLOCKING_FINDINGS",
+  "formal_evaluation_opened": false,
+  "human_external_audit": false,
+  "local_model_path_status": "TERMINATED_ENGINEERING_NULL",
+  "model_reviewers": [
+    "kimi-code/k3",
+    "codex"
+  ],
+  "preserved_result_status": "BLOCKED",
+  "reports": {
+    "codex_round1_counter_review_sha256": "3025a88d4d277b158af5503f2084962e8980c85552c885e676e05f4a3b8ea9a3",
+    "k3_round1_sha256": "7472ec9444918231868dc54aa9ec55c524a21e367bb993945e814a9186135245",
+    "k3_round2_sha256": "0063f9e87948f631e6fc99d68b2a75e5d54615fa8ba9ccf61903f997eaa93fc8"
+  },
+  "required_future_hardening": [
+    "bind_full_project_local_executable_import_closure",
+    "rederive_evaluation_summary_from_raw_rows_in_verifier",
+    "derive_deterministic_training_contract_in_verifier"
+  ],
+  "review_date": "2026-07-18",
+  "round_verdicts": {
+    "codex_counter_review": "ACCEPT_WITH_CORRECTIONS",
+    "k3_round1": "PASS_WITH_FINDINGS",
+    "k3_round2": "CONCUR_WITH_CORRECTIONS"
+  },
+  "server_rental_authorized": false,
+  "v4_execution_head": "06022604045188774ab208d4cecb0a4a93d93750"
+}
