@@ -1,0 +1,35 @@
+{
+  "confirmation_status": "RESERVED_NOT_GENERATED",
+  "formal_arm_comparison_started": false,
+  "gate_checks": {
+    "decision_not_collapsed": true,
+    "deterministic_training_contract": true,
+    "event_f1_beats_training_constant": false,
+    "event_mae_beats_training_constant": false,
+    "fixed_probe_loss_improvement": false,
+    "impact_not_collapsed": true,
+    "normative_accuracy": true,
+    "normative_recall_per_class": false,
+    "physical_f1_beats_training_constant": false,
+    "physical_not_empty": true,
+    "resource_status": true,
+    "strict_schema_coverage": true
+  },
+  "git_head_before_execution": "06022604045188774ab208d4cecb0a4a93d93750",
+  "input_lock_sha256": "56ce02b4ee07355f81e2eff97b0bda71ffe671e8ca840030e8a2e7de922db677",
+  "result_sha256": "8471c46a636f28102afe78d0d7f5376c1e03f4abdcca8647ca98b4235b50aa68",
+  "run_files": {
+    "runs/phase3_representation_gateway_v4/adapter/README.md": "9110cba974692a3493d53b06a721a26608920859a8d23dc43f811cca55266448",
+    "runs/phase3_representation_gateway_v4/adapter/adapter_config.json": "06f5da54b4f53d33bcb8bbf079b1ed8cc864c66f40ca6860d1999056618fefd5",
+    "runs/phase3_representation_gateway_v4/adapter/adapter_model.safetensors": "0cc202561e53c577438f95774c152b6de4196ed134cf05cb8b400de43fc60a5c",
+    "runs/phase3_representation_gateway_v4/role_query_heads.safetensors": "3c19a5db4edc1afc961f768fb2291442b1a29290a02919fa5e460f9bed8bbd90",
+    "runs/phase3_representation_gateway_v4/training_contract.json": "3dff8daf81d77ab1466b13155859e71f7482d57d6b44675e61da0ad38d24b9c1"
+  },
+  "scientific_arm_comparison": false,
+  "status": "BLOCKED",
+  "v1_status_preserved": "BLOCKED",
+  "v2_status_preserved": "BLOCKED",
+  "v3_status_preserved": "BLOCKED",
+  "version": "4.0-role-query-gateway-result-lock"
+}
+

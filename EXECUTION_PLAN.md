@@ -112,9 +112,9 @@ Exit criterion: pair metrics distinguish “physical/event records invariant but
 
 ## Phase 3 — local small-model pilot
 
-Status: **V1, V2, and full-diversity V3 are BLOCKED; the role-query V4 executable
-contract is frozen but not yet executed; formal three-arm comparison was not
-started; confirmation remains RESERVED_NOT_GENERATED**
+Status: **V1, V2, full-diversity V3, and role-query V4 are BLOCKED; the local
+Qwen3-1.7B path is terminated; formal three-arm comparison was not started;
+confirmation remains RESERVED_NOT_GENERATED**
 
 Estimated effort: 2–5 working days after the harness is stable.
 
@@ -200,11 +200,12 @@ These are not part of the minimum paper:
 
 ## Immediate next actions
 
-1. Verify and commit the V4 config, implementation, deterministic selection lock,
-   marker/token audit, tests, and execution input lock before any optimizer step.
-2. Run the one-shot V4 gate only against its precommitted 48-record fallback
-   reservation; preserve PASS and BLOCKED outcomes identically.
-3. If V4 passes, freeze and review a separate three-arm runner before opening the
-   formal population. If V4 is BLOCKED, terminate the local Qwen3-1.7B path.
+1. Preserve and independently verify the V4 `BLOCKED` result, exact adapter,
+   role-query heads, training-transform contract, row predictions, and execution
+   commit. Do not relax or reinterpret its five failed checks.
+2. Stop the local Qwen3-1.7B training path. Do not add epochs, tune learning
+   rates, create a fifth diagnostic population, or open the reserved formal set.
+3. Treat the completed local sequence as an engineering null, not as a
+   joint-consistency/factorized result or a claim about larger world models.
 4. Keep confirmation `RESERVED_NOT_GENERATED`, server rental stopped, and H5
-   `UNIDENTIFIED`; V4 itself authorizes none of them.
+   `UNIDENTIFIED`. Any scale study requires a separate protocol and authority.

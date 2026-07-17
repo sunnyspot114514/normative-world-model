@@ -12,6 +12,16 @@ from normative_world_model.gateway_v4_result_lock import (
 
 
 class GatewayV4ResultLockTests(unittest.TestCase):
+    def test_preserved_local_result_verifies(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        if not (
+            root / "artifacts/phase3_representation_gateway_v4/result.json"
+        ).is_file():
+            self.skipTest("ignored local V4 gateway result is absent")
+        self.assertEqual(
+            verify_phase3_representation_gateway_v4_result(root), []
+        )
+
     def test_missing_result_is_not_silently_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             failures = verify_phase3_representation_gateway_v4_result(
