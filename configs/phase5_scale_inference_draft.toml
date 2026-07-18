@@ -1,5 +1,5 @@
-version = "0.1-scale-inference-draft"
-status = "DRAFT_NOT_FROZEN"
+version = "0.2-two-lock-draft"
+status = "DRAFT_TWO_LOCKS_DEFINED_NOT_FROZEN"
 run_kind = "phase5_matched_checkpoint_inference_exploratory"
 scope = "retained_discovery_scale_diagnostic_only"
 
@@ -8,11 +8,16 @@ protocol_drafting = true
 population_selection = false
 model_download = false
 server_rental = false
+synthetic_preflight_lock_accepted = false
+synthetic_preflight_rental = false
+scientific_execution_lock_accepted = false
+scientific_run = false
 performance_inference = false
 training = false
 formal_evaluation = false
 confirmation_generation = false
-maximum_spend_usd = 0
+synthetic_preflight_maximum_spend_usd = 0
+scientific_run_maximum_spend_usd = 0
 
 [claim_boundary]
 primary_claim = "matched_checkpoint_family_difference_consistent_with_world_model_training"
@@ -21,6 +26,10 @@ causal_training_stage_attribution = false
 v4_rerun = false
 local_qwen3_1_7b_path_reopened = false
 agentworld_differs_from_base_by = ["CPT", "SFT", "RL"]
+agentworld_synthetic_preflight_status = "PASS_INFRASTRUCTURE_ONLY"
+base_serving_preflight_passed = false
+common_serialization_full_population_proved = false
+scientific_comparison_authorized = false
 
 [models.agentworld]
 model_id = "Qwen/Qwen-AgentWorld-35B-A3B"
@@ -39,9 +48,13 @@ joint_examples_sha256 = "bfe421a733d92c009c4e37a2326a6c0cf3eb05ba4a997ab90d549bf
 split = "development"
 confirmation_status = "RESERVED_NOT_GENERATED"
 formal_population_opened = false
+publisher_source_manifest_status = "NOT_BUILT"
+publisher_hashes_must_be_bound_before_weight_download = true
+mirror_bytes_must_match_publisher_hashes = true
 
 [selection]
 status = "NOT_BUILT"
+population_derivation_status = "NOT_STARTED"
 seed = 2026071802
 scenario_families = 96
 discretionary_flip_families = 72
@@ -59,11 +72,19 @@ selection_failure_policy = "STOP_WITHOUT_RELAXATION"
 
 [runtime]
 engine = "vllm"
-engine_version = "UNFROZEN"
-container_digest = "UNFROZEN"
+agentworld_observed_engine_version = "0.25.1"
+engine_version_lock_stage = "LOCK_A"
+container_identity_status = "PENDING_LOCK_A"
+container_digest = ""
+provider_image_snapshot_id = ""
+environment_manifest_required = true
+python_version_observed = "3.12.3"
+pytorch_version_observed = "2.11.0+cu130"
 native_endpoint = "/v1/chat/completions"
 common_serialization_endpoint = "/v1/completions"
-language_model_only = true
+language_model_only_agentworld = true
+language_model_only_base_candidate = true
+language_model_only_base_candidate_status = "PENDING_BASE_PREFLIGHT"
 reasoning_parser = "qwen3"
 native_agentworld_reasoning_enabled = true
 native_base_reasoning_enabled = false
@@ -81,10 +102,91 @@ maximum_model_length = 8192
 maximum_generated_tokens = 2048
 truncation_allowed = false
 same_container_and_hardware_for_both_checkpoints = true
-tensor_parallel_size = 0
+tensor_parallel_size = 1
+dtype = "bfloat16"
+quantization = "none"
+enforce_eager = true
+moe_backend = "triton"
+gpu_memory_utilization = 0.90
+interface_preflight_max_num_seqs = 1
+throughput_concurrency_candidates = [1, 8, 16, 32]
+science_max_num_seqs_status = "PENDING_LOCK_B_SELECTION_RULE"
+flashinfer_sampler_enabled = false
+vllm_use_flashinfer_sampler = "0"
+omp_num_threads = 1
 retryable_failures = ["transport_error", "server_5xx"]
 maximum_retries = 1
 retry_reuses_request_id_body_and_seed = true
+
+[runtime_exception_policy]
+common_by_default = true
+load_path_only_exception_requires_architecture_evidence = true
+kernel_or_precision_exception_requires_synthetic_neutrality = true
+decoding_length_seed_retry_exceptions_allowed = false
+prefer_common_harmless_setting = true
+unresolved_token_affecting_difference_policy = "TECHNICALLY_BLOCKED"
+every_surviving_exception_enters_claim_boundary = true
+
+[serialization_proof]
+cpu_proof_before_rental = true
+cpu_proof_uses_official_tokenizer_files = true
+cpu_probe_set_required_before_population_derivation = true
+all_locked_common_prompts_required_after_population_derivation = true
+served_snapshot_reproof_required_for_lock_b = true
+any_token_id_mismatch_policy = "STOP_COMMON_MODE"
+
+[synthetic_preflight_remote_payload]
+allowlist_required = true
+project_scenario_files_allowed = false
+selected_prompt_text_allowed = false
+scientific_request_bodies_allowed = false
+undeclared_file_policy = "FAIL_CLOSED"
+
+[throughput_smoke]
+status = "NOT_BUILT"
+synthetic_public_prompts_only = true
+checkpoints = ["agentworld", "base"]
+conditions = ["native_package", "common_base_serialization"]
+input_token_targets = [1024, 3072, 6000]
+protocol_shaped_requests_per_input_cell = 16
+decode_ceiling_output_token_target = 1800
+concurrency_candidates = [1, 8, 16, 32]
+stability_requests_per_candidate_per_condition = 8
+selected_concurrency_rule = "largest_candidate_passing_all_checkpoint_mode_stability_probes"
+warmup_concurrency_blocks = 1
+measurement_windows_per_checkpoint_condition = 3
+minimum_generated_tokens_per_measurement_window = 8192
+maximum_decode_throughput_cv = 0.20
+measured_minutes_cap_per_checkpoint_condition = 30
+maximum_measured_gpu_hours_per_checkpoint = 1
+require_both_checkpoints_expensive_condition = true
+server_crash_policy = "TECHNICALLY_BLOCKED"
+post_retry_failure_policy = "TECHNICALLY_BLOCKED"
+quality_metrics_allowed = false
+cost_ceiling_multiplier = 1.5
+cost_ceiling_formula = "1.5 * (measured_fixed_overhead + worst_case_variable_projection)"
+cost_model_includes = [
+  "model_download",
+  "publisher_hash_verification",
+  "model_load_unload",
+  "jit_and_warmup",
+  "measured_inference",
+  "retry_allowance",
+  "evidence_packaging_and_transfer",
+]
+
+[locks.synthetic_preflight]
+status = "NOT_BUILT"
+authorizes = "SYNTHETIC_INFRASTRUCTURE_ONLY"
+scientific_runner_status = "CANDIDATE_ONLY"
+two_round_review_required = true
+
+[locks.scientific_execution]
+status = "NOT_BUILT"
+requires_accepted_synthetic_preflight_evidence = true
+requires_final_runner_and_verifier = true
+requires_final_cost_ceiling = true
+two_round_review_required = true
 
 [metrics]
 aggregation_unit = "scenario_family"
@@ -124,5 +226,8 @@ result_summary_must_be_independently_recomputed = true
 two_round_review_required_before_freeze = true
 phase4_confirmation_remains_unopened = true
 server_preflight_uses_synthetic_public_prompts_only = true
+historical_preflight_evidence_immutable = true
+material_lock_a_change_requires_delta_review = true
+result_lock_review_required_before_reporting = true
 remote_allowed_ignored_roots = ["models", ".cache", ".tmp", "runs", "artifacts"]
 allowed_ignored_roots_require_separate_hash_or_provenance_manifests = true
