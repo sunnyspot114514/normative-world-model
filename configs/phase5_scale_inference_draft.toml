@@ -73,6 +73,16 @@ requests_per_checkpoint = 1536
 without_replacement = true
 exclude_all_prior_phase3_populations = true
 selection_failure_policy = "STOP_WITHOUT_RELAXATION"
+target_profile_pairs = [
+  "harm_averse|efficiency_tolerant",
+  "procedure_preserving|autonomy_preserving",
+  "procedure_preserving|harm_averse",
+]
+scenario_ranking_rule = "minimum_sha256(seed_tab_environment_tab_stratum_tab_scenario_id)"
+profile_pair_selection_rule = "minimum_sha256(seed_tab_profile_pair_tab_scenario_id_tab_left_tab_right)_among_eligible_pairs"
+structured_scenario_surface_variant = "NONE"
+natural_language_scenario_surface_variant = 0
+profile_surface_variants = [0, 1]
 
 [runtime]
 engine = "vllm"
