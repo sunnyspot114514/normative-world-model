@@ -45,12 +45,12 @@ Accepted:
 
 Accepted with modification:
 
-1. K3's suggested `max-num-seqs=32` is not frozen in advance. Lock A freezes `[1, 8, 16, 32]` and a deterministic all-checkpoint/all-mode stability rule; Lock B records the selected common value.
-2. K3's request/time smoke window is split into an exact protocol-shaped component and a separate long-output decode-ceiling component. Three token-minimum measurement windows and a CV gate are required so a slow condition cannot pass with too little evidence.
+1. A candidate `max-num-seqs=32` is not frozen in advance. Lock A freezes `[1, 8, 16, 32]` and a deterministic all-checkpoint/all-mode stability rule; Lock B records the selected common value. The value 32 is a project candidate, not a value attributed to K3's written review.
+2. K3's general request/time smoke recommendation is split into an exact protocol-shaped component and a separate long-output decode-ceiling component. Three token-minimum measurement windows and a CV gate are required so a slow condition cannot pass with too little evidence.
 3. A synthetic tokenizer probe validates only the checker. The binding proof covers every locked common prompt locally and is repeated from served-snapshot tokenizer files before Lock B.
 4. The cost ceiling is exactly `1.5 × (measured fixed overhead + worst-case variable projection)`, not a multiplier on inference alone.
 5. Lock A may bind scientific input hashes locally, but a separate fail-closed remote allowlist excludes all project prompt text and request bodies from the synthetic rental.
-6. K3's example treating `--language-model-only` as AgentWorld-only is not accepted. At the observed revisions, both checkpoint configs declare `Qwen3_5MoeForConditionalGeneration` with a `vision_config`; the common preflight candidate passes the flag to both and records any forced deviation only after Base evidence.
+6. K3's hedged phrase ``--language-model-only` where applicable` is not evidence for a checkpoint-specific exception. At the observed revisions, both checkpoint configs declare `Qwen3_5MoeForConditionalGeneration` with a `vision_config`; the common preflight candidate passes the flag to both and records any forced deviation only after Base evidence.
 7. Native Base reasoning is not pre-disabled. Its frozen chat template is thinking-enabled by default, so the native-package diagnostic preserves that package behavior and captures reasoning separately when present.
 
 Rejected:

@@ -6,6 +6,8 @@ scope = "retained_discovery_scale_diagnostic_only"
 [authorization]
 protocol_drafting = true
 population_selection = false
+population_selection_authorization_status = "PENDING_SEPARATE_LOCAL_DERIVATION_GATE"
+population_selection_authorization_event = "COMMITTED_POST_STAGE2_FIXTURE_REVIEW_GATE"
 model_download = false
 server_rental = false
 synthetic_preflight_lock_accepted = false
@@ -35,12 +37,14 @@ scientific_comparison_authorized = false
 model_id = "Qwen/Qwen-AgentWorld-35B-A3B"
 observed_revision_2026_07_18 = "60d2b0434a53d2e62a7c00a489586815d94ebffb"
 frozen_revision = ""
+frozen_revision_status = "PENDING_LOCK_A"
 declared_base_model = "Qwen/Qwen3.5-35B-A3B-Base"
 
 [models.base]
 model_id = "Qwen/Qwen3.5-35B-A3B-Base"
 observed_revision_2026_07_18 = "0f0813072d2358973511097385626f21fcb6d422"
 frozen_revision = ""
+frozen_revision_status = "PENDING_LOCK_A"
 
 [source]
 joint_examples = "data/generated/phase2_retained_v2/arms/joint_examples.jsonl.gz"
@@ -133,6 +137,8 @@ cpu_proof_uses_official_tokenizer_files = true
 cpu_probe_set_required_before_population_derivation = true
 all_locked_common_prompts_required_after_population_derivation = true
 served_snapshot_reproof_required_for_lock_b = true
+served_snapshot_reproof_location = "LOCAL_AFTER_HASH_VERIFIED_RETURN_TRANSFER"
+selected_project_prompt_content_or_derivatives_sent_to_preflight = false
 any_token_id_mismatch_policy = "STOP_COMMON_MODE"
 
 [synthetic_preflight_remote_payload]
@@ -140,6 +146,12 @@ allowlist_required = true
 project_scenario_files_allowed = false
 selected_prompt_text_allowed = false
 scientific_request_bodies_allowed = false
+project_prompt_derived_artifacts_allowed = false
+selected_prompt_token_id_sequences_allowed = false
+rendered_prompt_caches_allowed = false
+prompt_embeddings_allowed = false
+reversible_prompt_encodings_allowed = false
+allowed_content_classes = ["declared_runtime_source_files", "public_synthetic_inputs"]
 undeclared_file_policy = "FAIL_CLOSED"
 
 [throughput_smoke]
@@ -153,13 +165,27 @@ protocol_shaped_requests_per_input_cell = 16
 decode_ceiling_output_token_target = 1800
 concurrency_candidates = [1, 8, 16, 32]
 stability_requests_per_candidate_per_condition = 8
+stability_minimum_generated_tokens_per_cell = 8192
+stability_requires_all_final_http_2xx_after_retry = true
+stability_requires_all_synthetic_schema_valid = true
+stability_requires_no_context_truncation = true
+stability_forbidden_events = ["server_crash", "worker_restart", "cuda_oom", "kv_allocation_failure"]
+latency_is_stability_pass_predicate = false
 selected_concurrency_rule = "largest_candidate_passing_all_checkpoint_mode_stability_probes"
 warmup_concurrency_blocks = 1
+warmup_block_definition = "one_batch_at_selected_concurrency_per_checkpoint_mode"
+warmup_excluded_from_throughput_statistics = true
 measurement_windows_per_checkpoint_condition = 3
 minimum_generated_tokens_per_measurement_window = 8192
 maximum_decode_throughput_cv = 0.20
 measured_minutes_cap_per_checkpoint_condition = 30
 maximum_measured_gpu_hours_per_checkpoint = 1
+measurement_cap_scope = "post_warmup_decode_measurement_windows_only"
+grid_warmup_and_protocol_shaped_excluded_from_measurement_cap = true
+whole_rental_wall_clock_cap_status = "PENDING_LOCK_A_PROVIDER_QUOTE"
+whole_rental_wall_clock_cap_required_at_lock_a = true
+whole_rental_cap_includes = ["download", "verification", "load_unload", "jit", "grid_probes", "warmup", "protocol_shaped", "decode_measurement", "packaging", "transfer"]
+cap_exhaustion_before_evidence_policy = "INSUFFICIENT_FOR_LOCK_B"
 require_both_checkpoints_expensive_condition = true
 server_crash_policy = "TECHNICALLY_BLOCKED"
 post_retry_failure_policy = "TECHNICALLY_BLOCKED"
