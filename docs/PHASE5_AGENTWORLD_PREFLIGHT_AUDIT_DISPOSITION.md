@@ -50,6 +50,8 @@ Accepted with modification:
 3. A synthetic tokenizer probe validates only the checker. The binding proof covers every locked common prompt locally and is repeated from served-snapshot tokenizer files before Lock B.
 4. The cost ceiling is exactly `1.5 × (measured fixed overhead + worst-case variable projection)`, not a multiplier on inference alone.
 5. Lock A may bind scientific input hashes locally, but a separate fail-closed remote allowlist excludes all project prompt text and request bodies from the synthetic rental.
+6. K3's example treating `--language-model-only` as AgentWorld-only is not accepted. At the observed revisions, both checkpoint configs declare `Qwen3_5MoeForConditionalGeneration` with a `vision_config`; the common preflight candidate passes the flag to both and records any forced deviation only after Base evidence.
+7. Native Base reasoning is not pre-disabled. Its frozen chat template is thinking-enabled by default, so the native-package diagnostic preserves that package behavior and captures reasoning separately when present.
 
 Rejected:
 

@@ -65,7 +65,7 @@ Prospective runtime requirements:
 - native checkpoint serialization in `native_package`, and the same frozen base serialization in `common_base_serialization`;
 - the observed AgentWorld compatibility baseline: vLLM 0.25.1, `--language-model-only`, `--reasoning-parser qwen3`, `--moe-backend triton`, `--enforce-eager`, `--dtype bfloat16`, `--tensor-parallel-size 1`, `--gpu-memory-utilization 0.90`, `VLLM_USE_FLASHINFER_SAMPLER=0`, and `OMP_NUM_THREADS=1`;
 - final-content JSON-schema guidance applied identically to both checkpoints;
-- thinking/reasoning enabled and captured separately from final JSON in the native AgentWorld condition; disabled for both checkpoints in the common-serialization condition;
+- each native package uses its own default thinking-enabled chat template and captures any reasoning separately from final JSON; thinking is disabled for both checkpoints in the common-serialization condition;
 - `temperature=0`, `top_p=1`, one completion, and a fixed request order;
 - maximum model length 8,192 and maximum generated tokens 2,048;
 - no truncation of any source presentation;
@@ -92,7 +92,7 @@ The synthetic-only rental serves both checkpoints sequentially on the same GPU. 
 
 The smoke has two separately reported components:
 
-1. A **protocol-shaped** component uses the exact endpoints, reasoning settings, JSON guidance, and decoding parameters planned for science, but only public synthetic content. It runs 16 requests in each checkpoint-by-mode-by-input-length cell at approximately 1,024/3,072/6,000 input tokens. It measures request overhead, schema-path stability, achieved output lengths, and latency without pretending that synthetic output lengths reproduce the scientific population.
+1. A **protocol-shaped** component uses the exact endpoints, reasoning settings, JSON guidance, and decoding parameters planned for science, but only public synthetic content. It runs 16 requests in each checkpoint-by-mode-by-input-length cell at approximately 1,024/3,072/6,000 **total rendered prompt tokens**, including system and template tokens. The 6,000-token cell therefore leaves 2,192 tokens within the 8,192 context budget and can accommodate the frozen 2,048-token generation cap without truncation. It measures request overhead, schema-path stability, achieved output lengths, and latency without pretending that synthetic output lengths reproduce the scientific population.
 2. A **decode-ceiling** component uses a frozen synthetic long-output task targeting 1,800 generated tokens. It first tests the concurrency grid `[1, 8, 16, 32]` with eight stability requests per checkpoint and mode, then selects the largest value passing all four checkpoint-by-mode probes. At the selected common value it records three measurement windows per checkpoint and mode, each with at least 8,192 generated tokens. The across-window decode-throughput coefficient of variation must be at most 0.20. Each checkpoint-by-mode condition has a 30-minute measurement cap, and total measured time per checkpoint is capped at one GPU-hour.
 
 Both components retain raw synthetic rows. The long-output schema may differ from the scientific output schema only to create a decode-load ceiling and is never used as a behavioral or schema-quality result. Both checkpoints' native and common conditions must be valid. A server crash, a request that still fails after the frozen retry, or exhaustion of the wall-clock/spend cap before the minimum evidence makes the smoke insufficient for Lock B.
