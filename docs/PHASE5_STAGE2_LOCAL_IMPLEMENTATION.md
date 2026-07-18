@@ -32,3 +32,14 @@ Stage-1 closed at commit `0b1a2c0` after K3 review and Codex counter-adjudicatio
 This slice is not a population lock and creates no Lock A or Lock B artifact.
 
 The selector's target-pair order, SHA-256 ranking preimages, canonical NL scenario-surface choice, and canonical/sham profile variants are mirrored in the TOML. The Stage-2 contract test fails if code and configuration drift.
+
+## Second implementation slice
+
+`phase5_serialization.py` adds local proof primitives without adding a network or weight-download path:
+
+1. an exact public-metadata filename allowlist that rejects weights and path traversal;
+2. a publisher weight-plan resolver driven by the checkpoint's own index and publisher LFS SHA-256 metadata, never by a hard-coded shard count;
+3. tokenizer-package byte hashing plus exact core-vocabulary/preprocessing comparison;
+4. Base-template rendering with `enable_thinking=false` and a full-prompt token-ID equality proof that retains every compared ID locally and stops on one mismatch.
+
+Tests use temporary synthetic tokenizer packages and fake tokenizer objects. No official snapshot has been downloaded by this slice.
