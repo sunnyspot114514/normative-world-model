@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -224,6 +225,31 @@ class Phase5PublicMetadataDownloadTests(unittest.TestCase):
                     _FixtureFetcher(files),
                 )
             self.assertFalse(root.exists())
+
+    def test_verifier_rejects_extra_empty_and_hard_linked_content(self) -> None:
+        cases = ("extra", "empty", "hardlink")
+        for case in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary) / "metadata"
+                _download_frozen_sources_to_root(
+                    (SOURCE,),
+                    root,
+                    _FixtureFetcher(_public_files()),
+                )
+                if case == "extra":
+                    (root / "extra.txt").write_text("extra\n", encoding="utf-8")
+                    message = "exact-set mismatch"
+                elif case == "empty":
+                    (root / "empty").mkdir()
+                    message = "empty directory"
+                else:
+                    os.link(
+                        root / "base" / "files" / "config.json",
+                        Path(temporary) / "outside-hardlink.json",
+                    )
+                    message = "multiple hard links"
+                with self.assertRaisesRegex(ValueError, message):
+                    _verify_public_metadata_bundle(root, (SOURCE,))
 
 
 if __name__ == "__main__":
