@@ -402,6 +402,7 @@ def _download_checkpoint(
                 "request_url": url,
                 "final_url": result.final_url,
                 "redirect_chain": list(result.redirect_chain),
+                "declared_content_length": result.declared_content_length,
             }
         )
     snapshot = {
@@ -413,6 +414,7 @@ def _download_checkpoint(
         "api_final_url": api_result.final_url,
         "api_redirect_chain": list(api_result.redirect_chain),
         "api_response_bytes": len(api_result.body),
+        "api_declared_content_length": api_result.declared_content_length,
         "api_response_sha256": hashlib.sha256(api_result.body).hexdigest(),
         "publisher_document_sha256": _canonical_sha256(api_document),
         "files": downloaded,
@@ -477,6 +479,237 @@ def default_public_metadata_root() -> Path:
         / ".cache"
         / "phase5_public_metadata"
         / f"v1-{STAGE2_CONFIG_SEMANTIC_SHA256[:12]}"
+    )
+
+
+def _without_key(value: Mapping[str, Any], key: str) -> dict[str, Any]:
+    result = dict(value)
+    result.pop(key, None)
+    return result
+
+
+def _verify_recorded_redirects(
+    *,
+    request_url: str,
+    final_url: str,
+    redirects: Any,
+    label: str,
+) -> None:
+    validate_huggingface_url(request_url, initial=True)
+    if not isinstance(redirects, list) or len(redirects) > MAX_REDIRECTS:
+        raise ValueError(f"recorded redirect chain is malformed: {label}")
+    for redirect in redirects:
+        validate_huggingface_url(str(redirect), initial=False)
+    if redirects:
+        if final_url != redirects[-1]:
+            raise ValueError(f"recorded redirect final URL differs: {label}")
+        validate_huggingface_url(final_url, initial=False)
+    elif final_url != request_url:
+        raise ValueError(f"recorded final URL changed without a redirect: {label}")
+
+
+def _verify_recorded_content_length(value: Any, actual: int, *, label: str) -> None:
+    if value is not None and (
+        not isinstance(value, int)
+        or isinstance(value, bool)
+        or value != actual
+    ):
+        raise ValueError(f"recorded Content-Length differs: {label}")
+
+
+def _verify_public_metadata_bundle(
+    root: Path,
+    sources: tuple[FrozenPublicCheckpoint, ...],
+) -> dict[str, Any]:
+    """Rebuild one fixture or production bundle from local bytes."""
+
+    resolved_root = root.resolve(strict=True)
+    if (
+        not resolved_root.is_dir()
+        or root.is_symlink()
+        or getattr(root, "is_junction", lambda: False)()
+    ):
+        raise ValueError("public metadata bundle root is not a regular directory")
+    actual_paths = set()
+    for directory, directory_names, file_names in os.walk(resolved_root, followlinks=False):
+        base = Path(directory)
+        if base != resolved_root and not directory_names and not file_names:
+            raise ValueError(f"public metadata bundle contains an empty directory: {base}")
+        for name in list(directory_names):
+            path = base / name
+            if path.is_symlink() or getattr(path, "is_junction", lambda: False)():
+                raise ValueError(f"public metadata bundle contains a directory link: {path}")
+            path.resolve(strict=True).relative_to(resolved_root)
+        for name in file_names:
+            path = base / name
+            if path.is_symlink() or getattr(path, "is_junction", lambda: False)():
+                raise ValueError(f"public metadata bundle contains a file link: {path}")
+            path.resolve(strict=True).relative_to(resolved_root)
+            if path.stat().st_nlink != 1:
+                raise ValueError(f"public metadata bundle file has multiple hard links: {path}")
+            actual_paths.add(path.relative_to(resolved_root).as_posix())
+    manifest_path = resolved_root / "manifest.json"
+    if not manifest_path.is_file() or manifest_path.is_symlink():
+        raise ValueError("public metadata bundle lacks a regular manifest")
+    manifest = _load_inert_json(manifest_path.read_bytes(), label="bundle manifest")
+    if not isinstance(manifest, dict):
+        raise ValueError("public metadata bundle manifest must be an object")
+    if manifest.get("manifest_sha256") != _canonical_sha256(
+        _without_key(manifest, "manifest_sha256")
+    ):
+        raise ValueError("public metadata bundle manifest hash is invalid")
+    expected_constants = {
+        "format_version": DOWNLOAD_FORMAT_VERSION,
+        "stage2_config_semantic_sha256": STAGE2_CONFIG_SEMANTIC_SHA256,
+        "requested_metadata_filenames": list(REQUESTED_METADATA_FILENAMES),
+        "required_metadata_filenames": sorted(REQUIRED_METADATA_FILENAMES),
+        "api_response_max_bytes": API_RESPONSE_MAX_BYTES,
+        "per_file_max_bytes": PER_FILE_MAX_BYTES,
+        "total_file_max_bytes": TOTAL_FILE_MAX_BYTES,
+        "total_bundle_file_max_bytes": TOTAL_BUNDLE_FILE_MAX_BYTES,
+        "network_timeout_seconds": NETWORK_TIMEOUT_SECONDS,
+        "maximum_attempts": MAX_ATTEMPTS,
+        "maximum_redirects": MAX_REDIRECTS,
+    }
+    for key, expected in expected_constants.items():
+        if manifest.get(key) != expected:
+            raise ValueError(f"public metadata bundle constant differs: {key}")
+    if manifest.get("sources") != [asdict(source) for source in sources]:
+        raise ValueError("public metadata bundle source identities differ")
+    snapshots = manifest.get("snapshots")
+    if not isinstance(snapshots, list) or len(snapshots) != len(sources):
+        raise ValueError("public metadata bundle snapshot list is malformed")
+
+    expected_paths = {"manifest.json"}
+    verified_bundle_bytes = 0
+    for source, snapshot in zip(sources, snapshots, strict=True):
+        if not isinstance(snapshot, dict):
+            raise ValueError("public metadata snapshot manifest is malformed")
+        if (
+            snapshot.get("checkpoint") != source.checkpoint
+            or snapshot.get("repo_id") != source.repo_id
+            or snapshot.get("revision") != source.revision
+        ):
+            raise ValueError(f"public metadata snapshot identity differs: {source.checkpoint}")
+        snapshot_relative = f"{source.checkpoint}/snapshot_manifest.json"
+        api_relative = f"{source.checkpoint}/publisher_api_response.json"
+        expected_paths.update({snapshot_relative, api_relative})
+        stored_snapshot = _load_inert_json(
+            (resolved_root / snapshot_relative).read_bytes(),
+            label=snapshot_relative,
+        )
+        if stored_snapshot != snapshot:
+            raise ValueError(f"stored and aggregate snapshot manifests differ: {source.checkpoint}")
+        if snapshot.get("snapshot_manifest_sha256") != _canonical_sha256(
+            _without_key(snapshot, "snapshot_manifest_sha256")
+        ):
+            raise ValueError(f"snapshot manifest hash is invalid: {source.checkpoint}")
+        api_body = (resolved_root / api_relative).read_bytes()
+        if (
+            len(api_body) != snapshot.get("api_response_bytes")
+            or hashlib.sha256(api_body).hexdigest() != snapshot.get("api_response_sha256")
+        ):
+            raise ValueError(f"publisher API bytes differ: {source.checkpoint}")
+        api_document, publisher_plan = _publisher_file_plan(source, api_body)
+        if _canonical_sha256(api_document) != snapshot.get("publisher_document_sha256"):
+            raise ValueError(f"publisher API document hash differs: {source.checkpoint}")
+        if snapshot.get("api_request_url") != _api_url(source):
+            raise ValueError(f"publisher API request URL differs: {source.checkpoint}")
+        _verify_recorded_content_length(
+            snapshot.get("api_declared_content_length"),
+            len(api_body),
+            label=f"publisher API/{source.checkpoint}",
+        )
+        _verify_recorded_redirects(
+            request_url=str(snapshot.get("api_request_url")),
+            final_url=str(snapshot.get("api_final_url")),
+            redirects=snapshot.get("api_redirect_chain"),
+            label=f"publisher API/{source.checkpoint}",
+        )
+
+        downloaded = snapshot.get("files")
+        if not isinstance(downloaded, list) or len(downloaded) != len(publisher_plan):
+            raise ValueError(f"downloaded metadata file list differs: {source.checkpoint}")
+        projected = [
+            {
+                "path": row.get("path"),
+                "bytes": row.get("bytes"),
+                "publisher_lfs_sha256": row.get("publisher_lfs_sha256"),
+                "publisher_blob_id": row.get("publisher_blob_id"),
+            }
+            for row in downloaded
+        ]
+        if projected != publisher_plan:
+            raise ValueError(f"publisher and download plans differ: {source.checkpoint}")
+        snapshot_bytes = 0
+        for row in downloaded:
+            relative = validate_public_metadata_path(str(row.get("path")))
+            file_relative = f"{source.checkpoint}/files/{relative}"
+            expected_paths.add(file_relative)
+            body = (resolved_root / file_relative).read_bytes()
+            if len(body) != row.get("bytes"):
+                raise ValueError(f"metadata byte count differs: {file_relative}")
+            if hashlib.sha256(body).hexdigest() != row.get("sha256"):
+                raise ValueError(f"metadata SHA-256 differs: {file_relative}")
+            _verify_recorded_content_length(
+                row.get("declared_content_length"),
+                len(body),
+                label=file_relative,
+            )
+            publisher_lfs = row.get("publisher_lfs_sha256")
+            if publisher_lfs is not None:
+                if row.get("publisher_verification_kind") != "lfs_sha256":
+                    raise ValueError(f"metadata verification kind differs: {file_relative}")
+                if hashlib.sha256(body).hexdigest() != publisher_lfs:
+                    raise ValueError(f"metadata publisher LFS hash differs: {file_relative}")
+            else:
+                if row.get("publisher_verification_kind") != "git_blob_sha1":
+                    raise ValueError(f"metadata verification kind differs: {file_relative}")
+                if _git_blob_sha1(body) != row.get("publisher_blob_id"):
+                    raise ValueError(f"metadata publisher Git blob differs: {file_relative}")
+            _validate_inert_metadata_content(relative, body)
+            if row.get("request_url") != _file_url(source, relative):
+                raise ValueError(f"metadata request URL differs: {file_relative}")
+            _verify_recorded_redirects(
+                request_url=str(row.get("request_url")),
+                final_url=str(row.get("final_url")),
+                redirects=row.get("redirect_chain"),
+                label=file_relative,
+            )
+            snapshot_bytes += len(body)
+        if (
+            snapshot.get("file_count") != len(downloaded)
+            or snapshot.get("total_file_bytes") != snapshot_bytes
+        ):
+            raise ValueError(f"metadata snapshot totals differ: {source.checkpoint}")
+        verified_bundle_bytes += snapshot_bytes
+
+    if (
+        manifest.get("total_bundle_file_bytes") != verified_bundle_bytes
+        or verified_bundle_bytes > TOTAL_BUNDLE_FILE_MAX_BYTES
+    ):
+        raise ValueError("public metadata bundle total differs")
+    if actual_paths != expected_paths:
+        raise ValueError(
+            "public metadata bundle exact-set mismatch: "
+            f"extra={sorted(actual_paths - expected_paths)}, "
+            f"missing={sorted(expected_paths - actual_paths)}"
+        )
+    return {
+        "status": "PASS",
+        "manifest_sha256": manifest["manifest_sha256"],
+        "checkpoint_count": len(sources),
+        "file_count": sum(int(snapshot["file_count"]) for snapshot in snapshots),
+        "total_file_bytes": verified_bundle_bytes,
+    }
+
+
+def verify_public_metadata_bundle(root: Path) -> dict[str, Any]:
+    """Verify the exact two-source public bundle under the current Stage-2 binding."""
+
+    return _verify_public_metadata_bundle(
+        root,
+        _frozen_public_checkpoints(load_phase5_config()),
     )
 
 

@@ -181,6 +181,40 @@ class Phase5TokenizerPackageTests(unittest.TestCase):
             report = inspect_tokenizer_packages(base, agent)
             self.assertEqual(report["status"], "PASS")
 
+    def test_effective_added_tokens_union_and_bpe_false_default_are_compared(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            base = root / "base"
+            agent = root / "agent"
+            base.mkdir()
+            agent.mkdir()
+            _write_tokenizer_package(base, extra=False)
+            _write_tokenizer_package(agent, extra=True)
+            base_config_path = base / "tokenizer_config.json"
+            base_config = json.loads(base_config_path.read_text(encoding="utf-8"))
+            base_config["added_tokens_decoder"] = {
+                "4": {
+                    "content": "<think>",
+                    "special": True,
+                    "normalized": False,
+                    "lstrip": False,
+                    "rstrip": False,
+                    "single_word": False,
+                }
+            }
+            base_config_path.write_text(json.dumps(base_config), encoding="utf-8")
+            agent_document_path = agent / "tokenizer.json"
+            agent_document = json.loads(agent_document_path.read_text(encoding="utf-8"))
+            agent_document["model"]["ignore_merges"] = False
+            agent_document_path.write_text(json.dumps(agent_document), encoding="utf-8")
+            report = inspect_tokenizer_packages(base, agent)
+            self.assertEqual(report["base_only_added_tokens"], {})
+            self.assertEqual(report["agentworld_only_added_tokens"], {})
+            self.assertEqual(
+                report["normalized_default_equivalences"],
+                ["model.ignore_merges:absent_equals_false"],
+            )
+
 
 class Phase5CommonSerializationTests(unittest.TestCase):
     def test_renderer_disables_thinking_and_proof_keeps_all_token_ids(self) -> None:
@@ -208,7 +242,7 @@ class Phase5CommonSerializationTests(unittest.TestCase):
         self.assertIn("tokenizer_snapshot_binding_sha256", proof)
 
     def test_renderer_rejects_agentworld_only_control_literals(self) -> None:
-        with self.assertRaisesRegex(ValueError, "AgentWorld-only"):
+        with self.assertRaisesRegex(ValueError, "forbidden control"):
             render_common_base_prompt(_Tokenizer(rendered="history<think>"), [])
         with self.assertRaisesRegex(ValueError, "assistant prefix"):
             render_common_base_prompt(

@@ -37,8 +37,23 @@ COMPARABLE_TOKENIZER_SECTIONS = (
     "truncation",
     "padding",
 )
+COMPARABLE_TOKENIZER_CONFIG_FIELDS = (
+    "add_bos_token",
+    "add_prefix_space",
+    "additional_special_tokens",
+    "bos_token",
+    "clean_up_tokenization_spaces",
+    "errors",
+    "extra_special_tokens",
+    "pad_token",
+    "pretokenize_regex",
+    "split_special_tokens",
+    "tokenizer_class",
+    "unk_token",
+)
+DIAGNOSTIC_TOKENIZER_CONFIG_FIELDS = ("eos_token", "model_max_length")
 COMMON_ASSISTANT_PREFIX = "<|im_start|>assistant\n"
-AGENTWORLD_ONLY_CONTROL_LITERALS = (
+FORBIDDEN_COMMON_CONTROL_LITERALS = (
     "<tool_response>",
     "</tool_response>",
     "<think>",
@@ -128,31 +143,85 @@ def inspect_tokenizer_packages(base_root: Path, agentworld_root: Path) -> dict[s
         raise ValueError("tokenizer model.vocab must be an object")
     if base_vocab != agent_vocab:
         raise ValueError("tokenizer core vocabularies or token IDs differ")
-    for section in COMPARABLE_TOKENIZER_SECTIONS:
-        if base_tokenizer.get(section) != agent_tokenizer.get(section):
-            raise ValueError(f"tokenizer preprocessing section differs: {section}")
 
-    def added_by_id(document: Mapping[str, Any]) -> dict[int, dict[str, Any]]:
+    def comparable_section(document: Mapping[str, Any], section: str) -> Any:
+        value = document.get(section)
+        if section == "model" and isinstance(value, dict) and value.get("type") == "BPE":
+            value = dict(value)
+            value.setdefault("ignore_merges", False)
+        return value
+
+    normalized_default_equivalences = []
+    for section in COMPARABLE_TOKENIZER_SECTIONS:
+        base_section = comparable_section(base_tokenizer, section)
+        agent_section = comparable_section(agent_tokenizer, section)
+        if base_section != agent_section:
+            raise ValueError(f"tokenizer preprocessing section differs: {section}")
+        if base_tokenizer.get(section) != agent_tokenizer.get(section):
+            normalized_default_equivalences.append(f"{section}.ignore_merges:absent_equals_false")
+
+    base_config = documents["base"]["tokenizer_config.json"]
+    agent_config = documents["agentworld"]["tokenizer_config.json"]
+    for field in COMPARABLE_TOKENIZER_CONFIG_FIELDS:
+        if base_config.get(field) != agent_config.get(field):
+            raise ValueError(f"tokenizer config preprocessing field differs: {field}")
+    tokenizer_config_differences = {
+        field: {"base": base_config.get(field), "agentworld": agent_config.get(field)}
+        for field in DIAGNOSTIC_TOKENIZER_CONFIG_FIELDS
+        if base_config.get(field) != agent_config.get(field)
+    }
+
+    def added_by_id(
+        tokenizer_document: Mapping[str, Any],
+        config_document: Mapping[str, Any],
+    ) -> dict[int, dict[str, Any]]:
         result = {}
-        for entry in document.get("added_tokens", []):
+        entries = tokenizer_document.get("added_tokens", [])
+        if not isinstance(entries, list):
+            raise ValueError("tokenizer added_tokens must be a list")
+        for entry in entries:
             if (
                 not isinstance(entry, dict)
                 or not isinstance(entry.get("id"), int)
                 or isinstance(entry.get("id"), bool)
                 or entry["id"] < 0
+                or not isinstance(entry.get("content"), str)
+                or not entry["content"]
             ):
                 raise ValueError("added token entries must contain integer IDs")
             token_id = int(entry["id"])
             if token_id in result:
                 raise ValueError(f"duplicate added token ID: {token_id}")
             result[token_id] = dict(entry)
+        decoder = config_document.get("added_tokens_decoder", {})
+        if not isinstance(decoder, dict):
+            raise ValueError("tokenizer config added_tokens_decoder must be an object")
+        for raw_token_id, attributes in decoder.items():
+            if (
+                not isinstance(raw_token_id, str)
+                or not raw_token_id.isascii()
+                or not raw_token_id.isdecimal()
+                or not isinstance(attributes, dict)
+                or "id" in attributes
+            ):
+                raise ValueError("tokenizer config added-token entry is malformed")
+            token_id = int(raw_token_id)
+            if raw_token_id != str(token_id):
+                raise ValueError("tokenizer config added-token ID is not canonical")
+            normalized = {"id": token_id, **attributes}
+            if not isinstance(normalized.get("content"), str) or not normalized["content"]:
+                raise ValueError("tokenizer config added-token content is malformed")
+            if token_id in result and result[token_id] != normalized:
+                raise ValueError(f"tokenizer package added-token sources disagree: {token_id}")
+            result[token_id] = normalized
         return result
 
-    base_added = added_by_id(base_tokenizer)
-    agent_added = added_by_id(agent_tokenizer)
+    base_added = added_by_id(base_tokenizer, base_config)
+    agent_added = added_by_id(agent_tokenizer, agent_config)
     shared_ids = set(base_added) & set(agent_added)
     if any(base_added[token_id] != agent_added[token_id] for token_id in shared_ids):
         raise ValueError("shared added-token IDs differ in attributes")
+
     def resolved_template(checkpoint: str) -> str:
         inline = documents[checkpoint]["tokenizer_config.json"].get("chat_template")
         template_path = roots[checkpoint] / "chat_template.jinja"
@@ -175,6 +244,8 @@ def inspect_tokenizer_packages(base_root: Path, agentworld_root: Path) -> dict[s
         "files": files,
         "core_vocab_entries": len(base_vocab),
         "core_vocab_identical": True,
+        "normalized_default_equivalences": normalized_default_equivalences,
+        "tokenizer_config_differences": tokenizer_config_differences,
         "shared_added_tokens": len(shared_ids),
         "base_only_added_tokens": {
             str(token_id): base_added[token_id]
@@ -208,9 +279,9 @@ def render_common_base_prompt(
         raise ValueError("base chat template did not return a nonempty string")
     if history.endswith(COMMON_ASSISTANT_PREFIX):
         raise ValueError("base chat history unexpectedly contains an assistant prefix")
-    present = [literal for literal in AGENTWORLD_ONLY_CONTROL_LITERALS if literal in history]
+    present = [literal for literal in FORBIDDEN_COMMON_CONTROL_LITERALS if literal in history]
     if present:
-        raise ValueError(f"common prompt contains AgentWorld-only control literals: {present}")
+        raise ValueError(f"common prompt contains forbidden control literals: {present}")
     rendered = history + COMMON_ASSISTANT_PREFIX
     return rendered
 

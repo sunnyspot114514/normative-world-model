@@ -40,7 +40,7 @@ The selector's target-pair order, SHA-256 ranking preimages, canonical NL scenar
 1. an exact public-metadata filename allowlist that rejects weights and path traversal;
 2. a reviewed normalizer for realistic Hugging Face `blobs=true` sibling metadata and a publisher weight-plan resolver driven by the checkpoint's own index and nested publisher LFS SHA-256 metadata, never by a hard-coded shard count;
 3. every-present-metadata byte hashing plus exact core-vocabulary, preprocessing, truncation/padding, and full shared-added-token comparison;
-4. Base history rendering with `add_generation_prompt=false`, followed by the frozen shared assistant prefix and a ban on AgentWorld-only control literals; the full-prompt token-ID proof binds the inspected snapshot hashes, retains every compared ID locally, and stops on one mismatch.
+4. Base history rendering with `add_generation_prompt=false`, followed by the frozen shared assistant prefix and a ban on reserved control literals; the full-prompt token-ID proof binds the inspected snapshot hashes, retains every compared ID locally, and stops on one mismatch.
 
 Tests use temporary synthetic tokenizer packages and fake tokenizer objects. No official snapshot has been downloaded by this slice.
 
@@ -50,7 +50,7 @@ The selector API is intentionally named `select_phase5_fixture_population`. No r
 
 ## K3 review and counter-adjudication
 
-K3 returned `PASS_WITH_FIXES` for commit `164228d`; its exact report and the Codex counter-review are preserved under `external_reviews/2026-07-20_phase5-stage2-local-primitives_kimi-k3/`. The bounded fixes also close a Codex-identified empty-`<think>` serialization risk that K3 did not report. Restricted downloader implementation remains downstream of a clean full local check.
+K3 returned `PASS_WITH_FIXES` for commit `164228d`; its exact report and the Codex counter-review are preserved under `external_reviews/2026-07-20_phase5-stage2-local-primitives_kimi-k3/`. A later public-snapshot probe corrected one premise in the Codex counter-review: the effective Base package also registers the four control tokens through `tokenizer_config.json`. The exact erratum is preserved next to the review. The manual assistant-prefix rule remains because it removes an empty reasoning envelope, not because the old package would necessarily tokenize the tags differently.
 
 ## Restricted public-metadata downloader
 
@@ -64,3 +64,7 @@ After the review fixes passed the full local check, the TOML gained the distinct
 - exact API bytes, exact downloaded bytes, redirect evidence, publisher identities, and SHA-256 manifests are written once under `.cache/phase5_public_metadata/`; any failure removes the newly created partial root and an existing root is never overwritten.
 
 The tests use only injected fixture fetchers and do not open the network. The first real execution is permitted only from a clean commit containing this implementation and its passing tests. It remains a public-metadata probe, not a model download or Lock A.
+
+The verifier independently rebuilds the manifest hash, snapshot hashes, exact file set, source identities, URL boundaries, byte counts, local SHA-256s, publisher LFS/Git hashes, inert JSON checks, and aggregate caps before a tokenizer loader can see the files. It rejects symlinks, junctions, hard links, empty directories, extra files, and a cache bound to an older TOML semantic hash.
+
+`phase5_tokenizer_probe.py` then loads only the verified local files with `local_files_only=true`, `trust_remote_code=false`, and `use_fast=true`. Its fixed public prompts include ASCII, Unicode, punctuation, multi-turn, and long-context witnesses. The proof binds every prompt token ID to the exact snapshot hashes. A successful input-tokenization probe still reports `PASS_WITH_LOCK_A_EOS_ACTION`, because the checkpoint-default EOS tokens differ and the matched serving termination rule is not yet frozen.

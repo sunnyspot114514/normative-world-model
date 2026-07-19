@@ -16,6 +16,7 @@ from normative_world_model.phase5_public_metadata import (
     _frozen_public_checkpoints,
     _parse_content_length,
     _publisher_file_plan,
+    _verify_public_metadata_bundle,
     validate_huggingface_url,
 )
 
@@ -178,6 +179,11 @@ class Phase5PublicMetadataDownloadTests(unittest.TestCase):
                 if row["path"] == "config.json"
             )
             self.assertEqual(config_row["publisher_verification_kind"], "git_blob_sha1")
+            verification = _verify_public_metadata_bundle(root, (SOURCE,))
+            self.assertEqual(verification["status"], "PASS")
+            (root / "base" / "files" / "config.json").write_bytes(b'{"tampered":true}\n')
+            with self.assertRaisesRegex(ValueError, "byte count|SHA-256"):
+                _verify_public_metadata_bundle(root, (SOURCE,))
             self.assertEqual(tokenizer_row["redirect_chain"], ["https://us.aws.cdn.hf.co/object"])
 
     def test_external_redirect_and_lfs_mismatch_fail_and_remove_partial_root(self) -> None:
