@@ -24,6 +24,9 @@ ALLOWED_REMOTE_CONTENT_CLASSES = frozenset(
     {"declared_runtime_source_files", "public_synthetic_inputs"}
 )
 PROFILE_IDS = tuple(sorted({item for pair in TARGET_PROFILE_PAIRS for item in pair}))
+STAGE2_CONFIG_SEMANTIC_SHA256 = (
+    "4bffe84b12ac40c4f27f38e8823b651dd3a60a11db2a3aee841f7ef2a11f603e"
+)
 
 
 def default_phase5_config_path() -> Path:
@@ -35,10 +38,24 @@ def load_phase5_config(path: Path | None = None) -> dict[str, Any]:
         return tomllib.load(handle)
 
 
+def phase5_config_semantic_sha256(config: Mapping[str, Any]) -> str:
+    """Hash the complete parsed TOML semantics, independent of formatting."""
+
+    canonical = json.dumps(
+        config,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 def validate_stage2_contract(config: Mapping[str, Any]) -> list[str]:
     """Return fail-closed Stage-2 contract violations without changing state."""
 
     failures: list[str] = []
+    if phase5_config_semantic_sha256(config) != STAGE2_CONFIG_SEMANTIC_SHA256:
+        failures.append("complete Stage-2 config semantics differ from the reviewed binding")
     authorization = config.get("authorization", {})
     if authorization.get("protocol_drafting") is not True:
         failures.append("protocol_drafting must remain true during Stage 2")
@@ -155,10 +172,28 @@ def validate_stage2_contract(config: Mapping[str, Any]) -> list[str]:
     smoke = config.get("throughput_smoke", {})
     if smoke.get("status") != "NOT_BUILT":
         failures.append("throughput smoke must remain NOT_BUILT during local Stage 2")
-    maximum_input = max(smoke.get("input_token_targets", (0,)))
-    if maximum_input + runtime.get("maximum_generated_tokens", 0) > runtime.get(
-        "maximum_model_length", 0
+    input_targets = smoke.get("input_token_targets")
+    generated_cap = runtime.get("maximum_generated_tokens")
+    model_length = runtime.get("maximum_model_length")
+    if (
+        not isinstance(input_targets, list)
+        or not input_targets
+        or any(
+            not isinstance(value, int) or isinstance(value, bool) or value <= 0
+            for value in input_targets
+        )
     ):
+        failures.append("throughput input-token targets must be a nonempty positive-integer list")
+    elif (
+        not isinstance(generated_cap, int)
+        or isinstance(generated_cap, bool)
+        or generated_cap <= 0
+        or not isinstance(model_length, int)
+        or isinstance(model_length, bool)
+        or model_length <= 0
+    ):
+        failures.append("runtime generation and model-length caps must be positive integers")
+    elif max(input_targets) + generated_cap > model_length:
         failures.append("largest prompt plus generation cap exceeds model length")
     if smoke.get("concurrency_candidates") != runtime.get("throughput_concurrency_candidates"):
         failures.append("runtime and smoke concurrency grids differ")
@@ -329,13 +364,18 @@ def _inspect_family(
                     raise ValueError(f"family lacks required presentation: {key}") from error
                 if _target(record) != targets[profile]:
                     raise ValueError("surface variant changes the target")
+                if (
+                    condition == "structured"
+                    and _structured_model_input(record) != model_inputs[profile]
+                ):
+                    raise ValueError("structured surface variant changes the model input")
                 presentation_ids.append(str(record["record_id"]))
     if len(presentation_ids) != 8 or len(set(presentation_ids)) != 8:
         raise ValueError("selected family does not contain eight unique presentations")
     return stratum, pair, tuple(presentation_ids)
 
 
-def select_phase5_population(
+def select_phase5_fixture_population(
     records: Iterable[dict[str, Any]],
     *,
     excluded_scenario_ids: Iterable[str],
@@ -343,7 +383,11 @@ def select_phase5_population(
     discretionary_per_environment: int = 36,
     hard_policy_per_environment: int = 12,
 ) -> list[SelectedPhase5Family]:
-    """Select a balanced population; callers must separately authorize real input."""
+    """Select a balanced population from synthetic fixtures only.
+
+    The future real-source entry point must be a separate function that checks a
+    committed population-selection authorization before it opens any export.
+    """
 
     excluded = set(excluded_scenario_ids)
     grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -391,6 +435,13 @@ def select_phase5_population(
         selected.extend(bucket[:count])
     if len({item.scenario_id for item in selected}) != len(selected):
         raise ValueError("selection reused a scenario family")
+    presentation_ids = [
+        record_id
+        for item in selected
+        for record_id in item.presentation_record_ids
+    ]
+    if len(set(presentation_ids)) != len(presentation_ids):
+        raise ValueError("selection reused a presentation record ID")
     return selected
 
 
@@ -406,13 +457,15 @@ def phase5_selection_binding(selection: Iterable[SelectedPhase5Family]) -> dict[
 
 
 def _normalized_relative_path(value: str) -> PurePosixPath:
-    path = PurePosixPath(value.replace("\\", "/"))
+    path = PurePosixPath(value)
     if (
         not value
+        or "\\" in value
         or not path.parts
         or path.is_absolute()
         or ".." in path.parts
         or "." in path.parts
+        or path.as_posix() != value
     ):
         raise ValueError(f"payload path is not a normalized relative path: {value!r}")
     return path
@@ -425,6 +478,10 @@ def verify_remote_payload(
     """Verify an exact, symlink-free synthetic payload and return its manifest."""
 
     root = root.resolve(strict=True)
+    if not root.is_dir():
+        raise ValueError("payload root must be a directory")
+    if not declared_files:
+        raise ValueError("payload declaration must contain at least one file")
     declared: dict[str, str] = {}
     for raw_path, content_class in declared_files.items():
         relative = _normalized_relative_path(raw_path).as_posix()
@@ -436,8 +493,11 @@ def verify_remote_payload(
 
     actual_files: set[str] = set()
     symlinks: list[str] = []
+    empty_directories: list[str] = []
     for directory, directory_names, file_names in os.walk(root, followlinks=False):
         base = Path(directory)
+        if base != root and not directory_names and not file_names:
+            empty_directories.append(base.relative_to(root).as_posix())
         for name in list(directory_names):
             item = base / name
             if item.is_symlink():
@@ -451,6 +511,8 @@ def verify_remote_payload(
                 actual_files.add(relative)
     if symlinks:
         raise ValueError(f"payload contains symlinks: {sorted(symlinks)}")
+    if empty_directories:
+        raise ValueError(f"payload contains undeclared empty directories: {empty_directories}")
     if actual_files != set(declared):
         undeclared = sorted(actual_files - set(declared))
         missing = sorted(set(declared) - actual_files)
@@ -464,6 +526,9 @@ def verify_remote_payload(
             resolved.relative_to(root)
         except ValueError as error:
             raise ValueError(f"payload file escapes root: {relative}") from error
+        stat = resolved.stat()
+        if stat.st_nlink != 1:
+            raise ValueError(f"payload file must have exactly one hard link: {relative}")
         data = resolved.read_bytes()
         entries.append(
             {

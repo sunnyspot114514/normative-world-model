@@ -34,6 +34,15 @@ COMPARABLE_TOKENIZER_SECTIONS = (
     "pre_tokenizer",
     "post_processor",
     "decoder",
+    "truncation",
+    "padding",
+)
+COMMON_ASSISTANT_PREFIX = "<|im_start|>assistant\n"
+AGENTWORLD_ONLY_CONTROL_LITERALS = (
+    "<tool_response>",
+    "</tool_response>",
+    "<think>",
+    "</think>",
 )
 
 
@@ -52,6 +61,7 @@ def validate_public_metadata_path(value: str) -> str:
     path = PurePosixPath(normalized)
     if (
         not normalized
+        or "\\" in value
         or not path.parts
         or path.is_absolute()
         or ".." in path.parts
@@ -78,17 +88,37 @@ def inspect_tokenizer_packages(base_root: Path, agentworld_root: Path) -> dict[s
     documents: dict[str, dict[str, dict[str, Any]]] = {}
     files: dict[str, dict[str, dict[str, Any]]] = {}
     for checkpoint, root in roots.items():
+        if not root.is_dir() or root.is_symlink():
+            raise ValueError(f"tokenizer root must be a regular directory: {checkpoint}")
+        resolved_root = root.resolve(strict=True)
         documents[checkpoint] = {}
         files[checkpoint] = {}
+        for path in sorted(root.rglob("*")):
+            if path.is_symlink():
+                raise ValueError(f"tokenizer snapshot contains a symlink: {checkpoint}/{path.name}")
+            if getattr(path, "is_junction", lambda: False)():
+                raise ValueError(
+                    f"tokenizer snapshot contains a junction: {checkpoint}/{path.name}"
+                )
+            if not path.is_file():
+                continue
+            try:
+                path.resolve(strict=True).relative_to(resolved_root)
+            except ValueError as error:
+                raise ValueError(
+                    f"tokenizer snapshot file escapes its root: {checkpoint}/{path.name}"
+                ) from error
+            relative = path.relative_to(root).as_posix()
+            validate_public_metadata_path(relative)
+            files[checkpoint][relative] = {
+                "bytes": path.stat().st_size,
+                "sha256": sha256_file(path),
+            }
         for name in TOKENIZER_FILES:
             path = root / name
             if not path.is_file() or path.is_symlink():
                 raise ValueError(f"missing regular tokenizer file: {checkpoint}/{name}")
             documents[checkpoint][name] = _load_json_object(path)
-            files[checkpoint][name] = {
-                "bytes": path.stat().st_size,
-                "sha256": sha256_file(path),
-            }
 
     base_tokenizer = documents["base"]["tokenizer.json"]
     agent_tokenizer = documents["agentworld"]["tokenizer.json"]
@@ -102,26 +132,44 @@ def inspect_tokenizer_packages(base_root: Path, agentworld_root: Path) -> dict[s
         if base_tokenizer.get(section) != agent_tokenizer.get(section):
             raise ValueError(f"tokenizer preprocessing section differs: {section}")
 
-    def added_by_id(document: Mapping[str, Any]) -> dict[int, str]:
+    def added_by_id(document: Mapping[str, Any]) -> dict[int, dict[str, Any]]:
         result = {}
         for entry in document.get("added_tokens", []):
-            if not isinstance(entry, dict) or not isinstance(entry.get("id"), int):
+            if (
+                not isinstance(entry, dict)
+                or not isinstance(entry.get("id"), int)
+                or isinstance(entry.get("id"), bool)
+                or entry["id"] < 0
+            ):
                 raise ValueError("added token entries must contain integer IDs")
             token_id = int(entry["id"])
             if token_id in result:
                 raise ValueError(f"duplicate added token ID: {token_id}")
-            result[token_id] = str(entry.get("content"))
+            result[token_id] = dict(entry)
         return result
 
     base_added = added_by_id(base_tokenizer)
     agent_added = added_by_id(agent_tokenizer)
     shared_ids = set(base_added) & set(agent_added)
     if any(base_added[token_id] != agent_added[token_id] for token_id in shared_ids):
-        raise ValueError("shared added-token IDs differ in content")
-    base_template = documents["base"]["tokenizer_config.json"].get("chat_template")
-    agent_template = documents["agentworld"]["tokenizer_config.json"].get("chat_template")
-    if not isinstance(base_template, str) or not isinstance(agent_template, str):
-        raise ValueError("both tokenizer configs must contain string chat templates")
+        raise ValueError("shared added-token IDs differ in attributes")
+    def resolved_template(checkpoint: str) -> str:
+        inline = documents[checkpoint]["tokenizer_config.json"].get("chat_template")
+        template_path = roots[checkpoint] / "chat_template.jinja"
+        file_template = (
+            template_path.read_text(encoding="utf-8") if template_path.is_file() else None
+        )
+        if inline is not None and not isinstance(inline, str):
+            raise ValueError(f"tokenizer config chat_template must be a string: {checkpoint}")
+        if inline is not None and file_template is not None and inline != file_template:
+            raise ValueError(f"inline and file chat templates disagree: {checkpoint}")
+        template = inline if inline is not None else file_template
+        if not isinstance(template, str) or not template:
+            raise ValueError(f"tokenizer package has no nonempty chat template: {checkpoint}")
+        return template
+
+    base_template = resolved_template("base")
+    agent_template = resolved_template("agentworld")
     return {
         "status": "PASS",
         "files": files,
@@ -148,16 +196,22 @@ def render_common_base_prompt(
     base_tokenizer: Any,
     messages: Sequence[Mapping[str, str]],
 ) -> str:
-    """Render the common prompt with Base's template and thinking disabled."""
+    """Render shared history, then append an exact assistant prefix without think tags."""
 
-    rendered = base_tokenizer.apply_chat_template(
+    history = base_tokenizer.apply_chat_template(
         list(messages),
         tokenize=False,
-        add_generation_prompt=True,
+        add_generation_prompt=False,
         enable_thinking=False,
     )
-    if not isinstance(rendered, str) or not rendered:
+    if not isinstance(history, str) or not history:
         raise ValueError("base chat template did not return a nonempty string")
+    if history.endswith(COMMON_ASSISTANT_PREFIX):
+        raise ValueError("base chat history unexpectedly contains an assistant prefix")
+    present = [literal for literal in AGENTWORLD_ONLY_CONTROL_LITERALS if literal in history]
+    if present:
+        raise ValueError(f"common prompt contains AgentWorld-only control literals: {present}")
+    rendered = history + COMMON_ASSISTANT_PREFIX
     return rendered
 
 
@@ -169,7 +223,49 @@ def _token_ids(tokenizer: Any, text: str) -> list[int]:
         for item in values
     ):
         raise ValueError("tokenizer.encode must return a nonempty integer sequence")
+    try:
+        vocabulary_size = len(tokenizer)
+    except (TypeError, AttributeError) as error:
+        raise ValueError("tokenizer must expose its complete vocabulary size") from error
+    if (
+        not isinstance(vocabulary_size, int)
+        or isinstance(vocabulary_size, bool)
+        or vocabulary_size <= 0
+        or any(item >= vocabulary_size for item in values)
+    ):
+        raise ValueError("tokenizer.encode returned an ID outside its vocabulary")
     return values
+
+
+def _proof_snapshot_binding(report: Mapping[str, Any]) -> dict[str, Any]:
+    if report.get("status") != "PASS" or report.get("core_vocab_identical") is not True:
+        raise ValueError("tokenizer package report is not a passing core-vocabulary proof")
+    files = report.get("files")
+    if not isinstance(files, Mapping) or set(files) != {"base", "agentworld"}:
+        raise ValueError("tokenizer package report lacks both snapshot file maps")
+    binding: dict[str, dict[str, dict[str, Any]]] = {}
+    for checkpoint in ("base", "agentworld"):
+        checkpoint_files = files.get(checkpoint)
+        if not isinstance(checkpoint_files, Mapping) or not checkpoint_files:
+            raise ValueError(f"tokenizer package report has no files for {checkpoint}")
+        binding[checkpoint] = {}
+        for relative, metadata in sorted(checkpoint_files.items()):
+            if not isinstance(relative, str) or not isinstance(metadata, Mapping):
+                raise ValueError("tokenizer snapshot file binding is malformed")
+            validate_public_metadata_path(relative)
+            size = metadata.get("bytes")
+            digest = metadata.get("sha256")
+            if (
+                not isinstance(size, int)
+                or isinstance(size, bool)
+                or size < 0
+                or not isinstance(digest, str)
+                or len(digest) != 64
+                or any(character not in "0123456789abcdef" for character in digest)
+            ):
+                raise ValueError("tokenizer snapshot file binding is malformed")
+            binding[checkpoint][relative] = {"bytes": size, "sha256": digest}
+    return binding
 
 
 def prove_common_prompt_token_equality(
@@ -177,9 +273,11 @@ def prove_common_prompt_token_equality(
     *,
     base_tokenizer: Any,
     agentworld_tokenizer: Any,
+    tokenizer_package_report: Mapping[str, Any],
 ) -> dict[str, Any]:
     """Prove exact token-ID equality for every supplied locally retained prompt."""
 
+    snapshot_binding = _proof_snapshot_binding(tokenizer_package_report)
     rows = []
     seen_ids: set[str] = set()
     for prompt_id, text in rendered_prompts:
@@ -213,13 +311,86 @@ def prove_common_prompt_token_equality(
         )
     if not rows:
         raise ValueError("token equality proof requires at least one prompt")
-    canonical = json.dumps(rows, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    proof_payload = {"tokenizer_snapshot_files": snapshot_binding, "rows": rows}
+    canonical = json.dumps(
+        proof_payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    binding_canonical = json.dumps(snapshot_binding, sort_keys=True, separators=(",", ":"))
     return {
         "status": "PASS",
         "prompt_count": len(rows),
+        "tokenizer_snapshot_files": snapshot_binding,
+        "tokenizer_snapshot_binding_sha256": hashlib.sha256(
+            (binding_canonical + "\n").encode("utf-8")
+        ).hexdigest(),
         "rows": rows,
         "proof_sha256": hashlib.sha256((canonical + "\n").encode("utf-8")).hexdigest(),
     }
+
+
+def _lowercase_sha256(value: Any) -> str:
+    if isinstance(value, str) and value.startswith("sha256:"):
+        value = value.removeprefix("sha256:")
+    if (
+        not isinstance(value, str)
+        or len(value) != 64
+        or any(character not in "0123456789abcdef" for character in value)
+    ):
+        raise ValueError("publisher LFS digest is not a lowercase SHA-256")
+    return value
+
+
+def normalize_hf_publisher_siblings(
+    raw_siblings: Iterable[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    """Normalize the reviewed Hugging Face blobs=true sibling shape."""
+
+    normalized = []
+    seen: set[str] = set()
+    for item in raw_siblings:
+        relative = item.get("rfilename")
+        if not isinstance(relative, str):
+            raise ValueError("publisher sibling lacks rfilename")
+        path = PurePosixPath(relative)
+        if (
+            not relative
+            or "\\" in relative
+            or path.is_absolute()
+            or ".." in path.parts
+            or "." in path.parts
+            or path.as_posix() != relative
+        ):
+            raise ValueError(f"publisher sibling path is invalid: {relative!r}")
+        if relative in seen:
+            raise ValueError(f"duplicate publisher sibling path: {relative}")
+        seen.add(relative)
+        size = item.get("size")
+        if not isinstance(size, int) or isinstance(size, bool) or size < 0:
+            raise ValueError(f"publisher sibling has invalid size: {relative}")
+        row: dict[str, Any] = {"rfilename": relative, "size": size}
+        lfs = item.get("lfs")
+        if lfs is not None:
+            if not isinstance(lfs, Mapping):
+                raise ValueError(f"publisher sibling has malformed LFS metadata: {relative}")
+            candidates = [lfs[key] for key in ("sha256", "oid") if key in lfs]
+            if not candidates:
+                raise ValueError(f"publisher sibling LFS metadata lacks a digest: {relative}")
+            digests = {_lowercase_sha256(value) for value in candidates}
+            if len(digests) != 1:
+                raise ValueError(f"publisher sibling LFS digests disagree: {relative}")
+            lfs_size = lfs.get("size")
+            if (
+                not isinstance(lfs_size, int)
+                or isinstance(lfs_size, bool)
+                or lfs_size != size
+            ):
+                raise ValueError(f"publisher sibling and LFS sizes disagree: {relative}")
+            row["lfs_sha256"] = next(iter(digests))
+        normalized.append(row)
+    return normalized
 
 
 def resolve_publisher_weight_plan(
@@ -233,7 +404,7 @@ def resolve_publisher_weight_plan(
         raise ValueError("model index has no nonempty weight_map")
     referenced = sorted({str(value) for value in weight_map.values()})
     siblings = {}
-    for item in publisher_siblings:
+    for item in normalize_hf_publisher_siblings(publisher_siblings):
         relative = str(item.get("rfilename"))
         if relative in siblings:
             raise ValueError(f"duplicate publisher sibling path: {relative}")
@@ -243,6 +414,7 @@ def resolve_publisher_weight_plan(
         path = PurePosixPath(relative)
         if (
             path.is_absolute()
+            or "\\" in relative
             or ".." in path.parts
             or path.as_posix() != relative
             or not relative.endswith(".safetensors")
@@ -254,7 +426,7 @@ def resolve_publisher_weight_plan(
             raise ValueError(f"publisher metadata lacks referenced weight: {relative}") from error
         size = sibling.get("size")
         digest = sibling.get("lfs_sha256")
-        if not isinstance(size, int) or size <= 0:
+        if not isinstance(size, int) or isinstance(size, bool) or size <= 0:
             raise ValueError(f"publisher weight has invalid size: {relative}")
         if (
             not isinstance(digest, str)
@@ -263,10 +435,33 @@ def resolve_publisher_weight_plan(
         ):
             raise ValueError(f"publisher weight lacks a lowercase SHA-256: {relative}")
         rows.append({"path": relative, "bytes": size, "sha256": digest})
-    canonical = json.dumps(rows, sort_keys=True, separators=(",", ":"))
+    index_metadata = model_index.get("metadata", {})
+    if not isinstance(index_metadata, Mapping):
+        raise ValueError("model index metadata must be an object")
+    declared_total = index_metadata.get("total_size")
+    if declared_total is not None:
+        if (
+            not isinstance(declared_total, int)
+            or isinstance(declared_total, bool)
+            or declared_total <= 0
+        ):
+            raise ValueError("model index metadata.total_size is invalid")
+        if declared_total != sum(row["bytes"] for row in rows):
+            raise ValueError("model index total_size disagrees with publisher weights")
+    unreferenced = sorted(
+        relative
+        for relative in siblings
+        if relative.endswith(".safetensors") and relative not in referenced
+    )
+    canonical = json.dumps(
+        {"files": rows, "unreferenced_weight_files": unreferenced},
+        sort_keys=True,
+        separators=(",", ":"),
+    )
     return {
         "weight_file_count": len(rows),
         "total_weight_bytes": sum(row["bytes"] for row in rows),
         "files": rows,
+        "unreferenced_weight_files": unreferenced,
         "weight_plan_sha256": hashlib.sha256((canonical + "\n").encode("utf-8")).hexdigest(),
     }

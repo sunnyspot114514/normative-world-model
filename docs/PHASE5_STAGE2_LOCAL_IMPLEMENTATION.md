@@ -25,7 +25,7 @@ Stage-1 closed at commit `0b1a2c0` after K3 review and Codex counter-adjudicatio
 
 `phase5_preflight.py` provides three deliberately local primitives:
 
-1. a contract validator that fails if authorization, confirmation, remote-payload, token-budget, concurrency, or cap semantics drift;
+1. a contract validator that binds the complete parsed TOML semantics, while retaining targeted diagnostics for authorization, confirmation, remote-payload, token-budget, concurrency, and cap failures;
 2. a balanced 72/24 selector implementation whose tests use only synthetic records and which stops rather than relaxing a short stratum;
 3. an exact remote-payload verifier that rejects undeclared files, symlinks, path escapes, and content classes outside the two-class synthetic allowlist.
 
@@ -38,8 +38,16 @@ The selector's target-pair order, SHA-256 ranking preimages, canonical NL scenar
 `phase5_serialization.py` adds local proof primitives without adding a network or weight-download path:
 
 1. an exact public-metadata filename allowlist that rejects weights and path traversal;
-2. a publisher weight-plan resolver driven by the checkpoint's own index and publisher LFS SHA-256 metadata, never by a hard-coded shard count;
-3. tokenizer-package byte hashing plus exact core-vocabulary/preprocessing comparison;
-4. Base-template rendering with `enable_thinking=false` and a full-prompt token-ID equality proof that retains every compared ID locally and stops on one mismatch.
+2. a reviewed normalizer for realistic Hugging Face `blobs=true` sibling metadata and a publisher weight-plan resolver driven by the checkpoint's own index and nested publisher LFS SHA-256 metadata, never by a hard-coded shard count;
+3. every-present-metadata byte hashing plus exact core-vocabulary, preprocessing, truncation/padding, and full shared-added-token comparison;
+4. Base history rendering with `add_generation_prompt=false`, followed by the frozen shared assistant prefix and a ban on AgentWorld-only control literals; the full-prompt token-ID proof binds the inspected snapshot hashes, retains every compared ID locally, and stops on one mismatch.
 
 Tests use temporary synthetic tokenizer packages and fake tokenizer objects. No official snapshot has been downloaded by this slice.
+
+The payload verifier rejects hard links as well as symlinks and path escapes. Its two content-class labels remain attestations: the future payload builder must cross-check them against a separately hash-bound source/provenance closure, and the post-transfer verifier must rehash the received bytes.
+
+The selector API is intentionally named `select_phase5_fixture_population`. No real-export entry point exists. A future real selector must verify the separately committed population-selection authorization before it opens the retained export.
+
+## K3 review and counter-adjudication
+
+K3 returned `PASS_WITH_FIXES` for commit `164228d`; its exact report and the Codex counter-review are preserved under `external_reviews/2026-07-20_phase5-stage2-local-primitives_kimi-k3/`. The bounded fixes also close a Codex-identified empty-`<think>` serialization risk that K3 did not report. Restricted downloader implementation remains downstream of a clean full local check.

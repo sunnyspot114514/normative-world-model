@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
 
 from normative_world_model.phase5_preflight import (
     load_phase5_config,
+    phase5_config_semantic_sha256,
     phase5_selection_binding,
-    select_phase5_population,
+    select_phase5_fixture_population,
     validate_stage2_contract,
     verify_remote_payload,
 )
@@ -117,7 +119,12 @@ def _family(scenario: str, environment: str, *, hard: bool) -> list[dict]:
 
 class Phase5Stage2ContractTests(unittest.TestCase):
     def test_committed_draft_is_closed_for_local_stage2(self) -> None:
-        self.assertEqual(validate_stage2_contract(load_phase5_config()), [])
+        config = load_phase5_config()
+        self.assertEqual(
+            phase5_config_semantic_sha256(config),
+            "4bffe84b12ac40c4f27f38e8823b651dd3a60a11db2a3aee841f7ef2a11f603e",
+        )
+        self.assertEqual(validate_stage2_contract(config), [])
 
     def test_authorization_or_allowlist_relaxation_fails(self) -> None:
         config = load_phase5_config()
@@ -137,6 +144,31 @@ class Phase5Stage2ContractTests(unittest.TestCase):
         self.assertTrue(any("target profile pairs" in item for item in failures))
         self.assertTrue(any("locks must remain NOT_BUILT" in item for item in failures))
 
+    def test_complete_semantic_binding_catches_vacuous_and_unchecked_drift(self) -> None:
+        mutations = (
+            lambda config: config["throughput_smoke"].pop("input_token_targets"),
+            lambda config: config["runtime"].pop("maximum_generated_tokens"),
+            lambda config: config["runtime"].pop("throughput_concurrency_candidates"),
+            lambda config: config["throughput_smoke"].pop("concurrency_candidates"),
+            lambda config: config["source"].__setitem__(
+                "publisher_hashes_must_be_bound_before_weight_download", False
+            ),
+            lambda config: config["serialization_proof"].__setitem__(
+                "any_token_id_mismatch_policy", "CONTINUE"
+            ),
+            lambda config: config["selection"].__setitem__("seed", 0),
+            lambda config: config.pop("margins"),
+            lambda config: config.pop("governance"),
+        )
+        for mutate in mutations:
+            with self.subTest(mutate=mutate):
+                config = load_phase5_config()
+                mutate(config)
+                self.assertIn(
+                    "complete Stage-2 config semantics differ from the reviewed binding",
+                    validate_stage2_contract(config),
+                )
+
 
 class Phase5SyntheticSelectorTests(unittest.TestCase):
     def test_selector_is_deterministic_balanced_and_exclusion_safe(self) -> None:
@@ -147,14 +179,14 @@ class Phase5SyntheticSelectorTests(unittest.TestCase):
             for index in range(3):
                 rows.extend(_family(f"{environment}-h-{index}", environment, hard=True))
         excluded = {"game-d-0", "organization-h-0"}
-        first = select_phase5_population(
+        first = select_phase5_fixture_population(
             rows,
             excluded_scenario_ids=excluded,
             seed=17,
             discretionary_per_environment=2,
             hard_policy_per_environment=1,
         )
-        second = select_phase5_population(
+        second = select_phase5_fixture_population(
             reversed(rows),
             excluded_scenario_ids=excluded,
             seed=17,
@@ -170,7 +202,7 @@ class Phase5SyntheticSelectorTests(unittest.TestCase):
     def test_selector_stops_instead_of_relaxing_a_short_bucket(self) -> None:
         rows = _family("game-d-0", "game", hard=False)
         with self.assertRaisesRegex(ValueError, "insufficient eligible families"):
-            select_phase5_population(
+            select_phase5_fixture_population(
                 rows,
                 excluded_scenario_ids=(),
                 seed=1,
@@ -191,7 +223,7 @@ class Phase5SyntheticSelectorTests(unittest.TestCase):
         target["normative_decision"] = "allow"
         row["target_text"] = json.dumps(target)
         with self.assertRaisesRegex(ValueError, "surface variant changes"):
-            select_phase5_population(
+            select_phase5_fixture_population(
                 rows,
                 excluded_scenario_ids=(),
                 seed=1,
@@ -213,7 +245,29 @@ class Phase5SyntheticSelectorTests(unittest.TestCase):
         target["physical_delta"]["change"] = 2
         row["target_text"] = json.dumps(target)
         with self.assertRaisesRegex(ValueError, "surface variant changes"):
-            select_phase5_population(
+            select_phase5_fixture_population(
+                rows,
+                excluded_scenario_ids=(),
+                seed=1,
+                discretionary_per_environment=1,
+                hard_policy_per_environment=0,
+            )
+
+    def test_structured_surface_variant_cannot_change_model_input(self) -> None:
+        rows = _family("game-d-0", "game", hard=False)
+        row = next(
+            item
+            for item in rows
+            if item["input_condition"] == "structured"
+            and item["profile_id"] == "harm_averse"
+            and item["profile_surface_variant"] == 1
+        )
+        row["input_text"] = row["input_text"].replace(
+            '"conflict_blocking":false',
+            '"conflict_blocking":true',
+        )
+        with self.assertRaisesRegex(ValueError, "structured surface variant changes"):
+            select_phase5_fixture_population(
                 rows,
                 excluded_scenario_ids=(),
                 seed=1,
@@ -255,6 +309,36 @@ class Phase5RemotePayloadTests(unittest.TestCase):
                         "runner.py": "declared_runtime_source_files",
                         "selected_prompt.txt": "project_prompt",
                     },
+                )
+
+    def test_hard_links_empty_directories_and_noncanonical_paths_are_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            source = base / "source.py"
+            source.write_text("project-derived\n", encoding="utf-8")
+            root = base / "payload"
+            root.mkdir()
+            os.link(source, root / "synthetic.py")
+            with self.assertRaisesRegex(ValueError, "exactly one hard link"):
+                verify_remote_payload(
+                    root,
+                    {"synthetic.py": "public_synthetic_inputs"},
+                )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "empty").mkdir()
+            (root / "runner.py").write_text("pass\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "empty directories"):
+                verify_remote_payload(
+                    root,
+                    {"runner.py": "declared_runtime_source_files"},
+                )
+            (root / "empty").rmdir()
+            with self.assertRaisesRegex(ValueError, "normalized relative path"):
+                verify_remote_payload(
+                    root,
+                    {"folder\\runner.py": "declared_runtime_source_files"},
                 )
 
 
