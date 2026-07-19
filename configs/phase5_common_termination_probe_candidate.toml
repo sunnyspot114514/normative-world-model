@@ -1,0 +1,70 @@
+format_version = "phase5-common-termination-probe-candidate-v1"
+status = "CANDIDATE_LOCAL_PLAN_ONLY"
+
+[authorization]
+http_execution = false
+model_download = false
+server_rental = false
+gpu_execution = false
+project_prompt_access = false
+scientific_metrics = false
+
+[server]
+engine = "vllm"
+version = "0.25.1"
+generation_config = "vllm"
+generation_config_cli = "--generation-config vllm"
+
+[model_aliases]
+agentworld = "phase5-agentworld"
+base = "phase5-base"
+
+[checkpoint_default_eos.agentworld]
+literal = "<|im_end|>"
+token_id = 248046
+
+[checkpoint_default_eos.base]
+literal = "<|endoftext|>"
+token_id = 248044
+
+[[public_messages]]
+role = "system"
+content = "This is a public synthetic termination-interface probe."
+
+[[public_messages]]
+role = "user"
+content = "Emit the one token permitted by the request."
+
+[request]
+endpoint = "/v1/completions"
+stream = false
+temperature = 0.0
+top_p = 1.0
+n = 1
+seed = 2026072004
+max_tokens = 4
+min_tokens = 0
+add_special_tokens = false
+truncate_prompt_tokens = "NONE"
+stop_strings = []
+stop_token_ids = [248044, 248046]
+stop_token_literals = ["<|endoftext|>", "<|im_end|>"]
+forced_stop_token_ids = [248044, 248046]
+ignore_eos = true
+include_stop_str_in_output = false
+skip_special_tokens = false
+return_token_ids = true
+repetitions_per_checkpoint_stop_token = 2
+
+[acceptance]
+expected_case_count = 8
+http_status = 200
+choice_count = 1
+finish_reason = "stop"
+completion_tokens = 1
+require_stop_reason_exact_token_id = true
+require_generated_token_ids_exact_forced_token = true
+require_prompt_token_ids_exact = true
+require_response_model_alias_exact = true
+require_repeat_semantics_exact = true
+failure_policy = "TECHNICALLY_BLOCKED"

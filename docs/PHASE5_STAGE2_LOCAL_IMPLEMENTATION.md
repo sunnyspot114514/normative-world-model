@@ -2,7 +2,7 @@
 
 Date: 2026-07-19
 
-Status: **IN PROGRESS — PUBLIC SOURCE/INPUT/WEIGHT-METADATA PASS; LOCK-A EOS ACTION OPEN**
+Status: **IN PROGRESS — PUBLIC SOURCE/INPUT/WEIGHT-METADATA PASS; TERMINATION PLAN PASS, EXECUTION OPEN**
 
 Stage-1 closed at commit `0b1a2c0` after K3 review and Codex counter-adjudication. Stage 2 implements local primitives without opening a new data boundary.
 
@@ -81,3 +81,17 @@ and 141,225,192,536 prospective publisher bytes; it contains no weight bytes and
 does not alter `authorization.model_download=false`. Full evidence and the v1
 source-binding invalidation are recorded in
 `docs/PHASE5_PUBLIC_WEIGHT_PLAN_2026-07-20.md`.
+
+## Common termination probe candidate
+
+The standalone candidate TOML and `phase5_termination_probe.py` define a
+local-only eight-case probe for the remaining default-EOS difference. Both
+checkpoint servers would receive the same explicit stop-token list with default
+EOS ignored; each default token is separately forced on both checkpoints and
+must return its integer `stop_reason`. The request planner binds the verified
+public tokenizer proof and exact source bytes. The raw-response verifier also
+requires the future Lock-A plan hash, so a recomputed self-hash cannot authorize
+changed requests. The candidate plan passes locally, but contains no HTTP client
+and leaves the main TOML's termination status pending until an accepted Lock A
+authorizes the public synthetic serving probe. See
+`docs/PHASE5_COMMON_TERMINATION_PROBE_CANDIDATE_2026-07-20.md`.
