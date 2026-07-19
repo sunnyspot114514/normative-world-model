@@ -2,7 +2,7 @@
 
 Date: 2026-07-19
 
-Status: **IN PROGRESS — LOCAL SYNTHETIC FIXTURES ONLY**
+Status: **IN PROGRESS — PUBLIC SOURCE/INPUT TOKENIZATION PASS; LOCK-A EOS ACTION OPEN**
 
 Stage-1 closed at commit `0b1a2c0` after K3 review and Codex counter-adjudication. Stage 2 implements local primitives without opening a new data boundary.
 

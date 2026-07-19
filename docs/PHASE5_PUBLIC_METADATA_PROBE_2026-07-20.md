@@ -6,7 +6,7 @@ Execution commit: `2dc000d`
 
 Initial ignored-cache manifest SHA-256: `90045b75a1d01588a83c3df539c21f310f8d94324bf00b57015aebf1360151a7`
 
-Status: **REPEAT DOWNLOAD PASS; TOKENIZER PROBE V1 INVALIDATED FOR CONTEXT HEADROOM; V2 PENDING**
+Status: **REPEAT DOWNLOAD PASS; TOKENIZER PROBE V2 INPUT PASS; LOCK-A EOS ACTION OPEN**
 
 The first restricted execution ran from a clean commit. It fetched only the frozen public metadata allowlist at the two exact revisions and wrote under `.cache/phase5_public_metadata/v1-d46462f4f4c2/`.
 
@@ -38,3 +38,17 @@ V1 artifact SHA-256: `56984cf880b4102766e1d2ab3f1475cc236667aa074c6c2cfb19c42a93
 The five public prompts produced exact Base/AgentWorld token-ID equality, and the effective control-token bindings agreed. However, the `long-public` prompt was 8,019 input tokens. With the frozen 2,048-token generation cap, it would require 10,067 tokens and therefore is not a valid protocol-shaped witness for the 8,192 context.
 
 V1 remains valid evidence of tokenizer equality for those exact strings, but it is invalid as the required long-context/headroom probe. It is preserved in the ignored cache and is not overwritten. V2 changes the public repetition count, requires the long row to fall in `[5900, 6144]`, and separately asserts `input_tokens + 2048 <= 8192` before it may pass.
+
+## Tokenizer probe V2 result
+
+Execution commit: `952c0f7`
+
+V2 artifact SHA-256: `57aa5fe28faab15d7780df0243fa700ef9d0089f4c47fc0ade581c4ceee86970`
+
+Bound repeat manifest: `a8b8544ee8162e1634097b0d7194197d6c03244c98dcf134e818f59b9d872b3a`
+
+The independently rebuilt prompt counts were 34, 44, 49, 44, and 6,019 tokens. The long row plus the 2,048 generation allowance is 8,067, leaving 125 tokens under the frozen 8,192 context. All five Base/AgentWorld token-ID sequences matched exactly. The independent verifier reloaded both local packages and reproduced the complete stored artifact, returning PASS.
+
+Runtime versions were `transformers==4.57.6` and `tokenizers==0.22.2`. They are probe evidence, not yet the Lock-A container/source closure.
+
+The artifact status remains `PASS_WITH_LOCK_A_EOS_ACTION`: Base loads `<|endoftext|>`/248044 as EOS while AgentWorld loads `<|im_end|>`/248046. Input serialization is closed for this public probe; matched serving termination is not.

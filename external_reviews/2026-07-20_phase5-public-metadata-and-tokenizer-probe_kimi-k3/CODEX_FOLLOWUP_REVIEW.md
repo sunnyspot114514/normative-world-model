@@ -17,3 +17,9 @@ The accepted V2 repair is prospective and machine-enforced:
 - independently reload verified local tokenizer packages and rebuild the stored V2 document byte-semantically before accepting it.
 
 This change touches only public synthetic text and local proof logic. It does not authorize weights, project prompts, population selection, rental, confirmation, or science. A clean committed V2 implementation and passing full check are required before the one-time V2 run.
+
+## V2 outcome
+
+V2 ran from clean commit `952c0f7` and produced artifact SHA-256 `57aa5fe28faab15d7780df0243fa700ef9d0089f4c47fc0ade581c4ceee86970`. The long prompt was 6,019 tokens; with the 2,048 generation allowance it totals 8,067 and leaves 125 tokens. All five Base/AgentWorld input-ID sequences matched. The separate reload-and-rebuild verifier returned PASS.
+
+This closes only the public input-tokenization probe. The result remains `PASS_WITH_LOCK_A_EOS_ACTION` because matched serving termination is unresolved.
