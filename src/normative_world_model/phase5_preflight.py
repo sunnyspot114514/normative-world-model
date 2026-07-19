@@ -25,7 +25,7 @@ ALLOWED_REMOTE_CONTENT_CLASSES = frozenset(
 )
 PROFILE_IDS = tuple(sorted({item for pair in TARGET_PROFILE_PAIRS for item in pair}))
 STAGE2_CONFIG_SEMANTIC_SHA256 = (
-    "4bffe84b12ac40c4f27f38e8823b651dd3a60a11db2a3aee841f7ef2a11f603e"
+    "d46462f4f4c26765090a771972db30c62fa0a7a85e711d0c544f724bee55e481"
 )
 
 
@@ -59,6 +59,8 @@ def validate_stage2_contract(config: Mapping[str, Any]) -> list[str]:
     authorization = config.get("authorization", {})
     if authorization.get("protocol_drafting") is not True:
         failures.append("protocol_drafting must remain true during Stage 2")
+    if authorization.get("public_metadata_download") is not True:
+        failures.append("public metadata download must remain the only bounded network action")
     for name in (
         "population_selection",
         "model_download",

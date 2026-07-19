@@ -51,3 +51,16 @@ The selector API is intentionally named `select_phase5_fixture_population`. No r
 ## K3 review and counter-adjudication
 
 K3 returned `PASS_WITH_FIXES` for commit `164228d`; its exact report and the Codex counter-review are preserved under `external_reviews/2026-07-20_phase5-stage2-local-primitives_kimi-k3/`. The bounded fixes also close a Codex-identified empty-`<think>` serialization risk that K3 did not report. Restricted downloader implementation remains downstream of a clean full local check.
+
+## Restricted public-metadata downloader
+
+After the review fixes passed the full local check, the TOML gained the distinct authorization `public_metadata_download=true`; `model_download=false` remains unchanged. `phase5_public_metadata.py` and `scripts/fetch-phase5-public-metadata.py` implement this one bounded network action:
+
+- the two repository IDs and full 40-hex revisions come only from the semantic-hash-bound TOML;
+- the initial host is exactly `https://huggingface.co`; HTTPS redirects are limited to boundary-checked Hugging Face/CDN/Xet hosts and every redirect is retained;
+- a frozen root-filename allowlist is intersected with the pinned publisher response; four tokenizer/config/index files are mandatory and `.safetensors` bytes are never requested;
+- the API response, each file, each checkpoint, and the two-checkpoint bundle have predeclared byte caps; downloads use identity encoding, bounded attempts, bounded redirects, certificate-verified HTTPS, exact publisher-size checks, publisher LFS SHA-256 checks for LFS bytes, and locally recomputed Git blob IDs for non-LFS bytes;
+- JSON is parsed inertly with duplicate-key rejection, non-JSON metadata must be UTF-8, and no template or downloaded code is executed;
+- exact API bytes, exact downloaded bytes, redirect evidence, publisher identities, and SHA-256 manifests are written once under `.cache/phase5_public_metadata/`; any failure removes the newly created partial root and an existing root is never overwritten.
+
+The tests use only injected fixture fetchers and do not open the network. The first real execution is permitted only from a clean commit containing this implementation and its passing tests. It remains a public-metadata probe, not a model download or Lock A.

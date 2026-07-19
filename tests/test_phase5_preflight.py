@@ -122,7 +122,7 @@ class Phase5Stage2ContractTests(unittest.TestCase):
         config = load_phase5_config()
         self.assertEqual(
             phase5_config_semantic_sha256(config),
-            "4bffe84b12ac40c4f27f38e8823b651dd3a60a11db2a3aee841f7ef2a11f603e",
+            "d46462f4f4c26765090a771972db30c62fa0a7a85e711d0c544f724bee55e481",
         )
         self.assertEqual(validate_stage2_contract(config), [])
 

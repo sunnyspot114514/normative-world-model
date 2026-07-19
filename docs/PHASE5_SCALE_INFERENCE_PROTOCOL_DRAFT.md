@@ -187,7 +187,8 @@ Before a **synthetic-only** rental, Lock A must be complete and accepted. Before
 
 Until then:
 
-- model download: unauthorized until Lock A acceptance;
+- public tokenizer/config/index metadata: authorized only through the committed restricted Stage-2 downloader and ignored-cache manifest path;
+- model-weight download: unauthorized until Lock A acceptance;
 - server rental: unauthorized;
 - performance inference: unauthorized;
 - training: unauthorized;

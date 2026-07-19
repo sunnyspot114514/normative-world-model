@@ -5,6 +5,7 @@ scope = "retained_discovery_scale_diagnostic_only"
 
 [authorization]
 protocol_drafting = true
+public_metadata_download = true
 population_selection = false
 population_selection_authorization_status = "PENDING_SEPARATE_LOCAL_DERIVATION_GATE"
 population_selection_authorization_event = "COMMITTED_POST_STAGE2_FIXTURE_REVIEW_GATE"
