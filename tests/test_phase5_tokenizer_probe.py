@@ -6,6 +6,7 @@ from normative_world_model.phase5_serialization import FORBIDDEN_COMMON_CONTROL_
 from normative_world_model.phase5_tokenizer_probe import (
     EXPECTED_CONFIG_DIFFERENCES,
     EXPECTED_DEFAULT_EQUIVALENCES,
+    _verify_probe_document,
     build_public_tokenizer_probe,
 )
 
@@ -38,6 +39,8 @@ class _ProbeTokenizer:
             raise AssertionError("probe must not add special tokens")
         if text in self._control_ids:
             return [self._control_ids[text]]
+        if len(text) > 10_000:
+            return [index % 997 for index in range(6019)]
         return [index % 997 for index in range(max(1, len(text) // 5))]
 
 
@@ -66,13 +69,19 @@ class Phase5PublicTokenizerProbeTests(unittest.TestCase):
         self.assertEqual(result["status"], "PASS_WITH_LOCK_A_EOS_ACTION")
         self.assertEqual(result["input_tokenization_status"], "PASS")
         self.assertEqual(result["common_prompt_proof"]["prompt_count"], 5)
-        self.assertTrue(
-            any(
-                row["token_count"] >= 3072
-                for row in result["common_prompt_proof"]["rows"]
-            )
+        long_row = next(
+            row
+            for row in result["common_prompt_proof"]["rows"]
+            if row["prompt_id"] == "long-public"
         )
+        self.assertEqual(long_row["token_count"], 6019)
+        self.assertLessEqual(long_row["token_count"] + 2048, 8192)
         self.assertEqual(len(result["probe_sha256"]), 64)
+        self.assertEqual(_verify_probe_document(result, result)["status"], "PASS")
+        tampered = dict(result)
+        tampered["input_tokenization_status"] = "FAIL"
+        with self.assertRaisesRegex(ValueError, "artifact hash"):
+            _verify_probe_document(tampered, result)
 
     def test_effective_control_token_difference_stops_probe(self) -> None:
         with self.assertRaisesRegex(ValueError, "control-token binding differs"):

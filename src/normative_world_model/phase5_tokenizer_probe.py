@@ -20,7 +20,11 @@ from .phase5_serialization import (
     render_common_base_prompt,
 )
 
-PROBE_FORMAT_VERSION = "phase5-public-tokenizer-probe-v1"
+PROBE_FORMAT_VERSION = "phase5-public-tokenizer-probe-v2"
+MAXIMUM_MODEL_LENGTH = 8192
+MAXIMUM_GENERATED_TOKENS = 2048
+LONG_PROMPT_MINIMUM_TOKENS = 5900
+LONG_PROMPT_MAXIMUM_TOKENS = MAXIMUM_MODEL_LENGTH - MAXIMUM_GENERATED_TOKENS
 EXPECTED_CONFIG_DIFFERENCES = {
     "eos_token": {"base": "<|endoftext|>", "agentworld": "<|im_end|>"},
     "model_max_length": {"base": 262144, "agentworld": 131072},
@@ -67,7 +71,7 @@ PUBLIC_SYNTHETIC_MESSAGE_SETS: tuple[tuple[str, tuple[dict[str, str], ...]], ...
         "long-public",
         (
             {"role": "system", "content": "Public long-context tokenizer probe."},
-            {"role": "user", "content": "alpha beta gamma delta 123 " * 1000},
+            {"role": "user", "content": "alpha beta gamma delta 123 " * 750},
         ),
     ),
 )
@@ -127,10 +131,18 @@ def build_public_tokenizer_probe(
         agentworld_tokenizer=agentworld_tokenizer,
         tokenizer_package_report=package_report,
     )
-    if max(row["token_count"] for row in proof["rows"]) > 8192:
-        raise ValueError("public synthetic tokenizer probe exceeds the frozen context cap")
-    if not any(row["token_count"] >= 3072 for row in proof["rows"]):
-        raise ValueError("public synthetic tokenizer probe lacks a long-context witness")
+    long_row = next(
+        (row for row in proof["rows"] if row["prompt_id"] == "long-public"),
+        None,
+    )
+    if long_row is None or not (
+        LONG_PROMPT_MINIMUM_TOKENS
+        <= long_row["token_count"]
+        <= LONG_PROMPT_MAXIMUM_TOKENS
+    ):
+        raise ValueError("public synthetic tokenizer probe lacks a valid 6000-token witness")
+    if long_row["token_count"] + MAXIMUM_GENERATED_TOKENS > MAXIMUM_MODEL_LENGTH:
+        raise ValueError("public synthetic prompt plus generation cap exceeds model length")
     loaded_config_differences = {
         "eos_token": {
             "base": base_tokenizer.eos_token,
@@ -173,7 +185,8 @@ def build_public_tokenizer_probe(
 
 def default_public_tokenizer_probe_path() -> Path:
     root = default_public_metadata_root()
-    return root.parents[1] / "phase5_public_tokenizer_probe" / f"{root.name}.json"
+    binding = root.name.removeprefix("v1-")
+    return root.parents[1] / "phase5_public_tokenizer_probe" / f"v2-{binding}.json"
 
 
 def _write_probe_once(path: Path, result: Mapping[str, Any]) -> None:
@@ -195,11 +208,9 @@ def _write_probe_once(path: Path, result: Mapping[str, Any]) -> None:
         raise
 
 
-def run_public_tokenizer_probe(
+def _resolve_loader(
     loader: Callable[..., Any] | None = None,
-) -> dict[str, Any]:
-    """Verify, load locally without remote code, and prove public prompt token IDs."""
-
+) -> tuple[Callable[..., Any], dict[str, str]]:
     if loader is None:
         try:
             import tokenizers
@@ -216,6 +227,12 @@ def run_public_tokenizer_probe(
         }
     else:
         runtime_versions = {"transformers": "injected", "tokenizers": "injected"}
+    return loader, runtime_versions
+
+
+def _load_bound_tokenizers(
+    loader: Callable[..., Any],
+) -> tuple[dict[str, Any], dict[str, Any], Any, Any]:
     root = default_public_metadata_root()
     metadata_verification = verify_public_metadata_bundle(root)
     base_root = root / "base" / "files"
@@ -232,6 +249,18 @@ def run_public_tokenizer_probe(
         agentworld_tokenizer, "is_fast", False
     ):
         raise ValueError("both public tokenizer snapshots must load as fast tokenizers")
+    return metadata_verification, package_report, base_tokenizer, agentworld_tokenizer
+
+
+def run_public_tokenizer_probe(
+    loader: Callable[..., Any] | None = None,
+) -> dict[str, Any]:
+    """Verify, load locally without remote code, and prove public prompt token IDs."""
+
+    loader, runtime_versions = _resolve_loader(loader)
+    metadata_verification, package_report, base_tokenizer, agentworld_tokenizer = (
+        _load_bound_tokenizers(loader)
+    )
     result = build_public_tokenizer_probe(
         metadata_verification=metadata_verification,
         package_report=package_report,
@@ -241,3 +270,60 @@ def run_public_tokenizer_probe(
     )
     _write_probe_once(default_public_tokenizer_probe_path(), result)
     return result
+
+
+def _reject_duplicate_probe_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"public tokenizer probe contains a duplicate key: {key!r}")
+        result[key] = value
+    return result
+
+
+def _verify_probe_document(
+    stored: Mapping[str, Any],
+    rebuilt: Mapping[str, Any],
+) -> dict[str, Any]:
+    if stored.get("probe_sha256") != _artifact_sha256(
+        {key: value for key, value in stored.items() if key != "probe_sha256"}
+    ):
+        raise ValueError("public tokenizer probe artifact hash is invalid")
+    if stored != rebuilt:
+        raise ValueError("stored public tokenizer probe differs from an independent rebuild")
+    return {
+        "status": "PASS",
+        "probe_sha256": stored["probe_sha256"],
+        "input_tokenization_status": stored["input_tokenization_status"],
+        "prompt_count": stored["common_prompt_proof"]["prompt_count"],
+        "lock_a_required_actions": stored["lock_a_required_actions"],
+    }
+
+
+def verify_public_tokenizer_probe(
+    loader: Callable[..., Any] | None = None,
+) -> dict[str, Any]:
+    """Rebuild the fixed public proof from verified snapshots without writing."""
+
+    path = default_public_tokenizer_probe_path()
+    try:
+        stored = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=_reject_duplicate_probe_pairs,
+        )
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError("public tokenizer probe artifact is unreadable") from error
+    if not isinstance(stored, dict):
+        raise ValueError("public tokenizer probe artifact must be an object")
+    loader, runtime_versions = _resolve_loader(loader)
+    metadata_verification, package_report, base_tokenizer, agentworld_tokenizer = (
+        _load_bound_tokenizers(loader)
+    )
+    rebuilt = build_public_tokenizer_probe(
+        metadata_verification=metadata_verification,
+        package_report=package_report,
+        base_tokenizer=base_tokenizer,
+        agentworld_tokenizer=agentworld_tokenizer,
+        runtime_versions=runtime_versions,
+    )
+    return _verify_probe_document(stored, rebuilt)
