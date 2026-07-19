@@ -2,7 +2,7 @@
 
 Date: 2026-07-19
 
-Status: **IN PROGRESS — PUBLIC SOURCE/INPUT TOKENIZATION PASS; LOCK-A EOS ACTION OPEN**
+Status: **IN PROGRESS — PUBLIC SOURCE/INPUT/WEIGHT-METADATA PASS; LOCK-A EOS ACTION OPEN**
 
 Stage-1 closed at commit `0b1a2c0` after K3 review and Codex counter-adjudication. Stage 2 implements local primitives without opening a new data boundary.
 
@@ -68,3 +68,16 @@ The tests use only injected fixture fetchers and do not open the network. The fi
 The verifier independently rebuilds the manifest hash, snapshot hashes, exact file set, source identities, URL boundaries, byte counts, local SHA-256s, publisher LFS/Git hashes, inert JSON checks, and aggregate caps before a tokenizer loader can see the files. It rejects symlinks, junctions, hard links, empty directories, extra files, and a cache bound to an older TOML semantic hash.
 
 `phase5_tokenizer_probe.py` then loads only the verified local files with `local_files_only=true`, `trust_remote_code=false`, and `use_fast=true`. Its fixed public prompts include ASCII, Unicode, punctuation, multi-turn, and long-context witnesses. The V2 long witness must contain 5,900–6,144 input tokens and must also satisfy `input + 2,048 <= 8,192`; V1 was preserved and invalidated for missing this headroom check. The proof binds every prompt token ID to the exact snapshot hashes, and a separate verifier reloads the packages and rebuilds the whole artifact. A successful input-tokenization probe still reports `PASS_WITH_LOCK_A_EOS_ACTION`, because the checkpoint-default EOS tokens differ and the matched serving termination rule is not yet frozen.
+
+## Metadata-only publisher weight plan
+
+`phase5_public_weight_plan.py` consumes only the verified local public bundle.
+It separates index-declared tensor storage bytes from full publisher/LFS
+safetensors container bytes, resolves every index-referenced shard without a
+hard-coded count, and binds repo/revision, API/index hashes, LFS hashes, Stage-2
+configuration, and implementation source bytes. Its independent verifier
+rebuilds the complete write-once artifact. The accepted v3 plan covers 35 files
+and 141,225,192,536 prospective publisher bytes; it contains no weight bytes and
+does not alter `authorization.model_download=false`. Full evidence and the v1
+source-binding invalidation are recorded in
+`docs/PHASE5_PUBLIC_WEIGHT_PLAN_2026-07-20.md`.

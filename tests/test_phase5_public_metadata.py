@@ -15,6 +15,7 @@ from normative_world_model.phase5_public_metadata import (
     FrozenPublicCheckpoint,
     _download_frozen_sources_to_root,
     _frozen_public_checkpoints,
+    _load_inert_json,
     _parse_content_length,
     _publisher_file_plan,
     _verify_public_metadata_bundle,
@@ -105,6 +106,26 @@ class _FixtureFetcher:
 
 
 class Phase5PublicMetadataContractTests(unittest.TestCase):
+    def test_inert_json_rejects_nonfinite_literals_and_float_overflow(self) -> None:
+        for body in (b'{"x":NaN}', b'{"x":Infinity}', b'{"x":-Infinity}', b'{"x":1e309}'):
+            with self.subTest(body=body), self.assertRaisesRegex(ValueError, "non-finite"):
+                _load_inert_json(body, label="fixture")
+        self.assertEqual(_load_inert_json(b'{"x":1.25}', label="fixture"), {"x": 1.25})
+
+    def test_inert_json_rejects_float_rounding_across_integer_semantics(self) -> None:
+        cases = (
+            (b'{"x":9007199254740993.0}', "integer-valued float loses precision"),
+            (b'{"x":9007199254740991.1}', "fractional float loses"),
+            (b'{"x":1e-1000}', "fractional float loses"),
+        )
+        for body, message in cases:
+            with self.subTest(body=body), self.assertRaisesRegex(ValueError, message):
+                _load_inert_json(body, label="fixture")
+        self.assertEqual(
+            _load_inert_json(b'{"x":69321221376.0}', label="fixture"),
+            {"x": 69321221376.0},
+        )
+
     def test_url_boundary_distinguishes_initial_and_official_redirect_hosts(self) -> None:
         self.assertEqual(
             validate_huggingface_url("https://huggingface.co/api/models/x", initial=True),

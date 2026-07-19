@@ -301,6 +301,8 @@ class Phase5PublisherPlanTests(unittest.TestCase):
         plan = resolve_publisher_weight_plan(index, reversed(siblings))
         self.assertEqual(plan["weight_file_count"], 2)
         self.assertEqual(plan["total_weight_bytes"], 30)
+        self.assertEqual(plan["index_declared_tensor_bytes"], 30)
+        self.assertEqual(plan["safetensors_container_overhead_bytes"], 0)
         self.assertEqual([row["bytes"] for row in plan["files"]], [10, 20])
         extra = siblings + [
             {
@@ -312,6 +314,70 @@ class Phase5PublisherPlanTests(unittest.TestCase):
         extra_plan = resolve_publisher_weight_plan(index, extra)
         self.assertEqual(extra_plan["unreferenced_weight_files"], ["stale.safetensors"])
         self.assertNotEqual(plan["weight_plan_sha256"], extra_plan["weight_plan_sha256"])
+
+    def test_weight_plan_accepts_only_exact_safe_integer_valued_float_total(self) -> None:
+        siblings = [
+            {
+                "rfilename": "model.safetensors",
+                "size": 30,
+                "lfs": {"sha256": "a" * 64, "size": 30},
+            }
+        ]
+        plan = resolve_publisher_weight_plan(
+            {
+                "metadata": {"total_size": 30.0},
+                "weight_map": {"layer": "model.safetensors"},
+            },
+            siblings,
+        )
+        self.assertEqual(plan["total_weight_bytes"], 30)
+
+        invalid_totals = (
+            True,
+            0.0,
+            -0.0,
+            30.5,
+            float("nan"),
+            float("inf"),
+            float("-inf"),
+            float(2**53 + 2),
+        )
+        for total in invalid_totals:
+            with self.subTest(total=total), self.assertRaisesRegex(ValueError, "total_size"):
+                resolve_publisher_weight_plan(
+                    {
+                        "metadata": {"total_size": total},
+                        "weight_map": {"layer": "model.safetensors"},
+                    },
+                    siblings,
+                )
+
+        with self.assertRaisesRegex(ValueError, "exceed"):
+            resolve_publisher_weight_plan(
+                {
+                    "metadata": {"total_size": 31.0},
+                    "weight_map": {"layer": "model.safetensors"},
+                },
+                siblings,
+            )
+
+    def test_index_tensor_bytes_are_distinct_from_publisher_container_bytes(self) -> None:
+        plan = resolve_publisher_weight_plan(
+            {
+                "metadata": {"total_size": 27},
+                "weight_map": {"layer": "model.safetensors"},
+            },
+            [
+                {
+                    "rfilename": "model.safetensors",
+                    "size": 30,
+                    "lfs": {"sha256": "a" * 64, "size": 30},
+                }
+            ],
+        )
+        self.assertEqual(plan["index_declared_tensor_bytes"], 27)
+        self.assertEqual(plan["total_weight_bytes"], 30)
+        self.assertEqual(plan["safetensors_container_overhead_bytes"], 3)
 
     def test_missing_publisher_weight_or_bad_digest_fails(self) -> None:
         index = {"weight_map": {"layer": "model.safetensors"}}

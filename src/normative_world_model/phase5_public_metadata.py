@@ -8,10 +8,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import shutil
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -98,10 +100,29 @@ def _reject_duplicate_json_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]
 
 
 def _load_inert_json(body: bytes, *, label: str) -> Any:
+    def reject_nonfinite(value: str) -> None:
+        raise ValueError(f"JSON contains a non-finite number: {label}/{value}")
+
+    def parse_finite_float(value: str) -> float:
+        source = Decimal(value)
+        parsed = float(value)
+        if not math.isfinite(parsed):
+            reject_nonfinite(value)
+        if source == source.to_integral_value():
+            if Decimal(int(parsed)) != source:
+                raise ValueError(f"JSON integer-valued float loses precision: {label}/{value}")
+        elif parsed.is_integer():
+            raise ValueError(
+                f"JSON fractional float loses its fractional part: {label}/{value}"
+            )
+        return parsed
+
     try:
         return json.loads(
             body.decode("utf-8"),
             object_pairs_hook=_reject_duplicate_json_pairs,
+            parse_constant=reject_nonfinite,
+            parse_float=parse_finite_float,
         )
     except (UnicodeDecodeError, json.JSONDecodeError) as error:
         raise ValueError(f"invalid inert JSON content: {label}") from error

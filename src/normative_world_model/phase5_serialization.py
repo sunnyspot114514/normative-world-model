@@ -509,29 +509,53 @@ def resolve_publisher_weight_plan(
     index_metadata = model_index.get("metadata", {})
     if not isinstance(index_metadata, Mapping):
         raise ValueError("model index metadata must be an object")
-    declared_total = index_metadata.get("total_size")
+    declared_total_raw = index_metadata.get("total_size")
+    declared_total: int | None
+    if declared_total_raw is None:
+        declared_total = None
+    elif isinstance(declared_total_raw, int) and not isinstance(declared_total_raw, bool):
+        declared_total = declared_total_raw
+    elif (
+        isinstance(declared_total_raw, float)
+        and declared_total_raw.is_integer()
+        and 0 < declared_total_raw <= 2**53
+    ):
+        declared_total = int(declared_total_raw)
+    else:
+        raise ValueError("model index metadata.total_size is invalid")
+    publisher_total = sum(row["bytes"] for row in rows)
     if declared_total is not None:
-        if (
-            not isinstance(declared_total, int)
-            or isinstance(declared_total, bool)
-            or declared_total <= 0
-        ):
+        if declared_total <= 0:
             raise ValueError("model index metadata.total_size is invalid")
-        if declared_total != sum(row["bytes"] for row in rows):
-            raise ValueError("model index total_size disagrees with publisher weights")
+        # Hugging Face's sharder defines metadata.total_size as the sum of
+        # tensor storage sizes. Publisher/LFS sizes are complete safetensors
+        # container bytes and therefore also include per-shard headers.
+        if declared_total > publisher_total:
+            raise ValueError("model index tensor bytes exceed publisher weight bytes")
+    container_overhead = (
+        publisher_total - declared_total if declared_total is not None else None
+    )
     unreferenced = sorted(
         relative
         for relative in siblings
         if relative.endswith(".safetensors") and relative not in referenced
     )
     canonical = json.dumps(
-        {"files": rows, "unreferenced_weight_files": unreferenced},
+        {
+            "files": rows,
+            "index_declared_tensor_bytes": declared_total,
+            "publisher_weight_bytes": publisher_total,
+            "safetensors_container_overhead_bytes": container_overhead,
+            "unreferenced_weight_files": unreferenced,
+        },
         sort_keys=True,
         separators=(",", ":"),
     )
     return {
         "weight_file_count": len(rows),
-        "total_weight_bytes": sum(row["bytes"] for row in rows),
+        "total_weight_bytes": publisher_total,
+        "index_declared_tensor_bytes": declared_total,
+        "safetensors_container_overhead_bytes": container_overhead,
         "files": rows,
         "unreferenced_weight_files": unreferenced,
         "weight_plan_sha256": hashlib.sha256((canonical + "\n").encode("utf-8")).hexdigest(),
