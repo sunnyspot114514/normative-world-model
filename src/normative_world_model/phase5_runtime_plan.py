@@ -31,7 +31,7 @@ from .phase5_termination_probe import (
     verify_common_termination_probe_plan,
 )
 
-RUNTIME_PLAN_FORMAT_VERSION = "phase5-common-runtime-plan-v1"
+RUNTIME_PLAN_FORMAT_VERSION = "phase5-common-runtime-plan-v2"
 RUNTIME_PLAN_MAX_BYTES = 2 * 1024 * 1024
 IMPLEMENTATION_SOURCE_PATHS = (
     "configs/phase5_scale_inference_draft.toml",
@@ -47,10 +47,17 @@ COMMON_ENVIRONMENT = {
     "HF_HUB_DISABLE_TELEMETRY": "1",
     "HF_HUB_OFFLINE": "1",
     "OMP_NUM_THREADS": "1",
+    "PYTHONNOUSERSITE": "1",
     "TOKENIZERS_PARALLELISM": "false",
     "TRANSFORMERS_OFFLINE": "1",
+    "VLLM_SERVER_DEV_MODE": "0",
     "VLLM_USE_FLASHINFER_SAMPLER": "0",
 }
+
+ENVIRONMENT_INHERITANCE_POLICY = "LOCK_A_FAIL_CLOSED_ALLOWLIST_NOT_YET_FROZEN"
+RUNTIME_EVIDENCE_MODE = (
+    "DEV_MODE_DISABLED_EXACT_CAPTURE_PLUS_LANGUAGE_ONLY_BEHAVIORAL_PROBE"
+)
 
 
 def _canonical_sha256(value: Any) -> str:
@@ -263,7 +270,7 @@ def build_phase5_runtime_plan(
 
     result = {
         "format_version": RUNTIME_PLAN_FORMAT_VERSION,
-        "status": "LOCAL_RUNTIME_PLAN_PASS_LOCK_A_NOT_BUILT_EXECUTION_NOT_AUTHORIZED",
+        "status": "LOCAL_RUNTIME_PLAN_V2_PASS_LOCK_A_NOT_BUILT_EXECUTION_NOT_AUTHORIZED",
         "authorization": {
             "model_download": False,
             "server_rental": False,
@@ -286,6 +293,7 @@ def build_phase5_runtime_plan(
             "host": "127.0.0.1",
             "port": 8000,
             "language_model_only": True,
+            "server_dev_mode": False,
             "trust_remote_code": False,
             "tensor_parallel_size": 1,
             "dtype": "bfloat16",
@@ -300,6 +308,40 @@ def build_phase5_runtime_plan(
             "reasoning_parser": "qwen3",
             "flashinfer_sampler_enabled": False,
             "omp_num_threads": 1,
+            "python_no_user_site": True,
+            "required_environment": dict(COMMON_ENVIRONMENT),
+        },
+        "environment_contract": {
+            "status": "CANDIDATE_CLIENT_CONTRACT_NOT_IMPLEMENTED",
+            "inheritance_policy": ENVIRONMENT_INHERITANCE_POLICY,
+            "ambient_environment_allowlist_status": "PENDING_LOCK_A",
+            "required_environment": dict(COMMON_ENVIRONMENT),
+            "server_dev_mode": False,
+            "server_info_endpoint_expected": False,
+        },
+        "runtime_evidence_contract": {
+            "status": "CANDIDATE_CLIENT_CONTRACT_NOT_IMPLEMENTED",
+            "mode": RUNTIME_EVIDENCE_MODE,
+            "raw_before_parse_capture_required": True,
+            "exact_argv_capture_required": True,
+            "required_environment_capture_required": True,
+            "startup_log_capture_required": True,
+            "models_endpoint_capture_required": True,
+            "server_info_capture_required": False,
+            "language_only_behavioral_probe": {
+                "input_class": "PUBLIC_SYNTHETIC_VALID_MULTIMODAL_REQUEST",
+                "expected_result": "REJECTED_BECAUSE_LANGUAGE_MODEL_ONLY",
+                "payload_status": "NOT_BUILT",
+            },
+        },
+        "lifecycle_contract": {
+            "status": "CANDIDATE_CLIENT_CONTRACT_NOT_IMPLEMENTED",
+            "readiness_probe_required": True,
+            "shutdown_timeout_required": True,
+            "process_exit_capture_required": True,
+            "port_release_verification_required": True,
+            "next_launch_forbidden_before_port_release": True,
+            "raw_capture_required": True,
         },
         "launch_order": ["agentworld", "base"],
         "serve_sequentially": True,
@@ -308,11 +350,16 @@ def build_phase5_runtime_plan(
         "launch_specs": launch_specs,
         "unresolved_before_lock_a": [
             "freeze_checkpoint_revisions",
+            "build_post_download_exact_weight_verifier_and_snapshot_containment",
             "bind_container_digest_and_provider_image",
             "bind_provider_quote_wall_clock_cap_and_preflight_spend",
+            "freeze_ambient_environment_allowlist_and_effective_environment_manifest",
             "build_synthetic_client_orchestrator_and_raw_capture",
+            "freeze_valid_public_language_only_behavioral_probe",
+            "enforce_readiness_shutdown_process_exit_and_port_release",
             "build_throughput_smoke_runner_and_verifier",
             "build_source_import_closure_and_cleanliness_attestation",
+            "harden_or_exclude_nested_public_metadata_path_helper",
             "complete_two_round_lock_a_review",
         ],
     }
@@ -327,7 +374,7 @@ def default_phase5_runtime_plan_path() -> Path:
         / ".cache"
         / "phase5_runtime_plan"
         / (
-            f"v1-{STAGE2_CONFIG_SEMANTIC_SHA256[:12]}-"
+            f"v2-{STAGE2_CONFIG_SEMANTIC_SHA256[:12]}-"
             f"{TERMINATION_CONFIG_SEMANTIC_SHA256[:12]}.json"
         )
     )
@@ -411,7 +458,7 @@ def verify_phase5_runtime_plan() -> dict[str, Any]:
     if stored != rebuilt:
         raise ValueError("runtime plan differs from independent rebuild")
     return {
-        "status": "PASS_LOCAL_PLAN_ONLY_EXECUTION_NOT_AUTHORIZED",
+        "status": "PASS_LOCAL_PLAN_V2_ONLY_EXECUTION_NOT_AUTHORIZED",
         "runtime_plan_sha256": stored["runtime_plan_sha256"],
         "checkpoint_count": len(stored["launch_specs"]),
         "model_download": stored["authorization"]["model_download"],

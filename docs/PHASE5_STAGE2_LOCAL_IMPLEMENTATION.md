@@ -112,7 +112,7 @@ TP=1, max model length 8192, eager mode, Triton MoE, the Qwen3 reasoning parser,
 loopback-only port 8000, and FlashInfer sampling disabled. `trust_remote_code`
 is explicitly false and is absent from both launch vectors.
 
-The local write-once artifact is
+The preserved v1 write-once artifact is
 `.cache/phase5_runtime_plan/v1-2a23d1973113-1a8cdbf5f807.json`:
 
 - runtime-plan field SHA-256:
@@ -129,3 +129,28 @@ the current source-bound public artifacts. This is a local Lock-A component,
 not Lock A itself: revisions are still observed rather than frozen, container
 identity and provider quote are unset, and no reusable client/orchestrator,
 throughput runner, source closure, or two-round Lock-A disposition exists yet.
+
+The v1 artifact is preserved as the first launch-vector design. Internal review
+found that it did not make the ambient-environment policy, resolved-runtime
+evidence path, post-download weight verification, or process/port lifecycle
+obligations machine-readable. Runtime-plan v2 fixes those omissions without
+opening authorization: it pins `VLLM_SERVER_DEV_MODE=0` and
+`PYTHONNOUSERSITE=1`, declares a future fail-closed environment allowlist,
+chooses exact launch/environment/log/model-list capture plus a public
+language-only behavioral rejection probe instead of the disabled development
+`/server_info` endpoint, and records post-download snapshot containment and
+server shutdown/port release as mandatory unresolved work.
+
+The current local write-once artifact is
+`.cache/phase5_runtime_plan/v2-2a23d1973113-1a8cdbf5f807.json`:
+
+- runtime-plan field SHA-256:
+  `b2887ba90d81cc32f9b49993853df5c97a8676341e7bf3d76de2bb1b44ac7c6f`;
+- plan-file SHA-256:
+  `f9a4d9c14c863473bcd8ba46248e84b1d6ac52c4a04665af37a499cafd59bc74`;
+- status:
+  `PASS_LOCAL_PLAN_V2_ONLY_EXECUTION_NOT_AUTHORIZED`;
+- checkpoints: 2; weight files: 35; prospective publisher bytes:
+  141,225,192,536;
+- every download, rental, HTTP, GPU, retained-population, and science
+  authorization remains false.

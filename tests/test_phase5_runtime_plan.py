@@ -96,7 +96,7 @@ class Phase5RuntimePlanTests(unittest.TestCase):
         plan = _build()
         self.assertEqual(
             plan["status"],
-            "LOCAL_RUNTIME_PLAN_PASS_LOCK_A_NOT_BUILT_EXECUTION_NOT_AUTHORIZED",
+            "LOCAL_RUNTIME_PLAN_V2_PASS_LOCK_A_NOT_BUILT_EXECUTION_NOT_AUTHORIZED",
         )
         self.assertEqual(plan["launch_order"], ["agentworld", "base"])
         self.assertTrue(plan["serve_sequentially"])
@@ -129,12 +129,52 @@ class Phase5RuntimePlanTests(unittest.TestCase):
             self.assertEqual(launch["environment"]["HF_HUB_OFFLINE"], "1")
             self.assertEqual(launch["environment"]["TRANSFORMERS_OFFLINE"], "1")
             self.assertEqual(launch["environment"]["VLLM_USE_FLASHINFER_SAMPLER"], "0")
+            self.assertEqual(launch["environment"]["VLLM_SERVER_DEV_MODE"], "0")
+            self.assertEqual(launch["environment"]["PYTHONNOUSERSITE"], "1")
             self.assertTrue(launch["snapshot_relative_path"].startswith("models/phase5/"))
             self.assertEqual(launch["weight_plan"]["unreferenced_weight_files"], [])
             argv[1] = "<snapshot>"
             argv[argv.index("--served-model-name") + 1] = "<alias>"
             normalized_argv.append(argv)
         self.assertEqual(normalized_argv[0], normalized_argv[1])
+
+    def test_environment_evidence_and_lifecycle_debts_are_machine_readable(self) -> None:
+        plan = _build()
+        environment = plan["environment_contract"]
+        evidence = plan["runtime_evidence_contract"]
+        lifecycle = plan["lifecycle_contract"]
+
+        self.assertEqual(
+            environment["inheritance_policy"],
+            "LOCK_A_FAIL_CLOSED_ALLOWLIST_NOT_YET_FROZEN",
+        )
+        self.assertFalse(environment["server_dev_mode"])
+        self.assertFalse(environment["server_info_endpoint_expected"])
+        self.assertEqual(
+            evidence["mode"],
+            "DEV_MODE_DISABLED_EXACT_CAPTURE_PLUS_LANGUAGE_ONLY_BEHAVIORAL_PROBE",
+        )
+        self.assertFalse(evidence["server_info_capture_required"])
+        self.assertEqual(
+            evidence["language_only_behavioral_probe"]["payload_status"],
+            "NOT_BUILT",
+        )
+        self.assertTrue(lifecycle["port_release_verification_required"])
+        self.assertTrue(lifecycle["next_launch_forbidden_before_port_release"])
+
+        unresolved = set(plan["unresolved_before_lock_a"])
+        self.assertIn(
+            "build_post_download_exact_weight_verifier_and_snapshot_containment",
+            unresolved,
+        )
+        self.assertIn(
+            "freeze_ambient_environment_allowlist_and_effective_environment_manifest",
+            unresolved,
+        )
+        self.assertIn(
+            "harden_or_exclude_nested_public_metadata_path_helper",
+            unresolved,
+        )
 
     def test_open_authorization_or_language_only_drift_fails(self) -> None:
         opened = load_phase5_config()
