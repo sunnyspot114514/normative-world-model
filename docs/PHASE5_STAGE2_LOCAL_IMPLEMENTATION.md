@@ -100,3 +100,32 @@ The source-reviewed v2 evidence contract additionally binds the completion
 response object, the empty detokenized text required when the first forced stop
 token is excluded from output, and exact total-token accounting. The v1 plan is
 preserved but superseded; neither version authorizes HTTP or GPU execution.
+
+## Common runtime launch plan
+
+`phase5_runtime_plan.py` projects the reviewed Stage-2 config, public weight
+plan, and termination v2 proof into two exact future `vllm serve` argument
+vectors. AgentWorld and Base use the same offline environment and every runtime
+flag except the pinned snapshot path and served alias. In particular, both use
+vLLM 0.25.1, `--generation-config vllm`, `--language-model-only`, bfloat16,
+TP=1, max model length 8192, eager mode, Triton MoE, the Qwen3 reasoning parser,
+loopback-only port 8000, and FlashInfer sampling disabled. `trust_remote_code`
+is explicitly false and is absent from both launch vectors.
+
+The local write-once artifact is
+`.cache/phase5_runtime_plan/v1-2a23d1973113-1a8cdbf5f807.json`:
+
+- runtime-plan field SHA-256:
+  `e6b399934ccb433d850f355d65fa697ac4f8fd00a56add694eb8074310288a6c`;
+- plan-file SHA-256:
+  `803f39375b04b419f566bac1c12ea0fb347f45d348f69c760358a6f85fb5d33f`;
+- checkpoints: 2; weight files: 35; prospective publisher bytes:
+  141,225,192,536;
+- `model_download=false`, `server_rental=false`, `http_execution=false`, and
+  `gpu_execution=false`.
+
+The independent verifier rebuilds the full plan and both launch vectors from
+the current source-bound public artifacts. This is a local Lock-A component,
+not Lock A itself: revisions are still observed rather than frozen, container
+identity and provider quote are unset, and no reusable client/orchestrator,
+throughput runner, source closure, or two-round Lock-A disposition exists yet.
