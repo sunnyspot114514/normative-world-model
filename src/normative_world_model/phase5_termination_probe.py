@@ -23,9 +23,9 @@ from .phase5_tokenizer_probe import (
 )
 
 TERMINATION_CONFIG_SEMANTIC_SHA256 = (
-    "832c06e718b9436f708fa0db9d4ed78e09936b2d0253a692e13958a6986d69f7"
+    "1a8cdbf5f8071c27f31c1e04ec026655d922703c8aa8c4b30bfcc1a8a485018c"
 )
-TERMINATION_PLAN_FORMAT_VERSION = "phase5-common-termination-plan-v1"
+TERMINATION_PLAN_FORMAT_VERSION = "phase5-common-termination-plan-v2"
 TERMINATION_PLAN_MAX_BYTES = 2 * 1024 * 1024
 RAW_RESPONSE_MAX_BYTES = 2 * 1024 * 1024
 IMPLEMENTATION_SOURCE_PATHS = (
@@ -121,9 +121,12 @@ def validate_termination_probe_config(config: Mapping[str, Any]) -> list[str]:
     expected_acceptance = {
         "expected_case_count": 8,
         "http_status": 200,
+        "response_object": "text_completion",
         "choice_count": 1,
+        "expected_response_text": "",
         "finish_reason": "stop",
         "completion_tokens": 1,
+        "require_total_tokens_exact": True,
         "require_stop_reason_exact_token_id": True,
         "require_generated_token_ids_exact_forced_token": True,
         "require_prompt_token_ids_exact": True,
@@ -291,7 +294,7 @@ def default_common_termination_probe_plan_path() -> Path:
         project_root
         / ".cache"
         / "phase5_common_termination_probe_plan"
-        / f"v1-{TERMINATION_CONFIG_SEMANTIC_SHA256[:12]}.json"
+        / f"v2-{TERMINATION_CONFIG_SEMANTIC_SHA256[:12]}.json"
     )
 
 
@@ -429,6 +432,8 @@ def verify_common_termination_probe_evidence(
         response = _load_inert_json(raw.encode("utf-8"), label=f"termination/{case_id}")
         if not isinstance(response, dict) or response.get("model") != expected["model_alias"]:
             raise ValueError(f"termination response model differs: {case_id}")
+        if response.get("object") != plan["acceptance"]["response_object"]:
+            raise ValueError(f"termination response object differs: {case_id}")
         choices = response.get("choices")
         if not isinstance(choices, list) or len(choices) != 1 or not isinstance(choices[0], dict):
             raise ValueError(f"termination response choices differ: {case_id}")
@@ -439,7 +444,7 @@ def verify_common_termination_probe_evidence(
             not isinstance(choice.get("index"), int)
             or isinstance(choice.get("index"), bool)
             or choice["index"] != 0
-            or not isinstance(choice.get("text"), str)
+            or choice.get("text") != plan["acceptance"]["expected_response_text"]
             or choice.get("finish_reason") != "stop"
             or not isinstance(stop_reason, int)
             or isinstance(stop_reason, bool)
@@ -457,6 +462,9 @@ def verify_common_termination_probe_evidence(
             or not isinstance(usage.get("prompt_tokens"), int)
             or isinstance(usage.get("prompt_tokens"), bool)
             or usage["prompt_tokens"] != plan["public_prompt_token_count"]
+            or not isinstance(usage.get("total_tokens"), int)
+            or isinstance(usage.get("total_tokens"), bool)
+            or usage["total_tokens"] != plan["public_prompt_token_count"] + 1
         ):
             raise ValueError(f"termination usage differs: {case_id}")
         signature = (
@@ -466,6 +474,7 @@ def verify_common_termination_probe_evidence(
             choice["stop_reason"],
             usage["prompt_tokens"],
             usage["completion_tokens"],
+            usage["total_tokens"],
         )
         signatures[(expected["checkpoint"], forced_id)].append(signature)
     if set(observed) != set(planned):

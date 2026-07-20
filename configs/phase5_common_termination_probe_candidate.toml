@@ -1,4 +1,4 @@
-format_version = "phase5-common-termination-probe-candidate-v1"
+format_version = "phase5-common-termination-probe-candidate-v2"
 status = "CANDIDATE_LOCAL_PLAN_ONLY"
 
 [authorization]
@@ -59,9 +59,12 @@ repetitions_per_checkpoint_stop_token = 2
 [acceptance]
 expected_case_count = 8
 http_status = 200
+response_object = "text_completion"
 choice_count = 1
+expected_response_text = ""
 finish_reason = "stop"
 completion_tokens = 1
+require_total_tokens_exact = true
 require_stop_reason_exact_token_id = true
 require_generated_token_ids_exact_forced_token = true
 require_prompt_token_ids_exact = true

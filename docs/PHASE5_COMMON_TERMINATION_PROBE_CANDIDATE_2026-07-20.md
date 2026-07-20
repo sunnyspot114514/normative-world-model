@@ -29,27 +29,35 @@ response contract: `stop_reason` carries the stop token ID for an explicit token
 stop and is `None` for an EOS-only finish. A cell passes only if the response
 reports `finish_reason="stop"`, the exact forced integer `stop_reason`, exactly
 one generated token ID equal to that reason, exact prompt token IDs, and one
-completion token. Both repetitions must have identical semantic fields.
+completion token. Because `include_stop_str_in_output=false`, vLLM removes the
+first stop-terminated token from detokenized text even when
+`skip_special_tokens=false`; the exact expected text is therefore the empty
+string, while `token_ids` retains the forced token. The v2 verifier also requires
+`object="text_completion"` and exact `total_tokens = prompt_tokens + 1`. Both
+repetitions must have identical semantic fields.
 
 Official vLLM 0.25.1 references:
 
 - <https://github.com/vllm-project/vllm/blob/v0.25.1/vllm/entrypoints/openai/completion/protocol.py>
+- <https://github.com/vllm-project/vllm/blob/v0.25.1/vllm/entrypoints/openai/completion/serving.py>
 - <https://github.com/vllm-project/vllm/blob/v0.25.1/vllm/sampling_params.py>
+- <https://github.com/vllm-project/vllm/blob/v0.25.1/vllm/v1/core/sched/utils.py>
+- <https://github.com/vllm-project/vllm/blob/v0.25.1/vllm/v1/engine/detokenizer.py>
 - <https://github.com/vllm-project/vllm/blob/v0.25.1/vllm/config/model.py>
 
 ## Local plan result
 
 Candidate config semantic SHA-256:
-`832c06e718b9436f708fa0db9d4ed78e09936b2d0253a692e13958a6986d69f7`
+`1a8cdbf5f8071c27f31c1e04ec026655d922703c8aa8c4b30bfcc1a8a485018c`
 
 Plan artifact field:
-`d76811ebee847a272dea946258bd926bc35aa92e34d7fc374ef14efc1c551882`
+`b752a05215d735a5d33e4fb3a70e740876afe2a695759d78ded5828468610002`
 
 Plan file SHA-256:
-`6ec21f5337193aba9aa6c45ed89cefe0ca264bf0d9b3d8f5a942240b6218b9f6`
+`9d663e7d7f707bf51a66061bf79ff873e7977f1002985a946365723e9f2e8855`
 
 Ignored local path:
-`.cache/phase5_common_termination_probe_plan/v1-832c06e718b9.json`
+`.cache/phase5_common_termination_probe_plan/v2-1a8cdbf5f807.json`
 
 The plan binds the candidate TOML, four implementation modules, the verified
 public tokenizer-probe hash, both effective default EOS bindings, the complete
@@ -67,7 +75,20 @@ The future evidence verifier accepts raw-before-parse responses only when the
 caller supplies the exact Lock-A `expected_plan_sha256`; a self-hash alone is not
 a trust anchor. Duplicate JSON keys, non-finite numbers, missing/extra cases,
 request drift, bool-as-int fields, ambiguous/default EOS stops, and repeat drift
-all fail closed.
+all fail closed. It also rejects the wrong completion object, visible or
+otherwise nonempty stop-token text, and missing, bool, or inconsistent
+`usage.total_tokens`.
+
+## Revision ledger
+
+The original v1 artifact at
+`.cache/phase5_common_termination_probe_plan/v1-832c06e718b9.json` is preserved.
+K3's incomplete first-round attack showed that v1 did not bind the response
+`object`, exact detokenized text, or `usage.total_tokens`. Codex checked the
+official vLLM 0.25.1 source and replaced the initially suggested literal-token
+text assertion with the source-correct empty-string assertion. V2 supersedes v1
+for any future Lock-A package; v1 remains historical plan-only evidence and does
+not authorize execution.
 
 ## Boundary and next gate
 

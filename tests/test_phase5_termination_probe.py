@@ -53,15 +53,15 @@ def _evidence(plan: dict) -> list[dict]:
         forced_id = case["forced_stop_token_id"]
         response = {
             "id": f"synthetic-{case['case_id']}",
+            "object": "text_completion",
             "model": case["model_alias"],
             "choices": [
                 {
                     "index": 0,
-                    "text": next(
-                        row["literal"]
-                        for row in plan["literal_bindings"]
-                        if row["token_id"] == forced_id
-                    ),
+                    # vLLM excludes the first stop-terminated token from text
+                    # when include_stop_str_in_output=false. The token remains
+                    # observable through token_ids and stop_reason.
+                    "text": "",
                     "finish_reason": "stop",
                     "stop_reason": forced_id,
                     "token_ids": [forced_id],
@@ -93,6 +93,9 @@ class Phase5TerminationProbeTests(unittest.TestCase):
         self.assertEqual(plan["status"], "CANDIDATE_PLAN_PASS_EXECUTION_NOT_AUTHORIZED")
         self.assertFalse(plan["authorization"]["http_execution"])
         self.assertEqual(len(plan["cases"]), 8)
+        self.assertEqual(plan["acceptance"]["response_object"], "text_completion")
+        self.assertEqual(plan["acceptance"]["expected_response_text"], "")
+        self.assertTrue(plan["acceptance"]["require_total_tokens_exact"])
         self.assertEqual(
             {(row["checkpoint"], row["forced_stop_token_id"]) for row in plan["cases"]},
             {
@@ -164,6 +167,48 @@ class Phase5TerminationProbeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "usage differs"):
             verify_common_termination_probe_evidence(
                 plan, bool_usage, expected_plan_sha256=plan["plan_sha256"]
+            )
+
+    def test_evidence_binds_completion_object_empty_text_and_total_usage(self) -> None:
+        plan = _plan()
+        rows = _evidence(plan)
+
+        wrong_object = deepcopy(rows)
+        response = json.loads(wrong_object[0]["raw_response_text"])
+        response["object"] = "chat.completion"
+        wrong_object[0]["raw_response_text"] = json.dumps(response)
+        with self.assertRaisesRegex(ValueError, "response object differs"):
+            verify_common_termination_probe_evidence(
+                plan, wrong_object, expected_plan_sha256=plan["plan_sha256"]
+            )
+
+        visible_stop_token = deepcopy(rows)
+        response = json.loads(visible_stop_token[0]["raw_response_text"])
+        response["choices"][0]["text"] = "<|endoftext|>"
+        visible_stop_token[0]["raw_response_text"] = json.dumps(response)
+        with self.assertRaisesRegex(ValueError, "stop semantics differ"):
+            verify_common_termination_probe_evidence(
+                plan,
+                visible_stop_token,
+                expected_plan_sha256=plan["plan_sha256"],
+            )
+
+        missing_total = deepcopy(rows)
+        response = json.loads(missing_total[0]["raw_response_text"])
+        del response["usage"]["total_tokens"]
+        missing_total[0]["raw_response_text"] = json.dumps(response)
+        with self.assertRaisesRegex(ValueError, "usage differs"):
+            verify_common_termination_probe_evidence(
+                plan, missing_total, expected_plan_sha256=plan["plan_sha256"]
+            )
+
+        bool_total = deepcopy(rows)
+        response = json.loads(bool_total[0]["raw_response_text"])
+        response["usage"]["total_tokens"] = True
+        bool_total[0]["raw_response_text"] = json.dumps(response)
+        with self.assertRaisesRegex(ValueError, "usage differs"):
+            verify_common_termination_probe_evidence(
+                plan, bool_total, expected_plan_sha256=plan["plan_sha256"]
             )
 
     def test_evidence_rejects_duplicate_json_keys_before_semantics(self) -> None:

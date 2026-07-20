@@ -95,3 +95,8 @@ changed requests. The candidate plan passes locally, but contains no HTTP client
 and leaves the main TOML's termination status pending until an accepted Lock A
 authorizes the public synthetic serving probe. See
 `docs/PHASE5_COMMON_TERMINATION_PROBE_CANDIDATE_2026-07-20.md`.
+
+The source-reviewed v2 evidence contract additionally binds the completion
+response object, the empty detokenized text required when the first forced stop
+token is excluded from output, and exact total-token accounting. The v1 plan is
+preserved but superseded; neither version authorizes HTTP or GPU execution.
