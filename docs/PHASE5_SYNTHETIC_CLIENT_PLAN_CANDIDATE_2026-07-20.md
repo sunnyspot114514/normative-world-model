@@ -2,7 +2,7 @@
 
 Date: 2026-07-20
 
-Status: **LOCAL PLAN PASS; CLIENT, ORCHESTRATOR, AND EVIDENCE VERIFIER NOT BUILT; EXECUTION NOT AUTHORIZED**
+Status: **LOCAL V3 PLAN PASS; CLIENT, ORCHESTRATOR, AND EVIDENCE VERIFIER NOT BUILT; EXECUTION NOT AUTHORIZED**
 
 This candidate closes the paper design for the reusable Lock-A client before
 any networking code exists. It does not download a model, launch a server,
@@ -78,15 +78,15 @@ AgentWorld port-release proof is forbidden.
 
 Ignored write-once artifact:
 
-`.cache/phase5_synthetic_client_plan/v1-b2887ba90d81-b752a05215d7.json`
+`.cache/phase5_synthetic_client_plan/v3-b2887ba90d81-b752a05215d7.json`
 
 - plan-field SHA-256:
-  `a8d892819d6dc416f810a5749485b4b6968c5ba5237299416927d939dcd317ac`;
+  `37ca3afaf8b2b6d465d695ecbc324f7ee0f78b14439a4876c10c76ff099efdf8`;
 - file SHA-256:
-  `22586f3e3dc4be0a10107896dacce143b268d2c0bb92a98bc85678ef823e2787`;
-- bytes: 46,743;
+  `e0307cc074135d99c4585d91bf0ff11e1d2fd5dbe8818c9a89e066c53686b7bb`;
+- bytes: 48,071;
 - independent rebuild: PASS;
-- repository checks: 196 tests PASS, isolation PASS, retained locks PASS,
+- repository checks: 197 tests PASS, isolation PASS, retained locks PASS,
   confirmation remains `RESERVED_NOT_GENERATED`.
 
 Commands:
@@ -100,10 +100,30 @@ powershell -ExecutionPolicy Bypass -File scripts/check.ps1
 
 ## Remaining boundary
 
-This plan is not Lock A. The network client, process orchestrator, and
+The preserved v1 artifact has plan SHA-256
+`a8d892819d6dc416f810a5749485b4b6968c5ba5237299416927d939dcd317ac`
+and file SHA-256
+`22586f3e3dc4be0a10107896dacce143b268d2c0bb92a98bc85678ef823e2787`.
+It is superseded, not deleted: a second internal pass found that its generic
+4xx language-only gate could falsely accept 401/404 responses and that its
+lifecycle wording placed startup-log capture before process launch. V2 requires
+the source-derived 400 `BadRequestError` with an image/vision-chunk zero-limit
+signature, fixes the executable event order, and retains every health,
+shutdown, exit, and port-release event.
+
+The preserved V2 artifact has plan SHA-256
+`807b07d39b06fe800c444b90ad91fd3a3d2e7f7ecb403cedecfc869ac2174ba4`
+and file SHA-256
+`d156a4dd612996c2f833ad482c1a9a282459732f238f9b77aacb9cadcb7d423a`.
+It is also superseded: its PNG had a valid signature and 1-by-1 IHDR but a
+chunk CRC mismatch, so a strict parser could reject malformed media before
+testing the language-only boundary. V3 uses a fully CRC-validated 1-by-1 RGBA
+PNG and freezes an exact standard-library structural test.
+
+V3 is not Lock A. The network client, process orchestrator, and
 independent evidence verifier remain `NOT_BUILT`. The exact language-only error
-body is intentionally not guessed; the candidate freezes a 4xx class gate and
-requires exact semantics to be resolved from both-checkpoint runtime evidence.
+text still requires both-checkpoint runtime confirmation, but unrelated 4xx
+responses can no longer pass the source-bound semantic gate.
 Container/provider/cost bindings, the effective environment allowlist,
 post-download weight verification, throughput runner, and two accepted review
 rounds also remain unresolved.

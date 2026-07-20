@@ -167,15 +167,27 @@ client surface; the client, orchestrator, and evidence verifier are explicitly
 `NOT_BUILT`.
 
 The local write-once artifact is
-`.cache/phase5_synthetic_client_plan/v1-b2887ba90d81-b752a05215d7.json`:
+`.cache/phase5_synthetic_client_plan/v3-b2887ba90d81-b752a05215d7.json`:
 
 - client-plan field SHA-256:
-  `a8d892819d6dc416f810a5749485b4b6968c5ba5237299416927d939dcd317ac`;
+  `37ca3afaf8b2b6d465d695ecbc324f7ee0f78b14439a4876c10c76ff099efdf8`;
 - plan-file SHA-256:
-  `22586f3e3dc4be0a10107896dacce143b268d2c0bb92a98bc85678ef823e2787`;
+  `e0307cc074135d99c4585d91bf0ff11e1d2fd5dbe8818c9a89e066c53686b7bb`;
 - requests: 20; common public prompt: 64 tokens;
 - every process, HTTP, GPU, retained-population, and science authorization
   remains false.
+
+V1 is preserved and superseded. A second internal pass found that its generic
+4xx language-only gate could accept unrelated authentication or route errors,
+and that one composite lifecycle step mentioned startup-log capture before
+launch. V2 requires the vLLM-source-derived 400 multimodal-zero-limit error
+signature, separates prelaunch argv capture from post-launch log capture, and
+binds raw health, shutdown, exit, and port-release evidence.
+
+V2 is likewise preserved and superseded. A full PNG chunk/CRC audit found that
+its nominal 1-by-1 fixture was malformed even though its signature and IHDR
+looked valid. V3 replaces it with a standard-library-constructed 1-by-1 RGBA
+PNG and verifies signature, chunk order, lengths, CRCs, IEND, and dimensions.
 
 See `docs/PHASE5_SYNTHETIC_CLIENT_PLAN_CANDIDATE_2026-07-20.md` for the exact
 battery, evidence sequence, lifecycle contract, and remaining Lock-A debts.

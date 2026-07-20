@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
+import struct
 import unittest
+import zlib
 from pathlib import Path
 
 from normative_world_model.phase5_preflight import load_phase5_config
@@ -128,7 +131,7 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
         plan = _build()
         self.assertEqual(
             plan["status"],
-            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_ONLY_EXECUTION_NOT_AUTHORIZED",
+            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V3_ONLY_EXECUTION_NOT_AUTHORIZED",
         )
         self.assertEqual(plan["request_count"], 20)
         self.assertFalse(any(plan["authorization"].values()))
@@ -253,11 +256,64 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
         for row in probes:
             parts = row["request_body"]["messages"][0]["content"]
             image = next(part for part in parts if part["type"] == "image_url")
-            self.assertTrue(image["image_url"]["url"].startswith("data:image/png;base64,"))
+            uri = image["image_url"]["url"]
+            self.assertTrue(uri.startswith("data:image/png;base64,"))
+            png = base64.b64decode(uri.split(",", 1)[1], validate=True)
+            self.assertEqual(png[:8], b"\x89PNG\r\n\x1a\n")
+            offset = 8
+            chunks = []
+            while offset < len(png):
+                length = struct.unpack(">I", png[offset : offset + 4])[0]
+                kind = png[offset + 4 : offset + 8]
+                payload = png[offset + 8 : offset + 8 + length]
+                checksum = struct.unpack(
+                    ">I", png[offset + 8 + length : offset + 12 + length]
+                )[0]
+                self.assertEqual(checksum, zlib.crc32(kind + payload) & 0xFFFFFFFF)
+                chunks.append((kind, payload))
+                offset += 12 + length
+            self.assertEqual(offset, len(png))
+            self.assertEqual([kind for kind, _ in chunks], [b"IHDR", b"IDAT", b"IEND"])
+            self.assertEqual(struct.unpack(">II", chunks[0][1][:8]), (1, 1))
         gate = plan["semantic_pass_gate"]["language_only_probe"]
-        self.assertEqual(gate["required_status_class"], "4xx")
+        self.assertEqual(gate["required_http_status"], 400)
+        self.assertEqual(gate["required_error_object"]["error.code"], 400)
+        self.assertEqual(
+            gate["required_error_object"]["error.type"], "BadRequestError"
+        )
+        self.assertEqual(
+            gate["required_error_object"]["error.param_allowed"],
+            ["image", "vision_chunk"],
+        )
         self.assertEqual(gate["http_2xx_result"], "FAIL_LANGUAGE_ONLY_CONTRACT")
-        self.assertEqual(gate["exact_error_body_semantics_status"], "PENDING_RUNTIME_EVIDENCE")
+        self.assertEqual(
+            gate["unrelated_http_4xx_result"], "FAIL_LANGUAGE_ONLY_CONTRACT"
+        )
+        self.assertIn("SOURCE_BOUND", gate["error_semantics_status"])
+
+    def test_lifecycle_order_is_executable_and_every_boundary_has_raw_evidence(self) -> None:
+        lifecycle = _build()["lifecycle_contract"]
+        order = lifecycle["per_checkpoint_order"]
+        self.assertLess(
+            order.index("launch_one_server"),
+            order.index("capture_startup_log_stream_from_process_start"),
+        )
+        self.assertLess(
+            order.index("capture_startup_log_stream_from_process_start"),
+            order.index("poll_get_health_until_ready_or_timeout"),
+        )
+        events = lifecycle["lifecycle_evidence_event_order"]
+        self.assertLess(
+            events.index("process_started_with_pid_and_monotonic_time_captured"),
+            events.index("every_health_poll_envelope_captured_raw"),
+        )
+        self.assertLess(
+            events.index("process_exit_code_and_final_log_fsynced"),
+            events.index("port_release_probe_captured"),
+        )
+        self.assertTrue(lifecycle["every_health_poll_attempt_retained"])
+        self.assertTrue(lifecycle["shutdown_signal_and_timeout_path_retained"])
+        self.assertTrue(lifecycle["port_release_probe_raw_capture_required"])
 
     def test_drift_in_bindings_token_ids_or_authorization_fails_closed(self) -> None:
         runtime = _runtime_plan()

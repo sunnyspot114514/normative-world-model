@@ -2,7 +2,12 @@
 
 Date: 2026-07-20
 
-Verdict: **PASS AS A LOCAL, NON-EXECUTING CANDIDATE; NOT LOCK A**
+Verdict: **SUPERSEDED AFTER SECOND INTERNAL PASS; V1 IS NOT ACCEPTED**
+
+This file records the first pass against commit `c3d9f13`. Before any K3 audit
+actually began, Codex performed another source-level attack and invalidated the
+V1 disposition below. It is preserved rather than rewritten as though V1 had
+always passed the stronger checks.
 
 ## Independently checked
 
@@ -65,3 +70,20 @@ single permitted retry.
 
 K3 review is requested next. Codex retains final adjudication and will not
 convert an incomplete or unsupported K3 response into an accepted round.
+
+## Superseding findings
+
+1. **Generic 4xx false pass.** V1 accepted any 4xx for the language-only
+   negative probe. A 401 authentication failure or 404 route error could
+   therefore masquerade as proof that multimodality was disabled. vLLM 0.25.1
+   source traces the intended path through a zero multimodal item limit,
+   `VLLMValidationError`, and a 400 `BadRequestError`. V2 requires that code,
+   type, an image/vision-chunk parameter, and the zero-limit message fragments.
+2. **Impossible lifecycle wording.** V1's composite order placed startup-log
+   capture before server launch. V2 persists intended argv/environment before
+   launch, starts the process, then captures the log stream from process start.
+   It also adds explicit raw evidence for every health poll, shutdown path,
+   process exit, final log, and port-release check.
+
+These are contract changes, so the write-once V1 artifact remains on disk and
+V2 receives a new format version and path.

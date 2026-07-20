@@ -37,13 +37,13 @@ from .phase5_termination_probe import (
     verify_common_termination_probe_plan,
 )
 
-SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION = "phase5-public-synthetic-client-plan-v1"
+SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION = "phase5-public-synthetic-client-plan-v3"
 SYNTHETIC_CLIENT_PLAN_MAX_BYTES = 4 * 1024 * 1024
 PUBLIC_REQUEST_SEED = 2026071803
 PUBLIC_IMAGE_DATA_URI = (
     "data:image/png;base64,"
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8A"
-    "AgEBAScY42YAAAAASUVORK5CYII="
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGNgAAIA"
+    "AAUAAXpeqz8AAAAASUVORK5CYII="
 )
 PUBLIC_TOY_MESSAGES = (
     {
@@ -468,7 +468,7 @@ def build_phase5_synthetic_client_plan(
     ]
     result = {
         "format_version": SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION,
-        "status": "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_ONLY_EXECUTION_NOT_AUTHORIZED",
+        "status": "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V3_ONLY_EXECUTION_NOT_AUTHORIZED",
         "authorization": {
             "model_download": False,
             "server_rental": False,
@@ -555,10 +555,22 @@ def build_phase5_synthetic_client_plan(
             "models_endpoint_alias_exact": True,
             "language_only_probe": {
                 "request_is_valid_public_multimodal": True,
-                "required_status_class": "4xx",
+                "required_http_status": 400,
+                "required_error_object": {
+                    "error.code": 400,
+                    "error.type": "BadRequestError",
+                    "error.param_allowed": ["image", "vision_chunk"],
+                    "error.message_required_fragments": [
+                        "At most 0 ",
+                        "(s) may be provided in one prompt.",
+                    ],
+                },
                 "http_2xx_result": "FAIL_LANGUAGE_ONLY_CONTRACT",
+                "unrelated_http_4xx_result": "FAIL_LANGUAGE_ONLY_CONTRACT",
                 "http_5xx_result": "TECHNICALLY_BLOCKED_AFTER_FROZEN_RETRY",
-                "exact_error_body_semantics_status": "PENDING_RUNTIME_EVIDENCE",
+                "error_semantics_status": (
+                    "SOURCE_BOUND_VLLM_0_25_1_RUNTIME_MUST_MATCH_ONE_ALLOWED_MODALITY"
+                ),
             },
             "termination_evidence_verifier_must_pass": True,
             "toy_schema_must_pass": True,
@@ -575,8 +587,9 @@ def build_phase5_synthetic_client_plan(
             "per_checkpoint_order": [
                 "verify_port_8000_free_before_launch",
                 "verify_snapshot_and_effective_environment",
-                "capture_exact_argv_environment_and_startup_log",
+                "persist_exact_intended_argv_and_effective_environment",
                 "launch_one_server",
+                "capture_startup_log_stream_from_process_start",
                 "poll_get_health_until_ready_or_timeout",
                 "execute_request_sequence_for_checkpoint",
                 "request_graceful_shutdown",
@@ -591,6 +604,24 @@ def build_phase5_synthetic_client_plan(
             "port_release_timeout_seconds": 30,
             "next_checkpoint_launch_forbidden_before_port_release": True,
             "simultaneous_checkpoint_servers_forbidden": True,
+            "lifecycle_evidence_event_order": [
+                "prelaunch_port_probe_captured",
+                "snapshot_and_environment_verification_captured",
+                "argv_and_environment_fsynced",
+                "process_started_with_pid_and_monotonic_time_captured",
+                "startup_log_stream_capture_started",
+                "every_health_poll_envelope_captured_raw",
+                "readiness_result_fsynced",
+                "checkpoint_request_battery_completed_or_blocked",
+                "graceful_shutdown_requested_and_captured",
+                "forced_termination_if_needed_captured",
+                "process_exit_code_and_final_log_fsynced",
+                "port_release_probe_captured",
+            ],
+            "every_health_poll_attempt_retained": True,
+            "shutdown_signal_and_timeout_path_retained": True,
+            "process_exit_and_final_log_required_before_port_release_pass": True,
+            "port_release_probe_raw_capture_required": True,
         },
         "implementation_state": {
             "client": "NOT_BUILT",
@@ -602,7 +633,7 @@ def build_phase5_synthetic_client_plan(
         "unresolved_before_lock_a": [
             "implement_client_raw_capture_and_exact_retry_state_machine",
             "implement_independent_semantic_and_lifecycle_evidence_verifier",
-            "verify_exact_language_only_error_semantics_on_both_checkpoints",
+            "confirm_source_bound_language_only_error_semantics_on_both_checkpoints",
             "bind_effective_environment_allowlist_and_post_download_weight_verifier",
             "bind_container_provider_quote_and_whole_rental_cap",
             "complete_two_round_review_of_runtime_v2_and_client_plan",
@@ -630,7 +661,7 @@ def default_phase5_synthetic_client_plan_path(
         project_root
         / ".cache"
         / "phase5_synthetic_client_plan"
-        / f"v1-{runtime_plan_sha256[:12]}-{termination_plan_sha256[:12]}.json"
+        / f"v3-{runtime_plan_sha256[:12]}-{termination_plan_sha256[:12]}.json"
     )
 
 
@@ -746,7 +777,7 @@ def verify_phase5_synthetic_client_plan() -> dict[str, Any]:
     if stored != rebuilt:
         raise ValueError("synthetic client plan differs from independent rebuild")
     return {
-        "status": "PASS_LOCAL_CLIENT_PLAN_ONLY_EXECUTION_NOT_AUTHORIZED",
+        "status": "PASS_LOCAL_CLIENT_PLAN_V3_ONLY_EXECUTION_NOT_AUTHORIZED",
         "client_plan_sha256": stored["client_plan_sha256"],
         "request_count": stored["request_count"],
         "http_execution": stored["authorization"]["http_execution"],
