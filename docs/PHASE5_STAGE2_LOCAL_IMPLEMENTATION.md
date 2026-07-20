@@ -154,3 +154,28 @@ The current local write-once artifact is
   141,225,192,536;
 - every download, rental, HTTP, GPU, retained-population, and science
   authorization remains false.
+
+## Public-synthetic client/orchestrator plan
+
+`phase5_synthetic_client_plan.py` consumes the independently rebuilt runtime
+v2 and termination v2 plans plus a fresh two-tokenizer proof for a public toy
+prompt. It freezes 20 future public-only requests, exact canonical request-byte
+hashes, a one-retry identity contract, two-stage raw-before-parse persistence,
+the arithmetic semantic oracle, deterministic final-content replay, and the
+sequential server/port lifecycle. The module has no subprocess or network
+client surface; the client, orchestrator, and evidence verifier are explicitly
+`NOT_BUILT`.
+
+The local write-once artifact is
+`.cache/phase5_synthetic_client_plan/v1-b2887ba90d81-b752a05215d7.json`:
+
+- client-plan field SHA-256:
+  `a8d892819d6dc416f810a5749485b4b6968c5ba5237299416927d939dcd317ac`;
+- plan-file SHA-256:
+  `22586f3e3dc4be0a10107896dacce143b268d2c0bb92a98bc85678ef823e2787`;
+- requests: 20; common public prompt: 64 tokens;
+- every process, HTTP, GPU, retained-population, and science authorization
+  remains false.
+
+See `docs/PHASE5_SYNTHETIC_CLIENT_PLAN_CANDIDATE_2026-07-20.md` for the exact
+battery, evidence sequence, lifecycle contract, and remaining Lock-A debts.
