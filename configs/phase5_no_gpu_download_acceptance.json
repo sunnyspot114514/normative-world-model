@@ -1,0 +1,120 @@
+{
+  "format_version": "phase5-no-gpu-download-acceptance-v1",
+  "status": "LOCK_A_NO_GPU_DOWNLOAD_ACCEPTED",
+  "source_commit": "efaaac898df3cecc15362d22f896813ff8ab8d78",
+  "validity": {
+    "not_before_utc": "2026-07-21T20:28:23Z",
+    "expires_utc": "2026-07-23T20:28:23Z"
+  },
+  "operator_approval": {
+    "approved_scope": "NO_GPU_WEIGHT_PREPARATION_THEN_SEPARATELY_CONFIRMED_GPU_PREFLIGHT",
+    "request_text": "可以，用无卡模式下载，然后有卡去跑吧",
+    "no_gpu_transaction_confirmation_text": "确认",
+    "gpu_start_requires_action_time_confirmation": true
+  },
+  "authorization": {
+    "server_rental": true,
+    "no_gpu_preparation": true,
+    "model_download": true,
+    "weight_preparation_process_execution": true,
+    "gpu_execution": false,
+    "model_server_process_execution": false,
+    "http_model_execution": false,
+    "retained_population_access": false,
+    "project_prompt_access": false,
+    "scientific_execution": false,
+    "confirmation_generation": false
+  },
+  "provider_quote": {
+    "provider": "AutoDL",
+    "currency": "CNY",
+    "instance_id": "y4c4dlvw4m-87db1829",
+    "zone_host": "northwest-b/d44",
+    "gpu_model": "RTX PRO 6000",
+    "gpu_count": 1,
+    "gpu_memory_bytes": 103079215104,
+    "no_gpu_hourly_price_minor": 10,
+    "gpu_hourly_price_minor": 598,
+    "storage_daily_price_minor": 158
+  },
+  "limits": {
+    "currency": "CNY",
+    "maximum_spend_minor": 6000,
+    "whole_rental_wall_clock_seconds": 36000,
+    "maximum_network_download_bytes": 71903877960,
+    "maximum_additional_data_disk_bytes": 141225192536,
+    "observed_free_data_disk_bytes": 290465255424,
+    "minimum_post_preparation_free_bytes": 34359738368
+  },
+  "weight_plan": {
+    "path": ".cache/phase5_public_weight_plan/v3-2a23d1973113.json",
+    "artifact_sha256": "ee5eaa6d9fb3b9da9ede408743dacad0ed6c9bf6e4495307a662deff23ab6c8c",
+    "file_sha256": "c5e6fa190934011849afe5759477c892d27bc6fa8a593f7677a479e6575ce1f4",
+    "publisher_weight_bytes": 141225192536,
+    "agentworld_copy_bytes": 69321314576,
+    "base_network_download_bytes": 71903877960,
+    "weight_file_count": 35
+  },
+  "checkpoints": [
+    {
+      "checkpoint": "agentworld",
+      "repo_id": "Qwen/Qwen-AgentWorld-35B-A3B",
+      "revision": "60d2b0434a53d2e62a7c00a489586815d94ebffb",
+      "weight_plan_sha256": "484df605e6c74d4478dd5e09fadc790af9a33342ff3270e034deba493edfc0a3"
+    },
+    {
+      "checkpoint": "base",
+      "repo_id": "Qwen/Qwen3.5-35B-A3B-Base",
+      "revision": "0f0813072d2358973511097385626f21fcb6d422",
+      "weight_plan_sha256": "4917e831cd45756735148e1aa3e1ced7a71018b0fe3531230400bcb2a394111a"
+    }
+  ],
+  "remote_environment": {
+    "manifest_sha256": "a7fbd35254b8616dca42494869b888f9a2755122d2012f4749ed5e99b96274b5",
+    "format_version": "phase5-remote-environment-manifest-v1",
+    "observed_mode": "NO_GPU",
+    "kernel": "5.15.0-78-generic",
+    "python_version": "3.12.3",
+    "python_executable_sha256": "0c05a22b0b180580a76437114a95cf138f67c8f46245acad26017c803b42b8c1",
+    "vllm_version": "0.25.1",
+    "torch_version": "2.11.0",
+    "transformers_version": "5.14.1"
+  },
+  "preparation_implementation": {
+    "path": "scripts/prepare-phase5-remote-weights.sh",
+    "sha256": "6f362a6c98d1600b71f81e75be5ba88a128c318d42f049e052f0228c4023e3d0",
+    "manifest_row_count": 35,
+    "resumable_base_download": true,
+    "agentworld_source_rehash_before_copy": true,
+    "destination_rehash_before_atomic_rename": true,
+    "fail_closed_existing_file_policy": true
+  },
+  "internal_reviews": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_FIXES",
+      "findings_closed": [
+        "rejected_old_leading-zero Bash arithmetic",
+        "replaced three-attempt downloader with per-attempt resume offsets",
+        "required exact publisher size and SHA-256 before atomic rename"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS",
+      "findings_closed": [
+        "made explicit guard exits produce a failure marker",
+        "kept GPU and model-server execution unauthorized",
+        "verified free-disk headroom exceeds the frozen minimum"
+      ]
+    }
+  ],
+  "governance": {
+    "confirmation_status": "RESERVED_NOT_GENERATED",
+    "formal_scientific_execution_started": false,
+    "retained_data_available_to_remote": false,
+    "remote_payload_class": "PUBLIC_MODEL_WEIGHTS_AND_PUBLIC_METADATA_ONLY",
+    "next_stage_unlocked": "NO_GPU_WEIGHT_PREPARATION_ONLY"
+  },
+  "acceptance_sha256": "b6054505401bef550ae5edd6bae988509089a36533043a4f4653ae5bdbbea171"
+}
