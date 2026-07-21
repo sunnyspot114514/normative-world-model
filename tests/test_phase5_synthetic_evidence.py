@@ -16,11 +16,32 @@ from normative_world_model.phase5_synthetic_client_plan import (
 from normative_world_model.phase5_synthetic_evidence import (
     SYNTHETIC_EVIDENCE_FORMAT_VERSION,
     _canonical_sha256,
-    verify_phase5_synthetic_evidence,
+)
+from normative_world_model.phase5_synthetic_evidence import (
+    verify_phase5_synthetic_evidence as _verify_phase5_synthetic_evidence,
 )
 from normative_world_model.phase5_termination_probe import (
     TERMINATION_PLAN_FORMAT_VERSION,
 )
+
+FIXTURE_LOCK_A_SHA256 = "b" * 64
+
+
+def verify_phase5_synthetic_evidence(
+    client_plan: dict,
+    termination_plan: dict,
+    evidence_bundle: dict,
+    **kwargs,
+) -> dict:
+    """Keep the external Lock-A binding fixed across all evidence tests."""
+
+    return _verify_phase5_synthetic_evidence(
+        client_plan,
+        termination_plan,
+        evidence_bundle,
+        expected_lock_a_acceptance_sha256=FIXTURE_LOCK_A_SHA256,
+        **kwargs,
+    )
 
 
 def _runtime_plan() -> dict:
@@ -117,7 +138,6 @@ def _client_plan(termination: dict) -> dict:
         common_prompt="<public common prompt>",
         base_common_prompt_token_ids=[1, 2, 3],
         agentworld_common_prompt_token_ids=[1, 2, 3],
-        implementation_sources={"fixture.py": {"bytes": 1, "sha256": "0" * 64}},
     )
 
 
@@ -341,6 +361,7 @@ def _fixture() -> tuple[dict, dict, dict, dict]:
     bundle = {
         "format_version": SYNTHETIC_EVIDENCE_FORMAT_VERSION,
         "client_plan_sha256": client["client_plan_sha256"],
+        "lock_a_acceptance_sha256": FIXTURE_LOCK_A_SHA256,
         "termination_plan_sha256": termination["plan_sha256"],
         "checkpoint_runs": runs,
     }
@@ -364,7 +385,7 @@ class Phase5SyntheticEvidenceTests(unittest.TestCase):
             expected_client_plan_sha256=client["client_plan_sha256"],
             expected_runtime_bindings=bindings,
         )
-        self.assertEqual(result["status"], "PASS_PUBLIC_SYNTHETIC_EVIDENCE_V1")
+        self.assertEqual(result["status"], "PASS_PUBLIC_SYNTHETIC_EVIDENCE_V2")
         self.assertEqual(result["request_count"], 20)
         self.assertEqual(result["termination_case_count"], 8)
         self.assertEqual(result["repeat_cells"], 4)
@@ -543,6 +564,20 @@ class Phase5SyntheticEvidenceTests(unittest.TestCase):
         ).hexdigest()
         _rehash(broken)
         with self.assertRaisesRegex(ValueError, "request bytes differ"):
+            verify_phase5_synthetic_evidence(
+                client,
+                termination,
+                broken,
+                expected_client_plan_sha256=client["client_plan_sha256"],
+                expected_runtime_bindings=bindings,
+            )
+
+    def test_lock_a_binding_is_external_not_bundle_self_asserted(self) -> None:
+        client, termination, bundle, bindings = _fixture()
+        broken = copy.deepcopy(bundle)
+        broken["lock_a_acceptance_sha256"] = "c" * 64
+        _rehash(broken)
+        with self.assertRaisesRegex(ValueError, "bundle binding differs"):
             verify_phase5_synthetic_evidence(
                 client,
                 termination,

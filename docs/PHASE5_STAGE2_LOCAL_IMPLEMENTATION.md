@@ -223,6 +223,14 @@ and is explicitly not Lock A; remote container/package attestation, exact
 download authorization, provider/spend binding, and throughput qualification
 remain open.
 
+The subsequent two-pass authorization audit found that V5's caller-supplied
+authorization mapping, and then a caller-supplied expected certificate hash,
+could both be self-asserted. V6 replaces them with a strict Lock-A certificate
+whose acceptable digest must be registered in the reviewed execution source.
+That registry is deliberately empty, so V6 remains fail-closed. It also
+re-hashes every plan-bound execution source before any output or adapter side
+effect. See `PHASE5_SYNTHETIC_CLIENT_PLAN_V6_AUTHORIZATION_AUDIT_2026-07-22.md`.
+
 V2 is likewise preserved and superseded. A full PNG chunk/CRC audit found that
 its nominal 1-by-1 fixture was malformed even though its signature and IHDR
 looked valid. V3 replaces it with a standard-library-constructed 1-by-1 RGBA

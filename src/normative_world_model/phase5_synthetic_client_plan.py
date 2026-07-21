@@ -37,7 +37,7 @@ from .phase5_termination_probe import (
     verify_common_termination_probe_plan,
 )
 
-SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION = "phase5-public-synthetic-client-plan-v5"
+SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION = "phase5-public-synthetic-client-plan-v6"
 SYNTHETIC_CLIENT_PLAN_MAX_BYTES = 4 * 1024 * 1024
 PUBLIC_REQUEST_SEED = 2026071803
 PUBLIC_IMAGE_DATA_URI = (
@@ -79,6 +79,7 @@ PUBLIC_TOY_EXPECTED = {
 IMPLEMENTATION_SOURCE_PATHS = (
     "configs/phase5_scale_inference_draft.toml",
     "configs/phase5_common_termination_probe_candidate.toml",
+    "src/normative_world_model/phase5_lock_a.py",
     "src/normative_world_model/phase5_preflight.py",
     "src/normative_world_model/phase5_loopback_adapter.py",
     "src/normative_world_model/phase5_runtime_plan.py",
@@ -114,6 +115,35 @@ def _implementation_source_records() -> dict[str, dict[str, Any]]:
             "sha256": hashlib.sha256(body).hexdigest(),
         }
     return records
+
+
+def verify_implementation_source_records(client_plan: Mapping[str, Any]) -> dict[str, Any]:
+    """Re-hash every V6 execution source from disk before any side effect."""
+
+    records = client_plan.get("implementation_sources")
+    if not isinstance(records, Mapping) or set(records) != set(IMPLEMENTATION_SOURCE_PATHS):
+        raise ValueError("client-plan implementation source set differs")
+    project_root = Path(__file__).resolve().parents[2]
+    total_bytes = 0
+    for relative in IMPLEMENTATION_SOURCE_PATHS:
+        expected = records[relative]
+        if not isinstance(expected, Mapping) or set(expected) != {"bytes", "sha256"}:
+            raise ValueError(f"client-plan source record is malformed: {relative}")
+        path = project_root / relative
+        if path.is_symlink() or not path.is_file() or path.stat().st_nlink != 1:
+            raise ValueError(f"client-plan source is not a single-link regular file: {relative}")
+        body = path.read_bytes()
+        if (
+            expected["bytes"] != len(body)
+            or expected["sha256"] != hashlib.sha256(body).hexdigest()
+        ):
+            raise ValueError(f"client-plan implementation source differs: {relative}")
+        total_bytes += len(body)
+    return {
+        "status": "PASS_CLIENT_PLAN_IMPLEMENTATION_SOURCES_REHASHED",
+        "source_count": len(IMPLEMENTATION_SOURCE_PATHS),
+        "total_bytes": total_bytes,
+    }
 
 
 def _assert_lower_sha256(value: Any, *, label: str) -> str:
@@ -461,7 +491,7 @@ def build_phase5_synthetic_client_plan(
     result = {
         "format_version": SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION,
         "status": (
-            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V5_ADAPTER_AND_SNAPSHOT_VERIFIER_PASS_"
+            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V6_EXTERNAL_LOCK_AND_SOURCE_REHASH_PASS_"
             "EXECUTION_NOT_AUTHORIZED"
         ),
         "authorization": {
@@ -623,6 +653,11 @@ def build_phase5_synthetic_client_plan(
         "implementation_state": {
             "client_core": "BUILT_ADAPTER_DRIVEN_WRITE_ONCE_FSYNC",
             "orchestrator_core": "BUILT_AUTHORIZATION_GATED_SEQUENTIAL",
+            "lock_a_acceptance_verifier": (
+                "BUILT_READ_ONLY_EXTERNAL_HASH_TIME_BUDGET_BOUND"
+            ),
+            "lock_a_trust_root": "UNREGISTERED_FAIL_CLOSED",
+            "execution_source_rehash": "BUILT_BEFORE_ANY_SIDE_EFFECT",
             "concrete_remote_adapter": (
                 "BUILT_LINUX_LOOPBACK_ONLY_MOCK_REVIEWED_NO_REMOTE_EXECUTION"
             ),
@@ -640,7 +675,11 @@ def build_phase5_synthetic_client_plan(
             "authorize_exact_weight_download_and_create_post_download_snapshot_manifests",
             "bind_provider_quote_storage_policy_and_whole_rental_spend_cap",
             "complete_mock_throughput_and_memory-envelope qualification",
-            "complete_final_lock_a_review_of_runtime_v2_and_client_plan_v5",
+            (
+                "create_two-review_operator-approved_external_lock_a_certificate_"
+                "binding_runtime_v2_and_client_plan_v6"
+            ),
+            "register_exact_accepted_lock_a_digest_in_execution_source_and_rebuild_plan",
         ],
     }
     result["client_plan_sha256"] = _canonical_sha256(result)
@@ -665,7 +704,7 @@ def default_phase5_synthetic_client_plan_path(
         project_root
         / ".cache"
         / "phase5_synthetic_client_plan"
-        / f"v5-{runtime_plan_sha256[:12]}-{termination_plan_sha256[:12]}.json"
+        / f"v6-{runtime_plan_sha256[:12]}-{termination_plan_sha256[:12]}.json"
     )
 
 
@@ -774,7 +813,7 @@ def verify_phase5_synthetic_client_plan() -> dict[str, Any]:
         raise ValueError("synthetic client plan differs from independent rebuild")
     return {
         "status": (
-            "PASS_LOCAL_CLIENT_PLAN_V5_ADAPTER_AND_SNAPSHOT_VERIFIER_"
+            "PASS_LOCAL_CLIENT_PLAN_V6_EXTERNAL_LOCK_AND_SOURCE_REHASH_"
             "EXECUTION_NOT_AUTHORIZED"
         ),
         "client_plan_sha256": stored["client_plan_sha256"],

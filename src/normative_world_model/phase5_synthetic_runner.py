@@ -20,6 +20,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
+from .phase5_lock_a import (
+    registered_lock_a_acceptance_sha256,
+    verify_lock_a_acceptance,
+)
 from .phase5_public_metadata import _load_inert_json
 from .phase5_synthetic_evidence import (
     ATTEMPT_EVENT_ORDER,
@@ -32,7 +36,6 @@ from .phase5_synthetic_evidence import (
     verify_phase5_synthetic_evidence,
 )
 
-LOCK_A_ACCEPTED_STATUS = "LOCK_A_ACCEPTED_PUBLIC_SYNTHETIC_ONLY"
 CASE_ID_PATTERN = re.compile(r"^[a-z0-9_-]+$")
 MAX_RAW_RESPONSE_BYTES = 4 * 1024 * 1024
 MAX_HEALTH_POLLS = 451
@@ -114,37 +117,6 @@ def _canonical_request_body(body: Mapping[str, Any] | None) -> bytes:
     return json.dumps(body, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(
         "utf-8"
     )
-
-
-def _strict_authorization(
-    authorization: Mapping[str, Any], *, expected_client_plan_sha256: str
-) -> None:
-    expected_keys = {
-        "status",
-        "client_plan_sha256",
-        "runtime_bindings_sha256",
-        "public_synthetic_only",
-        "server_process_execution",
-        "http_execution",
-        "gpu_execution",
-        "retained_population_access",
-        "project_prompt_access",
-        "scientific_execution",
-    }
-    if not isinstance(authorization, Mapping) or set(authorization) != expected_keys:
-        raise PermissionError("Lock-A authorization schema differs")
-    if (
-        authorization["status"] != LOCK_A_ACCEPTED_STATUS
-        or authorization["client_plan_sha256"] != expected_client_plan_sha256
-        or authorization["public_synthetic_only"] is not True
-        or authorization["server_process_execution"] is not True
-        or authorization["http_execution"] is not True
-        or authorization["gpu_execution"] is not True
-        or authorization["retained_population_access"] is not False
-        or authorization["project_prompt_access"] is not False
-        or authorization["scientific_execution"] is not False
-    ):
-        raise PermissionError("Lock-A authorization is not accepted and synthetic-only")
 
 
 def _normalize_runtime_specs(
@@ -682,7 +654,7 @@ def run_phase5_public_synthetic_preflight(
     expected_client_plan_sha256: str,
     runtime_specs: Mapping[str, SyntheticRuntimeSpec],
     adapters: Mapping[str, SyntheticRuntimeAdapter],
-    authorization: Mapping[str, Any],
+    lock_a_acceptance: Mapping[str, Any],
     expected_runtime_bindings: Mapping[str, Mapping[str, str]],
     output_root: Path,
     clock_ns: Callable[[], int] = time.monotonic_ns,
@@ -690,21 +662,26 @@ def run_phase5_public_synthetic_preflight(
 ) -> dict[str, Any]:
     """Produce and independently verify one public-synthetic evidence bundle."""
 
-    _strict_authorization(authorization, expected_client_plan_sha256=expected_client_plan_sha256)
     _verify_plan_binding(
         client_plan,
         termination_plan,
         expected_client_plan_sha256=expected_client_plan_sha256,
     )
+    externally_bound = _verify_runtime_bindings(expected_runtime_bindings)
+    runtime_bindings_sha256 = _canonical_sha256(externally_bound)
+    registered_acceptance_sha256 = registered_lock_a_acceptance_sha256()
+    verify_lock_a_acceptance(
+        lock_a_acceptance,
+        expected_acceptance_sha256=registered_acceptance_sha256,
+        expected_client_plan_sha256=expected_client_plan_sha256,
+        expected_runtime_bindings_sha256=runtime_bindings_sha256,
+    )
     if not isinstance(adapters, Mapping) or set(adapters) != set(CHECKPOINT_ORDER):
         raise ValueError("runtime adapter checkpoint set differs")
     runtime_specs = _normalize_runtime_specs(runtime_specs)
     bindings = runtime_bindings_from_specs(runtime_specs)
-    externally_bound = _verify_runtime_bindings(expected_runtime_bindings)
     if bindings != externally_bound:
         raise ValueError("runtime specs differ from the accepted Lock-A bindings")
-    if authorization["runtime_bindings_sha256"] != _canonical_sha256(externally_bound):
-        raise PermissionError("Lock-A authorization does not bind the runtime specs")
     _reject_symlink_ancestors(output_root)
     if output_root.exists() or output_root.is_symlink():
         raise FileExistsError(f"refusing to reuse synthetic evidence root: {output_root}")
@@ -753,6 +730,7 @@ def run_phase5_public_synthetic_preflight(
         bundle = {
             "format_version": SYNTHETIC_EVIDENCE_FORMAT_VERSION,
             "client_plan_sha256": expected_client_plan_sha256,
+            "lock_a_acceptance_sha256": registered_acceptance_sha256,
             "termination_plan_sha256": termination_plan["plan_sha256"],
             "checkpoint_runs": runs,
         }
@@ -763,6 +741,7 @@ def run_phase5_public_synthetic_preflight(
             bundle,
             expected_client_plan_sha256=expected_client_plan_sha256,
             expected_runtime_bindings=bindings,
+            expected_lock_a_acceptance_sha256=registered_acceptance_sha256,
         )
         _write_json_once(output_root / "evidence-bundle.json", bundle)
         _write_json_once(output_root / "verification.json", verification)

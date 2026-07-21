@@ -5,11 +5,17 @@ import copy
 import json
 import tempfile
 import unittest
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from unittest.mock import patch
 
+from normative_world_model.phase5_lock_a import (
+    LOCK_A_ACCEPTED_STATUS,
+    LOCK_A_AUTHORIZATION,
+    LOCK_A_FORMAT_VERSION,
+)
 from normative_world_model.phase5_synthetic_evidence import _canonical_sha256
 from normative_world_model.phase5_synthetic_runner import (
-    LOCK_A_ACCEPTED_STATUS,
     SyntheticHTTPResponse,
     SyntheticProcess,
     SyntheticRuntimeSpec,
@@ -104,6 +110,53 @@ class _Adapter:
         return {"status": "NO_ACTIVE_PROCESS_OR_TERMINATED", "captured": True}
 
 
+def _lock_a_acceptance(client: dict, runtime_bindings: dict) -> dict:
+    now = datetime.now(UTC).replace(microsecond=0)
+    acceptance = {
+        "format_version": LOCK_A_FORMAT_VERSION,
+        "status": LOCK_A_ACCEPTED_STATUS,
+        "source_commit": "1" * 40,
+        "client_plan_sha256": client["client_plan_sha256"],
+        "client_plan_file_sha256": "2" * 64,
+        "runtime_bindings_sha256": _canonical_sha256(runtime_bindings),
+        "remote_environment_manifest_sha256": "3" * 64,
+        "weight_download_plan_sha256": "4" * 64,
+        "provider_quote": {
+            "provider": "AutoDL",
+            "currency": "CNY",
+            "gpu_model": "RTX PRO 6000",
+            "gpu_count": 1,
+            "gpu_memory_bytes": 96 * 1024**3,
+            "gpu_hourly_price_minor": 598,
+            "storage_daily_price_minor": 158,
+            "quote_evidence_sha256": "5" * 64,
+        },
+        "limits": {
+            "currency": "CNY",
+            "maximum_spend_minor": 6_000,
+            "whole_rental_wall_clock_seconds": 10 * 60 * 60,
+            "maximum_download_bytes": 150 * 1024**3,
+            "minimum_free_data_disk_bytes": 182 * 1024**3,
+            "minimum_post_download_free_bytes": 32 * 1024**3,
+        },
+        "authorization": dict(LOCK_A_AUTHORIZATION),
+        "governance": {
+            "confirmation_status": "RESERVED_NOT_GENERATED",
+            "formal_scientific_execution_started": False,
+            "retained_data_available_to_remote": False,
+            "next_stage_unlocked": "SYNTHETIC_PREFLIGHT_ONLY",
+        },
+        "validity": {
+            "not_before_utc": (now - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "expires_utc": (now + timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        },
+        "review_record_sha256s": ["6" * 64, "7" * 64],
+        "operator_approval_sha256": "8" * 64,
+    }
+    acceptance["acceptance_sha256"] = _canonical_sha256(acceptance)
+    return acceptance
+
+
 def _inputs() -> tuple[dict, dict, dict, dict, dict[str, _Adapter]]:
     client, termination, reference_bundle, _ = _fixture()
     specs = {}
@@ -131,44 +184,55 @@ def _inputs() -> tuple[dict, dict, dict, dict, dict[str, _Adapter]]:
             )
         adapters[checkpoint] = _Adapter(responses)
     runtime_bindings = runtime_bindings_from_specs(specs)
-    authorization = {
-        "status": LOCK_A_ACCEPTED_STATUS,
-        "client_plan_sha256": client["client_plan_sha256"],
-        "runtime_bindings_sha256": _canonical_sha256(runtime_bindings),
-        "public_synthetic_only": True,
-        "server_process_execution": True,
-        "http_execution": True,
-        "gpu_execution": True,
-        "retained_population_access": False,
-        "project_prompt_access": False,
-        "scientific_execution": False,
-    }
-    return client, termination, specs, authorization, adapters
+    acceptance = _lock_a_acceptance(client, runtime_bindings)
+    return client, termination, specs, acceptance, adapters
 
 
 def _run(root: Path, *, inputs=None) -> dict:
-    client, termination, specs, authorization, adapters = inputs or _inputs()
+    client, termination, specs, acceptance, adapters = inputs or _inputs()
     clock = _Clock()
-    return run_phase5_public_synthetic_preflight(
-        client_plan=client,
-        termination_plan=termination,
-        expected_client_plan_sha256=client["client_plan_sha256"],
-        runtime_specs=specs,
-        adapters=adapters,
-        authorization=authorization,
-        expected_runtime_bindings=runtime_bindings_from_specs(specs),
-        output_root=root,
-        clock_ns=clock,
-        sleep=clock.sleep,
-    )
+    with patch(
+        "normative_world_model.phase5_synthetic_runner.registered_lock_a_acceptance_sha256",
+        return_value=acceptance["acceptance_sha256"],
+    ):
+        return run_phase5_public_synthetic_preflight(
+            client_plan=client,
+            termination_plan=termination,
+            expected_client_plan_sha256=client["client_plan_sha256"],
+            runtime_specs=specs,
+            adapters=adapters,
+            lock_a_acceptance=acceptance,
+            expected_runtime_bindings=runtime_bindings_from_specs(specs),
+            output_root=root,
+            clock_ns=clock,
+            sleep=clock.sleep,
+        )
 
 
 class Phase5SyntheticRunnerTests(unittest.TestCase):
+    def test_unregistered_trust_root_rejects_valid_certificate_before_side_effect(self) -> None:
+        client, termination, specs, acceptance, adapters = _inputs()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "run"
+            with self.assertRaisesRegex(PermissionError, "no Lock-A acceptance digest"):
+                run_phase5_public_synthetic_preflight(
+                    client_plan=client,
+                    termination_plan=termination,
+                    expected_client_plan_sha256=client["client_plan_sha256"],
+                    runtime_specs=specs,
+                    adapters=adapters,
+                    lock_a_acceptance=acceptance,
+                    expected_runtime_bindings=runtime_bindings_from_specs(specs),
+                    output_root=root,
+                )
+            self.assertFalse(root.exists())
+            self.assertTrue(all(adapter.launch_count == 0 for adapter in adapters.values()))
+
     def test_fake_end_to_end_run_writes_and_verifies_complete_bundle(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "run"
             result = _run(root)
-            self.assertEqual(result["status"], "PASS_PUBLIC_SYNTHETIC_EVIDENCE_V1")
+            self.assertEqual(result["status"], "PASS_PUBLIC_SYNTHETIC_EVIDENCE_V2")
             self.assertEqual(result["request_count"], 20)
             self.assertTrue((root / "evidence-bundle.json").is_file())
             self.assertTrue((root / "verification.json").is_file())
@@ -178,12 +242,15 @@ class Phase5SyntheticRunnerTests(unittest.TestCase):
 
     def test_authorization_fails_before_adapter_or_output_side_effect(self) -> None:
         inputs = _inputs()
-        client, termination, specs, authorization, adapters = inputs
-        closed = copy.deepcopy(authorization)
-        closed["http_execution"] = False
+        client, termination, specs, acceptance, adapters = inputs
+        closed = copy.deepcopy(acceptance)
+        closed["authorization"]["http_execution"] = False
+        closed["acceptance_sha256"] = _canonical_sha256(
+            {key: value for key, value in closed.items() if key != "acceptance_sha256"}
+        )
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "run"
-            with self.assertRaisesRegex(PermissionError, "not accepted"):
+            with self.assertRaisesRegex(PermissionError, "synthetic-only"):
                 _run(
                     root,
                     inputs=(client, termination, specs, closed, adapters),
@@ -192,7 +259,7 @@ class Phase5SyntheticRunnerTests(unittest.TestCase):
             self.assertTrue(all(adapter.launch_count == 0 for adapter in adapters.values()))
 
     def test_tampered_plan_and_self_asserted_runtime_binding_fail_before_launch(self) -> None:
-        client, termination, specs, authorization, adapters = _inputs()
+        client, termination, specs, acceptance, adapters = _inputs()
         tampered = copy.deepcopy(client)
         tampered["request_sequence"][0]["endpoint"] = "/wrong"
         with tempfile.TemporaryDirectory() as temporary:
@@ -204,7 +271,32 @@ class Phase5SyntheticRunnerTests(unittest.TestCase):
                     expected_client_plan_sha256=client["client_plan_sha256"],
                     runtime_specs=specs,
                     adapters=adapters,
-                    authorization=authorization,
+                    lock_a_acceptance=acceptance,
+                    expected_runtime_bindings=runtime_bindings_from_specs(specs),
+                    output_root=root,
+                )
+            self.assertFalse(root.exists())
+            self.assertTrue(all(adapter.launch_count == 0 for adapter in adapters.values()))
+        source_drifted = copy.deepcopy(client)
+        first_source = next(iter(source_drifted["implementation_sources"]))
+        source_drifted["implementation_sources"][first_source]["sha256"] = "0" * 64
+        source_drifted["client_plan_sha256"] = _canonical_sha256(
+            {
+                key: value
+                for key, value in source_drifted.items()
+                if key != "client_plan_sha256"
+            }
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "run"
+            with self.assertRaisesRegex(ValueError, "implementation source differs"):
+                run_phase5_public_synthetic_preflight(
+                    client_plan=source_drifted,
+                    termination_plan=termination,
+                    expected_client_plan_sha256=source_drifted["client_plan_sha256"],
+                    runtime_specs=specs,
+                    adapters=adapters,
+                    lock_a_acceptance=acceptance,
                     expected_runtime_bindings=runtime_bindings_from_specs(specs),
                     output_root=root,
                 )
@@ -214,17 +306,24 @@ class Phase5SyntheticRunnerTests(unittest.TestCase):
         wrong_bindings["agentworld"]["snapshot_manifest_sha256"] = "0" * 64
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "run"
-            with self.assertRaisesRegex(ValueError, "runtime specs differ"):
-                run_phase5_public_synthetic_preflight(
-                    client_plan=client,
-                    termination_plan=termination,
-                    expected_client_plan_sha256=client["client_plan_sha256"],
-                    runtime_specs=specs,
-                    adapters=adapters,
-                    authorization=authorization,
-                    expected_runtime_bindings=wrong_bindings,
-                    output_root=root,
-                )
+            with patch(
+                (
+                    "normative_world_model.phase5_synthetic_runner."
+                    "registered_lock_a_acceptance_sha256"
+                ),
+                return_value=acceptance["acceptance_sha256"],
+            ):
+                with self.assertRaisesRegex(PermissionError, "acceptance identity differs"):
+                    run_phase5_public_synthetic_preflight(
+                        client_plan=client,
+                        termination_plan=termination,
+                        expected_client_plan_sha256=client["client_plan_sha256"],
+                        runtime_specs=specs,
+                        adapters=adapters,
+                        lock_a_acceptance=acceptance,
+                        expected_runtime_bindings=wrong_bindings,
+                        output_root=root,
+                    )
             self.assertFalse(root.exists())
 
     def test_one_transport_retry_preserves_both_attempts(self) -> None:
@@ -248,7 +347,7 @@ class Phase5SyntheticRunnerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "run"
             result = _run(root, inputs=inputs)
-            self.assertEqual(result["status"], "PASS_PUBLIC_SYNTHETIC_EVIDENCE_V1")
+            self.assertEqual(result["status"], "PASS_PUBLIC_SYNTHETIC_EVIDENCE_V2")
             release = (
                 root
                 / "agentworld"

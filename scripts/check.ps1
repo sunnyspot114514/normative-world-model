@@ -51,6 +51,14 @@ Invoke-CheckedPython -Description "isolation audit" -Arguments @(
     "-m", "normative_world_model", "check-isolation"
 )
 
+$Phase5SyntheticClientPlanV6 = Join-Path $ProjectRoot ".cache\phase5_synthetic_client_plan\v6-b2887ba90d81-b752a05215d7.json"
+if (Test-Path -LiteralPath $Phase5SyntheticClientPlanV6) {
+    Invoke-CheckedPython -Description "Phase-5 synthetic client plan V6 audit" -Arguments @(
+        "-c",
+        "from normative_world_model.phase5_synthetic_client_plan import verify_phase5_synthetic_client_plan as v; print(v())"
+    )
+}
+
 $V3Manifest = Join-Path $ProjectRoot "artifacts\phase1_v3_smoke\provenance_manifest.json"
 if (Test-Path -LiteralPath $V3Manifest) {
     $V3Acceptance = Join-Path $ProjectRoot "artifacts\phase1_v3_smoke\EXTERNAL_AUDIT_ACCEPTED.json"

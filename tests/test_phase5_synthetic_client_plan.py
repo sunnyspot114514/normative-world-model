@@ -13,8 +13,10 @@ from normative_world_model.phase5_runtime_plan import RUNTIME_PLAN_FORMAT_VERSIO
 from normative_world_model.phase5_synthetic_client_plan import (
     PUBLIC_REQUEST_SEED,
     PUBLIC_TOY_EXPECTED,
+    SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION,
     _canonical_sha256,
     build_phase5_synthetic_client_plan,
+    verify_implementation_source_records,
 )
 from normative_world_model.phase5_termination_probe import (
     TERMINATION_PLAN_FORMAT_VERSION,
@@ -128,9 +130,13 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
         self.assertEqual(
             plan["status"],
             (
-                "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V5_ADAPTER_AND_SNAPSHOT_VERIFIER_PASS_"
-                "EXECUTION_NOT_AUTHORIZED"
+                "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V6_EXTERNAL_LOCK_AND_SOURCE_REHASH_"
+                "PASS_EXECUTION_NOT_AUTHORIZED"
             ),
+        )
+        self.assertEqual(
+            plan["format_version"],
+            SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION,
         )
         self.assertEqual(plan["request_count"], 20)
         self.assertFalse(any(plan["authorization"].values()))
@@ -141,6 +147,18 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
         self.assertEqual(
             plan["implementation_state"]["concrete_remote_adapter"],
             "BUILT_LINUX_LOOPBACK_ONLY_MOCK_REVIEWED_NO_REMOTE_EXECUTION",
+        )
+        self.assertEqual(
+            plan["implementation_state"]["lock_a_acceptance_verifier"],
+            "BUILT_READ_ONLY_EXTERNAL_HASH_TIME_BUDGET_BOUND",
+        )
+        self.assertEqual(
+            plan["implementation_state"]["lock_a_trust_root"],
+            "UNREGISTERED_FAIL_CLOSED",
+        )
+        self.assertEqual(
+            plan["implementation_state"]["execution_source_rehash"],
+            "BUILT_BEFORE_ANY_SIDE_EFFECT",
         )
         self.assertFalse(plan["implementation_state"]["network_calls_performed"])
         self.assertEqual(
@@ -317,6 +335,17 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
         opened["authorization"]["server_rental"] = True
         with self.assertRaises(ValueError):
             _build(config=opened)
+
+    def test_execution_source_records_are_rehashed_against_disk(self) -> None:
+        plan = _build(implementation_sources=None)
+        result = verify_implementation_source_records(plan)
+        self.assertEqual(result["status"], "PASS_CLIENT_PLAN_IMPLEMENTATION_SOURCES_REHASHED")
+
+        drifted = json.loads(json.dumps(plan))
+        first = next(iter(drifted["implementation_sources"]))
+        drifted["implementation_sources"][first]["sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "implementation source differs"):
+            verify_implementation_source_records(drifted)
 
     def test_module_has_no_execution_network_or_retained_data_client_surface(self) -> None:
         source = (

@@ -17,9 +17,10 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from .phase5_public_metadata import _load_inert_json
+from .phase5_synthetic_client_plan import verify_implementation_source_records
 from .phase5_termination_probe import verify_common_termination_probe_evidence
 
-SYNTHETIC_EVIDENCE_FORMAT_VERSION = "phase5-public-synthetic-evidence-v1"
+SYNTHETIC_EVIDENCE_FORMAT_VERSION = "phase5-public-synthetic-evidence-v2"
 RAW_BODY_MAX_BYTES = 4 * 1024 * 1024
 CHECKPOINT_ORDER = ("agentworld", "base")
 ATTEMPT_EVENT_ORDER = (
@@ -122,6 +123,7 @@ def _verify_plan_binding(
     *,
     expected_client_plan_sha256: str,
 ) -> None:
+    verify_implementation_source_records(client_plan)
     expected = _lower_sha256(expected_client_plan_sha256, label="external client-plan binding")
     if client_plan.get("client_plan_sha256") != expected:
         raise ValueError("client plan differs from the external lock binding")
@@ -131,11 +133,11 @@ def _verify_plan_binding(
     if _canonical_sha256(client_without_hash) != expected:
         raise ValueError("client plan self-hash is invalid")
     if (
-        client_plan.get("format_version") != "phase5-public-synthetic-client-plan-v5"
+        client_plan.get("format_version") != "phase5-public-synthetic-client-plan-v6"
         or client_plan.get("status")
         != (
-            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V5_ADAPTER_AND_SNAPSHOT_VERIFIER_PASS_"
-            "EXECUTION_NOT_AUTHORIZED"
+            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V6_EXTERNAL_LOCK_AND_SOURCE_REHASH_"
+            "PASS_EXECUTION_NOT_AUTHORIZED"
         )
         or not isinstance(client_plan.get("authorization"), Mapping)
         or any(value is not False for value in client_plan["authorization"].values())
@@ -144,7 +146,7 @@ def _verify_plan_binding(
         or client_plan.get("lifecycle_contract", {}).get("lifecycle_evidence_event_order")
         != list(LIFECYCLE_EVENT_ORDER)
     ):
-        raise ValueError("client plan is not the reviewed closed V5 contract")
+        raise ValueError("client plan is not the reviewed closed V6 contract")
     termination_hash = _lower_sha256(
         termination_plan.get("plan_sha256"), label="termination plan hash"
     )
@@ -649,6 +651,7 @@ def verify_phase5_synthetic_evidence(
     *,
     expected_client_plan_sha256: str,
     expected_runtime_bindings: Mapping[str, Mapping[str, str]],
+    expected_lock_a_acceptance_sha256: str,
 ) -> dict[str, Any]:
     """Verify one complete, accepted-candidate public-synthetic evidence bundle."""
 
@@ -658,11 +661,16 @@ def verify_phase5_synthetic_evidence(
         expected_client_plan_sha256=expected_client_plan_sha256,
     )
     runtime_bindings = _verify_runtime_bindings(expected_runtime_bindings)
+    expected_lock_a = _lower_sha256(
+        expected_lock_a_acceptance_sha256,
+        label="external Lock-A acceptance binding",
+    )
     bundle = _strict_keys(
         evidence_bundle,
         {
             "format_version",
             "client_plan_sha256",
+            "lock_a_acceptance_sha256",
             "termination_plan_sha256",
             "checkpoint_runs",
             "bundle_sha256",
@@ -673,6 +681,7 @@ def verify_phase5_synthetic_evidence(
     if (
         bundle["format_version"] != SYNTHETIC_EVIDENCE_FORMAT_VERSION
         or bundle["client_plan_sha256"] != expected_client_plan_sha256
+        or bundle["lock_a_acceptance_sha256"] != expected_lock_a
         or bundle["termination_plan_sha256"] != termination_plan["plan_sha256"]
         or bundle["bundle_sha256"] != _canonical_sha256(without_hash)
     ):
@@ -844,8 +853,9 @@ def verify_phase5_synthetic_evidence(
                 }
             )
     return {
-        "status": "PASS_PUBLIC_SYNTHETIC_EVIDENCE_V1",
+        "status": "PASS_PUBLIC_SYNTHETIC_EVIDENCE_V2",
         "client_plan_sha256": expected_client_plan_sha256,
+        "lock_a_acceptance_sha256": expected_lock_a,
         "bundle_sha256": bundle["bundle_sha256"],
         "checkpoint_count": len(runs),
         "request_count": len(requests),
