@@ -184,6 +184,21 @@ launch. V2 requires the vLLM-source-derived 400 multimodal-zero-limit error
 signature, separates prelaunch argv capture from post-launch log capture, and
 binds raw health, shutdown, exit, and port-release evidence.
 
+## Independent public-synthetic evidence verifier candidate
+
+On 2026-07-22, `phase5_synthetic_evidence.py` added a read-only, fail-closed
+consumer for the future preflight bundle. It binds the external client-plan and
+runtime hashes; verifies request bytes, retry identity, raw-before-parse event
+times, semantic gates, termination evidence, and sequential lifecycle proof;
+and reports reasoning/envelope replay only as diagnostics. It contains no
+network, process, GPU, download, or retained-data surface. The two-pass internal
+review and remaining Lock-A boundary are recorded in
+`PHASE5_SYNTHETIC_EVIDENCE_VERIFIER_CANDIDATE_2026-07-22.md`.
+
+This does not revise the immutable V3 client-plan artifact. A future V4 plan
+must bind the verifier together with the still-missing evidence producer and
+concrete runtime bindings before Lock A can be considered.
+
 V2 is likewise preserved and superseded. A full PNG chunk/CRC audit found that
 its nominal 1-by-1 fixture was malformed even though its signature and IHDR
 looked valid. V3 replaces it with a standard-library-constructed 1-by-1 RGBA
