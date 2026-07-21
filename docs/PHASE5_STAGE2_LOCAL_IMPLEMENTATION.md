@@ -199,6 +199,20 @@ This does not revise the immutable V3 client-plan artifact. A future V4 plan
 must bind the verifier together with the still-missing evidence producer and
 concrete runtime bindings before Lock A can be considered.
 
+That V4 plan was subsequently built at commit `1efa304` and is documented in
+`PHASE5_SYNTHETIC_CLIENT_PLAN_V4_CANDIDATE_2026-07-22.md`. It binds the
+authorization-gated adapter-driven producer and independent verifier, while
+leaving the concrete remote adapter explicitly `NOT_BUILT` and every execution
+authorization false. Its client-plan SHA-256 is
+`5f5b8b60726e71f5af65e027a73bbef1ca2c8eeb45927b24dc3d619f3eb7a770`.
+
+The later `phase5_weight_snapshot.py` slice adds exact post-download
+weight-plus-metadata verification without a downloader. It rejects linked or
+escaping files, exact-set drift, size/hash drift, and files that change while
+their open descriptors are being hashed. This slice post-dates the immutable V4
+artifact and must be bound together with the concrete adapter in the next plan
+revision.
+
 V2 is likewise preserved and superseded. A full PNG chunk/CRC audit found that
 its nominal 1-by-1 fixture was malformed even though its signature and IHDR
 looked valid. V3 replaces it with a standard-library-constructed 1-by-1 RGBA
