@@ -18,7 +18,7 @@ from .phase5_public_metadata import _canonical_sha256, _load_inert_json
 FORMAT_VERSION = "phase5-no-gpu-download-acceptance-v1"
 ACCEPTED_STATUS = "LOCK_A_NO_GPU_DOWNLOAD_ACCEPTED"
 REGISTERED_ACCEPTANCE_SHA256 = (
-    "b6054505401bef550ae5edd6bae988509089a36533043a4f4653ae5bdbbea171"
+    "23df26336b5206784dd6e39f15fcf5c1a4b8b9f386d097f2958379b20d204096"
 )
 AUTHORIZATION = {
     "server_rental": True,
@@ -265,6 +265,9 @@ def verify_no_gpu_download_acceptance(
             "path",
             "sha256",
             "manifest_row_count",
+            "primary_resolver",
+            "fallback_resolver",
+            "fallback_after_failed_attempts",
             "resumable_base_download",
             "agentworld_source_rehash_before_copy",
             "destination_rehash_before_atomic_rename",
@@ -277,6 +280,9 @@ def verify_no_gpu_download_acceptance(
         not implementation_path.is_relative_to(repository_root.resolve())
         or _sha256_file(implementation_path) != implementation["sha256"]
         or implementation["manifest_row_count"] != weight["weight_file_count"]
+        or implementation["primary_resolver"] != "https://huggingface.co"
+        or implementation["fallback_resolver"] != "https://hf-mirror.com"
+        or implementation["fallback_after_failed_attempts"] != 2
         or any(
             implementation[field] is not True
             for field in (

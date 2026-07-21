@@ -1,7 +1,7 @@
 {
   "format_version": "phase5-no-gpu-download-acceptance-v1",
   "status": "LOCK_A_NO_GPU_DOWNLOAD_ACCEPTED",
-  "source_commit": "efaaac898df3cecc15362d22f896813ff8ab8d78",
+  "source_commit": "31c4b09f80509d517936f53b263572c5dbc052c5",
   "validity": {
     "not_before_utc": "2026-07-21T20:28:23Z",
     "expires_utc": "2026-07-23T20:28:23Z"
@@ -82,8 +82,11 @@
   },
   "preparation_implementation": {
     "path": "scripts/prepare-phase5-remote-weights.sh",
-    "sha256": "6f362a6c98d1600b71f81e75be5ba88a128c318d42f049e052f0228c4023e3d0",
+    "sha256": "ecd2147e88bae73e45c1083d75afa446b4255db96dc9b6d5acfa36434d824915",
     "manifest_row_count": 35,
+    "primary_resolver": "https://huggingface.co",
+    "fallback_resolver": "https://hf-mirror.com",
+    "fallback_after_failed_attempts": 2,
     "resumable_base_download": true,
     "agentworld_source_rehash_before_copy": true,
     "destination_rehash_before_atomic_rename": true,
@@ -105,7 +108,8 @@
       "findings_closed": [
         "made explicit guard exits produce a failure marker",
         "kept GPU and model-server execution unauthorized",
-        "verified free-disk headroom exceeds the frozen minimum"
+        "verified free-disk headroom exceeds the frozen minimum",
+        "preserved v1 network failure evidence and bound an exact mirror fallback without changing repository, revision, size, or SHA-256 checks"
       ]
     }
   ],
@@ -116,5 +120,5 @@
     "remote_payload_class": "PUBLIC_MODEL_WEIGHTS_AND_PUBLIC_METADATA_ONLY",
     "next_stage_unlocked": "NO_GPU_WEIGHT_PREPARATION_ONLY"
   },
-  "acceptance_sha256": "b6054505401bef550ae5edd6bae988509089a36533043a4f4653ae5bdbbea171"
+  "acceptance_sha256": "23df26336b5206784dd6e39f15fcf5c1a4b8b9f386d097f2958379b20d204096"
 }
