@@ -213,6 +213,16 @@ their open descriptors are being hashed. This slice post-dates the immutable V4
 artifact and must be bound together with the concrete adapter in the next plan
 revision.
 
+That next revision is now the immutable local V5 candidate documented in
+`PHASE5_SYNTHETIC_CLIENT_PLAN_V5_INTERNAL_AUDIT_2026-07-22.md`. It binds the
+Linux-only `127.0.0.1:8000` adapter, the exact snapshot verifier, the runner,
+and the independent evidence verifier. Two mock-only internal audit passes
+closed the download-to-launch recheck, bounded-log/response, cleanup, live-child
+HTTP, and 30-second port-release gaps. V5 still keeps every execution bit false
+and is explicitly not Lock A; remote container/package attestation, exact
+download authorization, provider/spend binding, and throughput qualification
+remain open.
+
 V2 is likewise preserved and superseded. A full PNG chunk/CRC audit found that
 its nominal 1-by-1 fixture was malformed even though its signature and IHDR
 looked valid. V3 replaces it with a standard-library-constructed 1-by-1 RGBA

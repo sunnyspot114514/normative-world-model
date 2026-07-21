@@ -327,6 +327,7 @@ It does **not** yet provide:
 - [x] Four local Qwen3-1.7B engineering gateways preserved as `BLOCKED`; path terminated
 - [x] Two-round Kimi K3/Codex model cross-review of the V4 preservation record
 - [x] Phase-5 matched scale-inference protocol draft, with execution unauthorized
+- [x] Phase-5 V5 public-synthetic loopback adapter and exact snapshot prelaunch audit
 - [ ] Retained local three-arm model comparison (not started; local path terminated)
 - [ ] Locked confirmation
 - [ ] Optional server-scale study
@@ -352,6 +353,7 @@ The repository is designed not to contaminate sibling projects:
 - [Evaluator profiles](docs/EVALUATOR_PROFILES.md)
 - [Joint-consistency objective](docs/JOINT_CONSISTENCY_OBJECTIVE.md)
 - [Phase-5 scale-inference protocol draft](docs/PHASE5_SCALE_INFERENCE_PROTOCOL_DRAFT.md)
+- [Phase-5 V5 internal adapter audit](docs/PHASE5_SYNTHETIC_CLIENT_PLAN_V5_INTERNAL_AUDIT_2026-07-22.md)
 - [Phase-3 V4 model cross-review archive](external_reviews/2026-07-18_phase3-v4_kimi-k3/README.md)
 - [Leakage audit specification](docs/LEAKAGE_AUDIT_SPEC.md)
 - [Metric comparator v2.1](docs/METRIC_COMPARATOR_V2_1.md)

@@ -477,6 +477,7 @@ def _run_checkpoint(
     readiness_poll_interval_seconds: int,
     graceful_shutdown_timeout_seconds: int,
     post_force_exit_timeout_seconds: int,
+    port_release_timeout_seconds: int,
 ) -> dict[str, Any]:
     checkpoint_root = output_root / checkpoint
     lifecycle = []
@@ -639,7 +640,20 @@ def _run_checkpoint(
             "fsynced": True,
         },
     )
-    released, release_probe = adapter.probe_port_8000()
+    if (
+        not isinstance(port_release_timeout_seconds, int)
+        or isinstance(port_release_timeout_seconds, bool)
+        or port_release_timeout_seconds < 0
+    ):
+        raise ValueError("port release timeout is invalid")
+    released = False
+    release_probe = b""
+    for release_attempt in range(port_release_timeout_seconds + 1):
+        if release_attempt > 0:
+            sleep(1.0)
+        released, release_probe = adapter.probe_port_8000()
+        if released is True:
+            break
     release_b64, release_sha = _raw_capture(
         checkpoint_root, "post-exit-port-probe.bin", release_probe
     )
@@ -719,6 +733,7 @@ def run_phase5_public_synthetic_preflight(
                         "graceful_shutdown_timeout_seconds"
                     ],
                     post_force_exit_timeout_seconds=lifecycle["post_force_exit_timeout_seconds"],
+                    port_release_timeout_seconds=lifecycle["port_release_timeout_seconds"],
                 )
             except BaseException:
                 cleanup = adapters[checkpoint].emergency_cleanup()

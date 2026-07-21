@@ -37,7 +37,7 @@ from .phase5_termination_probe import (
     verify_common_termination_probe_plan,
 )
 
-SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION = "phase5-public-synthetic-client-plan-v4"
+SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION = "phase5-public-synthetic-client-plan-v5"
 SYNTHETIC_CLIENT_PLAN_MAX_BYTES = 4 * 1024 * 1024
 PUBLIC_REQUEST_SEED = 2026071803
 PUBLIC_IMAGE_DATA_URI = (
@@ -80,12 +80,14 @@ IMPLEMENTATION_SOURCE_PATHS = (
     "configs/phase5_scale_inference_draft.toml",
     "configs/phase5_common_termination_probe_candidate.toml",
     "src/normative_world_model/phase5_preflight.py",
+    "src/normative_world_model/phase5_loopback_adapter.py",
     "src/normative_world_model/phase5_runtime_plan.py",
     "src/normative_world_model/phase5_serialization.py",
     "src/normative_world_model/phase5_synthetic_client_plan.py",
     "src/normative_world_model/phase5_synthetic_evidence.py",
     "src/normative_world_model/phase5_synthetic_runner.py",
     "src/normative_world_model/phase5_termination_probe.py",
+    "src/normative_world_model/phase5_weight_snapshot.py",
 )
 
 
@@ -459,8 +461,8 @@ def build_phase5_synthetic_client_plan(
     result = {
         "format_version": SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION,
         "status": (
-            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V4_CORE_VERIFIER_PASS_"
-            "REMOTE_ADAPTER_NOT_BUILT_EXECUTION_NOT_AUTHORIZED"
+            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V5_ADAPTER_AND_SNAPSHOT_VERIFIER_PASS_"
+            "EXECUTION_NOT_AUTHORIZED"
         ),
         "authorization": {
             "model_download": False,
@@ -521,8 +523,7 @@ def build_phase5_synthetic_client_plan(
         },
         "raw_before_parse_evidence_contract": {
             "status": (
-                "SCHEMA_FROZEN_CORE_PRODUCER_AND_VERIFIER_IMPLEMENTED_"
-                "CONCRETE_REMOTE_ADAPTER_NOT_IMPLEMENTED"
+                "SCHEMA_FROZEN_PRODUCER_VERIFIER_AND_LOOPBACK_ADAPTER_BUILT_MOCK_ONLY"
             ),
             "attempt_event_order": event_order,
             "raw_capture_must_be_fsynced_before_parse": True,
@@ -577,8 +578,7 @@ def build_phase5_synthetic_client_plan(
         },
         "lifecycle_contract": {
             "status": (
-                "FROZEN_CANDIDATE_ORCHESTRATOR_CORE_IMPLEMENTED_"
-                "CONCRETE_REMOTE_ADAPTER_NOT_IMPLEMENTED"
+                "FROZEN_CANDIDATE_ORCHESTRATOR_AND_LOOPBACK_ADAPTER_MOCK_REVIEWED"
             ),
             "checkpoint_order": ["agentworld", "base"],
             "per_checkpoint_order": [
@@ -623,17 +623,24 @@ def build_phase5_synthetic_client_plan(
         "implementation_state": {
             "client_core": "BUILT_ADAPTER_DRIVEN_WRITE_ONCE_FSYNC",
             "orchestrator_core": "BUILT_AUTHORIZATION_GATED_SEQUENTIAL",
-            "concrete_remote_adapter": "NOT_BUILT",
+            "concrete_remote_adapter": (
+                "BUILT_LINUX_LOOPBACK_ONLY_MOCK_REVIEWED_NO_REMOTE_EXECUTION"
+            ),
+            "exact_weight_snapshot_verifier": "BUILT_READ_ONLY_WITH_PRELAUNCH_RECHECK",
             "independent_evidence_verifier": "BUILT_LOCAL_CANDIDATE",
             "network_calls_performed": False,
             "processes_started": False,
         },
         "unresolved_before_lock_a": [
-            "implement_and_review_loopback_http_and_process_remote_adapter",
             "confirm_source_bound_language_only_error_semantics_on_both_checkpoints",
-            "bind_effective_environment_allowlist_and_post_download_weight_verifier",
-            "bind_container_provider_quote_and_whole_rental_cap",
-            "complete_two_round_review_of_runtime_v2_and_client_plan",
+            (
+                "bind_absolute_remote_runtime_specs_container_identity_executable_and_"
+                "installed_package_attestation"
+            ),
+            "authorize_exact_weight_download_and_create_post_download_snapshot_manifests",
+            "bind_provider_quote_storage_policy_and_whole_rental_spend_cap",
+            "complete_mock_throughput_and_memory-envelope qualification",
+            "complete_final_lock_a_review_of_runtime_v2_and_client_plan_v5",
         ],
     }
     result["client_plan_sha256"] = _canonical_sha256(result)
@@ -658,7 +665,7 @@ def default_phase5_synthetic_client_plan_path(
         project_root
         / ".cache"
         / "phase5_synthetic_client_plan"
-        / f"v4-{runtime_plan_sha256[:12]}-{termination_plan_sha256[:12]}.json"
+        / f"v5-{runtime_plan_sha256[:12]}-{termination_plan_sha256[:12]}.json"
     )
 
 
@@ -767,8 +774,8 @@ def verify_phase5_synthetic_client_plan() -> dict[str, Any]:
         raise ValueError("synthetic client plan differs from independent rebuild")
     return {
         "status": (
-            "PASS_LOCAL_CLIENT_PLAN_V4_CORE_VERIFIER_ONLY_"
-            "REMOTE_ADAPTER_NOT_BUILT_EXECUTION_NOT_AUTHORIZED"
+            "PASS_LOCAL_CLIENT_PLAN_V5_ADAPTER_AND_SNAPSHOT_VERIFIER_"
+            "EXECUTION_NOT_AUTHORIZED"
         ),
         "client_plan_sha256": stored["client_plan_sha256"],
         "request_count": stored["request_count"],

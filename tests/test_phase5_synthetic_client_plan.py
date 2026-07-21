@@ -128,8 +128,8 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
         self.assertEqual(
             plan["status"],
             (
-                "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V4_CORE_VERIFIER_PASS_"
-                "REMOTE_ADAPTER_NOT_BUILT_EXECUTION_NOT_AUTHORIZED"
+                "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V5_ADAPTER_AND_SNAPSHOT_VERIFIER_PASS_"
+                "EXECUTION_NOT_AUTHORIZED"
             ),
         )
         self.assertEqual(plan["request_count"], 20)
@@ -138,7 +138,10 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
             plan["implementation_state"]["client_core"],
             "BUILT_ADAPTER_DRIVEN_WRITE_ONCE_FSYNC",
         )
-        self.assertEqual(plan["implementation_state"]["concrete_remote_adapter"], "NOT_BUILT")
+        self.assertEqual(
+            plan["implementation_state"]["concrete_remote_adapter"],
+            "BUILT_LINUX_LOOPBACK_ONLY_MOCK_REVIEWED_NO_REMOTE_EXECUTION",
+        )
         self.assertFalse(plan["implementation_state"]["network_calls_performed"])
         self.assertEqual(
             plan["client_plan_sha256"],

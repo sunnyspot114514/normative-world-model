@@ -8,6 +8,7 @@ snapshot byte to be an exact regular, single-link file inside its declared root.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import stat
 from collections.abc import Mapping
@@ -179,6 +180,56 @@ def _actual_regular_files(root: Path) -> dict[str, Path]:
     return result
 
 
+def _stat_fingerprint(
+    actual: Mapping[str, Path], expected: Mapping[str, Mapping[str, Any]]
+) -> str:
+    rows = []
+    for relative in sorted(expected):
+        path = actual[relative]
+        observed = path.stat()
+        if observed.st_nlink != 1 or observed.st_size != expected[relative]["bytes"]:
+            raise ValueError(f"bound snapshot stat contract differs: {relative}")
+        rows.append(
+            {
+                "path": relative,
+                "device": observed.st_dev,
+                "inode": observed.st_ino,
+                "bytes": observed.st_size,
+                "mtime_ns": observed.st_mtime_ns,
+            }
+        )
+    return _canonical_sha256(rows)
+
+
+def bound_snapshot_stat_fingerprint(snapshot_manifest: Mapping[str, Any]) -> str:
+    """Return a cheap launch-time identity seal for an already verified manifest."""
+
+    if not isinstance(snapshot_manifest, Mapping):
+        raise ValueError("bound snapshot manifest must be an object")
+    root_value = snapshot_manifest.get("snapshot_root")
+    rows = snapshot_manifest.get("files")
+    if not isinstance(root_value, str) or not isinstance(rows, list) or not rows:
+        raise ValueError("bound snapshot manifest is malformed")
+    expected = {}
+    for row in rows:
+        if not isinstance(row, Mapping):
+            raise ValueError("bound snapshot file row is malformed")
+        relative = _safe_relative_path(row.get("path"), label="bound snapshot file path")
+        size = row.get("bytes")
+        if (
+            relative in expected
+            or not isinstance(size, int)
+            or isinstance(size, bool)
+            or size < 0
+        ):
+            raise ValueError("bound snapshot file contract is malformed")
+        expected[relative] = {"bytes": size}
+    actual = _actual_regular_files(Path(root_value))
+    if set(actual) != set(expected):
+        raise ValueError("bound snapshot exact file set differs")
+    return _stat_fingerprint(actual, expected)
+
+
 def verify_downloaded_weight_snapshots(
     weight_plan: Mapping[str, Any],
     metadata_manifest: Mapping[str, Any],
@@ -278,6 +329,148 @@ def verify_downloaded_weight_snapshots(
     }
     result["snapshot_bundle_sha256"] = _canonical_sha256(result)
     return result
+
+
+def reverify_bound_snapshot(
+    snapshot_manifest: Mapping[str, Any],
+    *,
+    expected_snapshot_manifest_sha256: str,
+) -> dict[str, Any]:
+    """Re-hash one externally bound snapshot immediately before service launch.
+
+    This is deliberately separate from the post-download verifier.  A Lock-A
+    runtime binding carries one checkpoint row emitted by
+    :func:`verify_downloaded_weight_snapshots`; the launch adapter calls this
+    function again so bytes changed after download verification cannot silently
+    enter a served process.
+    """
+
+    expected_manifest = _lower_sha256(
+        expected_snapshot_manifest_sha256,
+        label="external snapshot-manifest binding",
+    )
+    manifest_bytes = json.dumps(
+        snapshot_manifest,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    manifest = _load_inert_json(manifest_bytes, label="bound snapshot manifest")
+    if not isinstance(manifest, Mapping):
+        raise ValueError("bound snapshot manifest must be an object")
+    required_keys = {
+        "checkpoint",
+        "repo_id",
+        "revision",
+        "snapshot_root",
+        "files",
+        "file_count",
+        "total_bytes",
+        "weight_bytes",
+        "snapshot_manifest_sha256",
+    }
+    if set(manifest) != required_keys:
+        raise ValueError("bound snapshot manifest schema differs")
+    without_hash = {
+        key: value for key, value in manifest.items() if key != "snapshot_manifest_sha256"
+    }
+    if (
+        manifest["snapshot_manifest_sha256"] != expected_manifest
+        or _canonical_sha256(without_hash) != expected_manifest
+    ):
+        raise ValueError("bound snapshot manifest differs from its external binding")
+    for label in ("checkpoint", "repo_id", "revision"):
+        if not isinstance(manifest[label], str) or not manifest[label]:
+            raise ValueError(f"bound snapshot {label} is invalid")
+    root_value = manifest["snapshot_root"]
+    if not isinstance(root_value, str) or not root_value:
+        raise ValueError("bound snapshot root is invalid")
+    root = Path(root_value)
+    if not root.is_absolute():
+        raise ValueError("bound snapshot root is not absolute")
+
+    rows = manifest["files"]
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("bound snapshot file list is malformed")
+    expected_files: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        if not isinstance(row, Mapping) or set(row) != {
+            "path",
+            "bytes",
+            "sha256",
+            "content_class",
+        }:
+            raise ValueError("bound snapshot file row is malformed")
+        relative = _safe_relative_path(row["path"], label="bound snapshot file path")
+        if relative in expected_files:
+            raise ValueError(f"bound snapshot file is duplicated: {relative}")
+        size = row["bytes"]
+        if not isinstance(size, int) or isinstance(size, bool) or size < 0:
+            raise ValueError(f"bound snapshot size is invalid: {relative}")
+        content_class = row["content_class"]
+        if content_class not in {"weight", "metadata"}:
+            raise ValueError(f"bound snapshot content class is invalid: {relative}")
+        expected_files[relative] = {
+            "path": relative,
+            "bytes": size,
+            "sha256": _lower_sha256(
+                row["sha256"], label=f"bound snapshot digest/{relative}"
+            ),
+            "content_class": content_class,
+        }
+    if [row["path"] for row in rows] != sorted(expected_files):
+        raise ValueError("bound snapshot file order is not canonical")
+    total_bytes = sum(row["bytes"] for row in expected_files.values())
+    weight_bytes = sum(
+        row["bytes"]
+        for row in expected_files.values()
+        if row["content_class"] == "weight"
+    )
+    if (
+        manifest["file_count"] != len(expected_files)
+        or manifest["total_bytes"] != total_bytes
+        or manifest["weight_bytes"] != weight_bytes
+    ):
+        raise ValueError("bound snapshot aggregate fields differ")
+
+    actual = _actual_regular_files(root)
+    if set(actual) != set(expected_files):
+        raise ValueError("bound snapshot exact file set differs")
+    fingerprints: dict[str, tuple[int, int, int, int]] = {}
+    for relative in sorted(expected_files):
+        contract = expected_files[relative]
+        path = actual[relative]
+        digest = _sha256_regular_file(path, expected_size=contract["bytes"])
+        if digest != contract["sha256"]:
+            raise ValueError(f"bound snapshot file digest differs: {relative}")
+        observed = path.stat()
+        fingerprints[relative] = (
+            observed.st_dev,
+            observed.st_ino,
+            observed.st_size,
+            observed.st_mtime_ns,
+        )
+    final_actual = _actual_regular_files(root)
+    if set(final_actual) != set(expected_files):
+        raise ValueError("bound snapshot file set changed while re-verifying")
+    for relative, path in final_actual.items():
+        observed = path.stat()
+        if fingerprints[relative] != (
+            observed.st_dev,
+            observed.st_ino,
+            observed.st_size,
+            observed.st_mtime_ns,
+        ):
+            raise ValueError(f"bound snapshot file changed after hashing: {relative}")
+    return {
+        "status": "PASS_BOUND_SNAPSHOT_REVERIFIED_PRELAUNCH",
+        "checkpoint": manifest["checkpoint"],
+        "snapshot_manifest_sha256": expected_manifest,
+        "file_count": len(expected_files),
+        "total_bytes": total_bytes,
+        "weight_bytes": weight_bytes,
+        "stat_fingerprint_sha256": _stat_fingerprint(final_actual, expected_files),
+    }
 
 
 def load_inert_manifest(path: Path, *, label: str) -> dict[str, Any]:

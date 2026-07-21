@@ -36,6 +36,7 @@ class _Adapter:
     def __init__(self, responses: dict[str, SyntheticHTTPResponse]) -> None:
         self.responses = responses
         self.port_free = True
+        self.port_probe_results: list[bool] = []
         self.launch_count = 0
         self.force_count = 0
         self.cleanup_count = 0
@@ -44,7 +45,8 @@ class _Adapter:
         self._failed: set[str] = set()
 
     def probe_port_8000(self) -> tuple[bool, bytes]:
-        return self.port_free, b"port probe"
+        free = self.port_probe_results.pop(0) if self.port_probe_results else self.port_free
+        return free, b"port probe"
 
     def verify_snapshot_and_environment(self, spec: SyntheticRuntimeSpec) -> tuple[bool, bool]:
         return True, True
@@ -238,6 +240,21 @@ class Phase5SyntheticRunnerTests(unittest.TestCase):
             self.assertTrue((case_root / "attempt-1-evidence.json").is_file())
             self.assertTrue((case_root / "attempt-2-evidence.json").is_file())
             self.assertEqual((case_root / "attempt-1-raw-response.bin").read_bytes(), b"")
+
+    def test_port_release_uses_the_frozen_timeout_instead_of_one_shot_probe(self) -> None:
+        inputs = _inputs()
+        adapters = inputs[-1]
+        adapters["agentworld"].port_probe_results = [True, False, True]
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "run"
+            result = _run(root, inputs=inputs)
+            self.assertEqual(result["status"], "PASS_PUBLIC_SYNTHETIC_EVIDENCE_V1")
+            release = (
+                root
+                / "agentworld"
+                / "lifecycle-12-port_release_probe_captured.json"
+            )
+            self.assertTrue(release.is_file())
 
     def test_semantic_failure_preserves_raw_evidence_and_failure_record(self) -> None:
         inputs = _inputs()

@@ -13,6 +13,7 @@ from normative_world_model.phase5_public_weight_plan import (
     _artifact_sha256,
 )
 from normative_world_model.phase5_weight_snapshot import (
+    reverify_bound_snapshot,
     verify_downloaded_weight_snapshots,
 )
 
@@ -194,6 +195,53 @@ class Phase5WeightSnapshotTests(unittest.TestCase):
             "hf_hub_download",
         ):
             self.assertNotIn(forbidden, source)
+
+    def test_bound_snapshot_is_rehashed_immediately_before_launch(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            weight_plan, metadata, roots = _fixture(Path(temporary))
+            result = _verify(weight_plan, metadata, roots)
+            manifest = result["snapshots"][0]
+            verification = reverify_bound_snapshot(
+                manifest,
+                expected_snapshot_manifest_sha256=manifest["snapshot_manifest_sha256"],
+            )
+            self.assertEqual(
+                verification["status"], "PASS_BOUND_SNAPSHOT_REVERIFIED_PRELAUNCH"
+            )
+            weight_path = roots["agentworld"] / "model.safetensors"
+            weight_path.write_bytes(b"x" * len(weight_path.read_bytes()))
+            with self.assertRaisesRegex(ValueError, "digest differs"):
+                reverify_bound_snapshot(
+                    manifest,
+                    expected_snapshot_manifest_sha256=manifest["snapshot_manifest_sha256"],
+                )
+
+    def test_bound_snapshot_rejects_manifest_root_and_aggregate_tampering(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            weight_plan, metadata, roots = _fixture(Path(temporary))
+            result = _verify(weight_plan, metadata, roots)
+            manifest = result["snapshots"][1]
+            changed_root = copy.deepcopy(manifest)
+            changed_root["snapshot_root"] = str(roots["agentworld"])
+            with self.assertRaisesRegex(ValueError, "external binding"):
+                reverify_bound_snapshot(
+                    changed_root,
+                    expected_snapshot_manifest_sha256=manifest["snapshot_manifest_sha256"],
+                )
+            changed_total = copy.deepcopy(manifest)
+            changed_total["total_bytes"] += 1
+            changed_total["snapshot_manifest_sha256"] = _canonical_sha256(
+                {
+                    key: value
+                    for key, value in changed_total.items()
+                    if key != "snapshot_manifest_sha256"
+                }
+            )
+            with self.assertRaisesRegex(ValueError, "external binding"):
+                reverify_bound_snapshot(
+                    changed_total,
+                    expected_snapshot_manifest_sha256=manifest["snapshot_manifest_sha256"],
+                )
 
 
 if __name__ == "__main__":
