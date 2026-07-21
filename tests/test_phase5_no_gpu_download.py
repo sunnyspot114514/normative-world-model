@@ -57,6 +57,19 @@ class Phase5NoGpuDownloadTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, source)
 
+    def test_remote_preparer_has_a_frozen_hash_checked_resolver_fallback(self) -> None:
+        source = (ROOT / "scripts" / "prepare-phase5-remote-weights.sh").read_text(
+            encoding="utf-8"
+        )
+        primary = 'primary_resolver="https://huggingface.co"'
+        fallback = 'fallback_resolver="https://hf-mirror.com"'
+        self.assertIn(primary, source)
+        self.assertIn(fallback, source)
+        self.assertLess(source.index(primary), source.index(fallback))
+        self.assertIn("fallback_after_failed_attempts=2", source)
+        self.assertIn('actual_sha=$(sha256sum "$partial"', source)
+        self.assertIn('actual_sha" != "$expected_sha"', source)
+
 
 if __name__ == "__main__":
     unittest.main()

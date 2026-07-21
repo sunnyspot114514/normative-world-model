@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+primary_resolver="https://huggingface.co"
+fallback_resolver="https://hf-mirror.com"
+fallback_after_failed_attempts=2
+
 if [[ $# -ne 4 ]]; then
   echo "usage: $0 MANIFEST_TSV AGENTWORLD_SOURCE_ROOT TARGET_ROOT EVIDENCE_ROOT" >&2
   exit 64
@@ -124,7 +128,6 @@ while IFS=$'\t' read -r checkpoint repo revision relative expected_bytes expecte
       echo "Base partial exceeds expected bytes: $partial" >&2
       exit 80
     fi
-    url="https://huggingface.co/$repo/resolve/$revision/$relative?download=true"
     for attempt in $(seq 1 30); do
       partial_bytes=0
       [[ -f "$partial" ]] && partial_bytes=$(stat -c %s "$partial")
@@ -135,8 +138,14 @@ while IFS=$'\t' read -r checkpoint repo revision relative expected_bytes expecte
         echo "Base partial exceeds expected bytes after download: $partial" >&2
         exit 80
       fi
-      printf 'downloading checkpoint=%s path=%s attempt=%s resume_bytes=%s expected_bytes=%s\n' \
-        "$checkpoint" "$relative" "$attempt" "$partial_bytes" "$expected_bytes"
+      resolver="$primary_resolver"
+      if (( attempt > fallback_after_failed_attempts )); then
+        resolver="$fallback_resolver"
+      fi
+      url="$resolver/$repo/resolve/$revision/$relative?download=true"
+      printf 'downloading checkpoint=%s path=%s attempt=%s resolver=%s resume_bytes=%s expected_bytes=%s\n' \
+        "$checkpoint" "$relative" "$attempt" "$resolver" "$partial_bytes" \
+        "$expected_bytes"
       set +e
       curl --fail --location --continue-at - \
         --connect-timeout 30 --speed-time 120 --speed-limit 1024 \
