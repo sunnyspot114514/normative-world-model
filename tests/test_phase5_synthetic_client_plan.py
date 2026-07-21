@@ -59,9 +59,7 @@ def _termination_plan() -> dict:
                 }
                 cases.append(
                     {
-                        "case_id": (
-                            f"{checkpoint}-stop-{forced_id}-repeat-{repetition}"
-                        ),
+                        "case_id": (f"{checkpoint}-stop-{forced_id}-repeat-{repetition}"),
                         "checkpoint": checkpoint,
                         "request_body": body,
                         "request_body_sha256": _canonical_sha256(body),
@@ -112,9 +110,7 @@ def _build(**overrides) -> dict:
         common_prompt=overrides.pop(
             "common_prompt", "<public common prompt><|im_start|>assistant\n"
         ),
-        base_common_prompt_token_ids=overrides.pop(
-            "base_common_prompt_token_ids", [11, 12, 13]
-        ),
+        base_common_prompt_token_ids=overrides.pop("base_common_prompt_token_ids", [11, 12, 13]),
         agentworld_common_prompt_token_ids=overrides.pop(
             "agentworld_common_prompt_token_ids", [11, 12, 13]
         ),
@@ -131,31 +127,30 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
         plan = _build()
         self.assertEqual(
             plan["status"],
-            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V3_ONLY_EXECUTION_NOT_AUTHORIZED",
+            (
+                "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V4_CORE_VERIFIER_PASS_"
+                "REMOTE_ADAPTER_NOT_BUILT_EXECUTION_NOT_AUTHORIZED"
+            ),
         )
         self.assertEqual(plan["request_count"], 20)
         self.assertFalse(any(plan["authorization"].values()))
-        self.assertEqual(plan["implementation_state"]["client"], "NOT_BUILT")
+        self.assertEqual(
+            plan["implementation_state"]["client_core"],
+            "BUILT_ADAPTER_DRIVEN_WRITE_ONCE_FSYNC",
+        )
+        self.assertEqual(plan["implementation_state"]["concrete_remote_adapter"], "NOT_BUILT")
         self.assertFalse(plan["implementation_state"]["network_calls_performed"])
         self.assertEqual(
             plan["client_plan_sha256"],
             _canonical_sha256(
-                {
-                    key: value
-                    for key, value in plan.items()
-                    if key != "client_plan_sha256"
-                }
+                {key: value for key, value in plan.items() if key != "client_plan_sha256"}
             ),
         )
 
         cases = plan["request_sequence"]
-        self.assertEqual(
-            [row["checkpoint"] for row in cases[:10]], ["agentworld"] * 10
-        )
+        self.assertEqual([row["checkpoint"] for row in cases[:10]], ["agentworld"] * 10)
         self.assertEqual([row["checkpoint"] for row in cases[10:]], ["base"] * 10)
-        self.assertEqual(
-            sum(row["mode"] == "common_termination" for row in cases), 8
-        )
+        self.assertEqual(sum(row["mode"] == "common_termination" for row in cases), 8)
         self.assertEqual(
             sum(row["mode"] in {"native_package", "common_base_serialization"} for row in cases),
             8,
@@ -175,9 +170,7 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
             self.assertEqual(body["request_id"], row["logical_request_id"])
             self.assertEqual(body["response_format"]["type"], "json_schema")
             self.assertFalse(
-                body["response_format"]["json_schema"]["schema"][
-                    "additionalProperties"
-                ]
+                body["response_format"]["json_schema"]["schema"]["additionalProperties"]
             )
             self.assertEqual(row["headers"]["X-Request-ID"], row["logical_request_id"])
         gate = plan["semantic_pass_gate"]
@@ -214,9 +207,7 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
         )
         self.assertIn("raw_response_body_base64", evidence["raw_envelope_fields"])
         self.assertTrue(
-            evidence[
-                "generated_text_must_be_fsynced_verbatim_before_generated_text_json_parse"
-            ]
+            evidence["generated_text_must_be_fsynced_verbatim_before_generated_text_json_parse"]
         )
 
         for row in plan["request_sequence"]:
@@ -241,16 +232,12 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
                     sort_keys=True,
                     separators=(",", ":"),
                 ).encode("utf-8")
-            self.assertEqual(
-                row["request_body_utf8_sha256"], hashlib.sha256(rendered).hexdigest()
-            )
+            self.assertEqual(row["request_body_utf8_sha256"], hashlib.sha256(rendered).hexdigest())
 
     def test_language_only_probe_is_public_valid_and_rejection_is_required(self) -> None:
         plan = _build()
         probes = [
-            row
-            for row in plan["request_sequence"]
-            if row["mode"] == "language_only_negative"
+            row for row in plan["request_sequence"] if row["mode"] == "language_only_negative"
         ]
         self.assertEqual(len(probes), 2)
         for row in probes:
@@ -266,9 +253,7 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
                 length = struct.unpack(">I", png[offset : offset + 4])[0]
                 kind = png[offset + 4 : offset + 8]
                 payload = png[offset + 8 : offset + 8 + length]
-                checksum = struct.unpack(
-                    ">I", png[offset + 8 + length : offset + 12 + length]
-                )[0]
+                checksum = struct.unpack(">I", png[offset + 8 + length : offset + 12 + length])[0]
                 self.assertEqual(checksum, zlib.crc32(kind + payload) & 0xFFFFFFFF)
                 chunks.append((kind, payload))
                 offset += 12 + length
@@ -278,17 +263,13 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
         gate = plan["semantic_pass_gate"]["language_only_probe"]
         self.assertEqual(gate["required_http_status"], 400)
         self.assertEqual(gate["required_error_object"]["error.code"], 400)
-        self.assertEqual(
-            gate["required_error_object"]["error.type"], "BadRequestError"
-        )
+        self.assertEqual(gate["required_error_object"]["error.type"], "BadRequestError")
         self.assertEqual(
             gate["required_error_object"]["error.param_allowed"],
             ["image", "vision_chunk"],
         )
         self.assertEqual(gate["http_2xx_result"], "FAIL_LANGUAGE_ONLY_CONTRACT")
-        self.assertEqual(
-            gate["unrelated_http_4xx_result"], "FAIL_LANGUAGE_ONLY_CONTRACT"
-        )
+        self.assertEqual(gate["unrelated_http_4xx_result"], "FAIL_LANGUAGE_ONLY_CONTRACT")
         self.assertIn("SOURCE_BOUND", gate["error_semantics_status"])
 
     def test_lifecycle_order_is_executable_and_every_boundary_has_raw_evidence(self) -> None:

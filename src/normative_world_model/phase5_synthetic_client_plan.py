@@ -37,7 +37,7 @@ from .phase5_termination_probe import (
     verify_common_termination_probe_plan,
 )
 
-SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION = "phase5-public-synthetic-client-plan-v3"
+SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION = "phase5-public-synthetic-client-plan-v4"
 SYNTHETIC_CLIENT_PLAN_MAX_BYTES = 4 * 1024 * 1024
 PUBLIC_REQUEST_SEED = 2026071803
 PUBLIC_IMAGE_DATA_URI = (
@@ -83,6 +83,8 @@ IMPLEMENTATION_SOURCE_PATHS = (
     "src/normative_world_model/phase5_runtime_plan.py",
     "src/normative_world_model/phase5_serialization.py",
     "src/normative_world_model/phase5_synthetic_client_plan.py",
+    "src/normative_world_model/phase5_synthetic_evidence.py",
+    "src/normative_world_model/phase5_synthetic_runner.py",
     "src/normative_world_model/phase5_termination_probe.py",
 )
 
@@ -95,9 +97,9 @@ def _canonical_sha256(value: Any) -> str:
 def _request_body_bytes(body: Mapping[str, Any] | None) -> bytes:
     if body is None:
         return b""
-    return json.dumps(
-        body, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-    ).encode("utf-8")
+    return json.dumps(body, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(
+        "utf-8"
+    )
 
 
 def _implementation_source_records() -> dict[str, dict[str, Any]]:
@@ -160,9 +162,7 @@ def _request_record(
         "logical_request_id": logical_request_id,
         "headers": headers,
         "request_body": None if body is None else dict(body),
-        "request_body_utf8_sha256": hashlib.sha256(
-            _request_body_bytes(body)
-        ).hexdigest(),
+        "request_body_utf8_sha256": hashlib.sha256(_request_body_bytes(body)).hexdigest(),
         "seed": seed,
     }
     result["request_identity_sha256"] = _canonical_sha256(
@@ -287,17 +287,14 @@ def build_phase5_synthetic_client_plan(
         runtime_plan.get("runtime_plan_sha256"), label="runtime plan hash"
     )
     runtime_without_hash = {
-        key: value
-        for key, value in runtime_plan.items()
-        if key != "runtime_plan_sha256"
+        key: value for key, value in runtime_plan.items() if key != "runtime_plan_sha256"
     }
     if (
         runtime_plan.get("format_version") != RUNTIME_PLAN_FORMAT_VERSION
         or runtime_plan.get("status")
         != "LOCAL_RUNTIME_PLAN_V2_PASS_LOCK_A_NOT_BUILT_EXECUTION_NOT_AUTHORIZED"
         or runtime_hash != _canonical_sha256(runtime_without_hash)
-        or runtime_verification.get("status")
-        != "PASS_LOCAL_PLAN_V2_ONLY_EXECUTION_NOT_AUTHORIZED"
+        or runtime_verification.get("status") != "PASS_LOCAL_PLAN_V2_ONLY_EXECUTION_NOT_AUTHORIZED"
         or runtime_verification.get("runtime_plan_sha256") != runtime_hash
         or runtime_verification.get("http_execution") is not False
         or runtime_verification.get("gpu_execution") is not False
@@ -314,11 +311,9 @@ def build_phase5_synthetic_client_plan(
     }
     if (
         termination_plan.get("format_version") != TERMINATION_PLAN_FORMAT_VERSION
-        or termination_plan.get("status")
-        != "CANDIDATE_PLAN_PASS_EXECUTION_NOT_AUTHORIZED"
+        or termination_plan.get("status") != "CANDIDATE_PLAN_PASS_EXECUTION_NOT_AUTHORIZED"
         or termination_hash != _canonical_sha256(termination_without_hash)
-        or termination_verification.get("status")
-        != "PASS_PLAN_ONLY_EXECUTION_NOT_AUTHORIZED"
+        or termination_verification.get("status") != "PASS_PLAN_ONLY_EXECUTION_NOT_AUTHORIZED"
         or termination_verification.get("plan_sha256") != termination_hash
         or termination_verification.get("http_execution") is not False
     ):
@@ -334,8 +329,7 @@ def build_phase5_synthetic_client_plan(
         base_ids != agentworld_ids
         or not base_ids
         or any(
-            not isinstance(value, int) or isinstance(value, bool) or value < 0
-            for value in base_ids
+            not isinstance(value, int) or isinstance(value, bool) or value < 0 for value in base_ids
         )
         or len(base_ids) + 2048 > 8192
     ):
@@ -371,9 +365,7 @@ def build_phase5_synthetic_client_plan(
                 },
                 "request_body": body,
                 "request_body_sha256": case["request_body_sha256"],
-                "request_body_utf8_sha256": hashlib.sha256(
-                    _request_body_bytes(body)
-                ).hexdigest(),
+                "request_body_utf8_sha256": hashlib.sha256(_request_body_bytes(body)).hexdigest(),
                 "seed": body.get("seed"),
             }
         )
@@ -400,9 +392,7 @@ def build_phase5_synthetic_client_plan(
                 mode="language_only_negative",
                 method="POST",
                 endpoint="/v1/chat/completions",
-                body=_language_only_request_body(
-                    checkpoint=checkpoint, model_alias=alias
-                ),
+                body=_language_only_request_body(checkpoint=checkpoint, model_alias=alias),
                 seed=PUBLIC_REQUEST_SEED,
             )
         )
@@ -468,7 +458,10 @@ def build_phase5_synthetic_client_plan(
     ]
     result = {
         "format_version": SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION,
-        "status": "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V3_ONLY_EXECUTION_NOT_AUTHORIZED",
+        "status": (
+            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V4_CORE_VERIFIER_PASS_"
+            "REMOTE_ADAPTER_NOT_BUILT_EXECUTION_NOT_AUTHORIZED"
+        ),
         "authorization": {
             "model_download": False,
             "server_rental": False,
@@ -492,9 +485,7 @@ def build_phase5_synthetic_client_plan(
             "verification_status": termination_verification["status"],
             "case_count": len(termination_references),
         },
-        "implementation_sources": dict(
-            implementation_sources or _implementation_source_records()
-        ),
+        "implementation_sources": dict(implementation_sources or _implementation_source_records()),
         "public_content_contract": {
             "content_class": "PUBLIC_SYNTHETIC_ONLY",
             "toy_messages": [dict(message) for message in PUBLIC_TOY_MESSAGES],
@@ -529,7 +520,10 @@ def build_phase5_synthetic_client_plan(
             "second_failure_result": "TECHNICALLY_BLOCKED",
         },
         "raw_before_parse_evidence_contract": {
-            "status": "SCHEMA_FROZEN_CLIENT_AND_VERIFIER_NOT_IMPLEMENTED",
+            "status": (
+                "SCHEMA_FROZEN_CORE_PRODUCER_AND_VERIFIER_IMPLEMENTED_"
+                "CONCRETE_REMOTE_ADAPTER_NOT_IMPLEMENTED"
+            ),
             "attempt_event_order": event_order,
             "raw_capture_must_be_fsynced_before_parse": True,
             "request_body_serialization": (
@@ -550,7 +544,7 @@ def build_phase5_synthetic_client_plan(
             "invalid_utf8_policy": "RETAIN_RAW_BYTES_AND_FAIL_TEXT_PARSE",
         },
         "semantic_pass_gate": {
-            "status": "FROZEN_CANDIDATE_VERIFIER_NOT_IMPLEMENTED",
+            "status": "FROZEN_CANDIDATE_INDEPENDENT_VERIFIER_IMPLEMENTED",
             "all_required": True,
             "models_endpoint_alias_exact": True,
             "language_only_probe": {
@@ -582,7 +576,10 @@ def build_phase5_synthetic_client_plan(
             "missing_raw_generated_text_result": "FAIL",
         },
         "lifecycle_contract": {
-            "status": "FROZEN_CANDIDATE_ORCHESTRATOR_NOT_IMPLEMENTED",
+            "status": (
+                "FROZEN_CANDIDATE_ORCHESTRATOR_CORE_IMPLEMENTED_"
+                "CONCRETE_REMOTE_ADAPTER_NOT_IMPLEMENTED"
+            ),
             "checkpoint_order": ["agentworld", "base"],
             "per_checkpoint_order": [
                 "verify_port_8000_free_before_launch",
@@ -624,15 +621,15 @@ def build_phase5_synthetic_client_plan(
             "port_release_probe_raw_capture_required": True,
         },
         "implementation_state": {
-            "client": "NOT_BUILT",
-            "orchestrator": "NOT_BUILT",
-            "independent_evidence_verifier": "NOT_BUILT",
+            "client_core": "BUILT_ADAPTER_DRIVEN_WRITE_ONCE_FSYNC",
+            "orchestrator_core": "BUILT_AUTHORIZATION_GATED_SEQUENTIAL",
+            "concrete_remote_adapter": "NOT_BUILT",
+            "independent_evidence_verifier": "BUILT_LOCAL_CANDIDATE",
             "network_calls_performed": False,
             "processes_started": False,
         },
         "unresolved_before_lock_a": [
-            "implement_client_raw_capture_and_exact_retry_state_machine",
-            "implement_independent_semantic_and_lifecycle_evidence_verifier",
+            "implement_and_review_loopback_http_and_process_remote_adapter",
             "confirm_source_bound_language_only_error_semantics_on_both_checkpoints",
             "bind_effective_environment_allowlist_and_post_download_weight_verifier",
             "bind_container_provider_quote_and_whole_rental_cap",
@@ -647,13 +644,13 @@ def default_phase5_synthetic_client_plan_path(
     *, runtime_plan_sha256: str | None = None, termination_plan_sha256: str | None = None
 ) -> Path:
     if runtime_plan_sha256 is None:
-        runtime_plan_sha256 = _read_runtime_plan(
-            default_phase5_runtime_plan_path()
-        )["runtime_plan_sha256"]
+        runtime_plan_sha256 = _read_runtime_plan(default_phase5_runtime_plan_path())[
+            "runtime_plan_sha256"
+        ]
     if termination_plan_sha256 is None:
-        termination_plan_sha256 = _read_plan(
-            default_common_termination_probe_plan_path()
-        )["plan_sha256"]
+        termination_plan_sha256 = _read_plan(default_common_termination_probe_plan_path())[
+            "plan_sha256"
+        ]
     _assert_lower_sha256(runtime_plan_sha256, label="runtime plan hash")
     _assert_lower_sha256(termination_plan_sha256, label="termination plan hash")
     project_root = Path(__file__).resolve().parents[2]
@@ -661,7 +658,7 @@ def default_phase5_synthetic_client_plan_path(
         project_root
         / ".cache"
         / "phase5_synthetic_client_plan"
-        / f"v3-{runtime_plan_sha256[:12]}-{termination_plan_sha256[:12]}.json"
+        / f"v4-{runtime_plan_sha256[:12]}-{termination_plan_sha256[:12]}.json"
     )
 
 
@@ -669,9 +666,7 @@ def _write_once(path: Path, plan: Mapping[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists() or path.is_symlink():
         raise FileExistsError(f"refusing to overwrite synthetic client plan: {path}")
-    data = (json.dumps(plan, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode(
-        "utf-8"
-    )
+    data = (json.dumps(plan, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
     if len(data) > SYNTHETIC_CLIENT_PLAN_MAX_BYTES:
         raise ValueError("synthetic client plan exceeds its byte cap")
     partial = path.with_name(path.name + ".part")
@@ -740,11 +735,7 @@ def _read_client_plan(path: Path) -> dict[str, Any]:
     if path.is_symlink() or not path.is_file():
         raise ValueError("synthetic client plan is not a regular file")
     stat = path.stat()
-    if (
-        stat.st_nlink != 1
-        or stat.st_size <= 0
-        or stat.st_size > SYNTHETIC_CLIENT_PLAN_MAX_BYTES
-    ):
+    if stat.st_nlink != 1 or stat.st_size <= 0 or stat.st_size > SYNTHETIC_CLIENT_PLAN_MAX_BYTES:
         raise ValueError("synthetic client plan violates its file contract")
     value = _load_inert_json(path.read_bytes(), label="synthetic client plan")
     if not isinstance(value, dict):
@@ -759,9 +750,7 @@ def verify_phase5_synthetic_client_plan() -> dict[str, Any]:
         termination_plan_sha256=inputs[2]["plan_sha256"],
     )
     stored = _read_client_plan(path)
-    without_hash = {
-        key: value for key, value in stored.items() if key != "client_plan_sha256"
-    }
+    without_hash = {key: value for key, value in stored.items() if key != "client_plan_sha256"}
     if stored.get("client_plan_sha256") != _canonical_sha256(without_hash):
         raise ValueError("synthetic client plan self-hash is invalid")
     rebuilt = build_phase5_synthetic_client_plan(
@@ -777,12 +766,13 @@ def verify_phase5_synthetic_client_plan() -> dict[str, Any]:
     if stored != rebuilt:
         raise ValueError("synthetic client plan differs from independent rebuild")
     return {
-        "status": "PASS_LOCAL_CLIENT_PLAN_V3_ONLY_EXECUTION_NOT_AUTHORIZED",
+        "status": (
+            "PASS_LOCAL_CLIENT_PLAN_V4_CORE_VERIFIER_ONLY_"
+            "REMOTE_ADAPTER_NOT_BUILT_EXECUTION_NOT_AUTHORIZED"
+        ),
         "client_plan_sha256": stored["client_plan_sha256"],
         "request_count": stored["request_count"],
         "http_execution": stored["authorization"]["http_execution"],
-        "server_process_execution": stored["authorization"][
-            "server_process_execution"
-        ],
+        "server_process_execution": stored["authorization"]["server_process_execution"],
         "scientific_execution": stored["authorization"]["scientific_execution"],
     }
