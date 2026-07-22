@@ -1,0 +1,57 @@
+{
+  "acceptance_sha256": "7621b7c56e1e2f14c504e8a4d3974a657c5a2ead26bd3a91c5294c0f4f8a28b8",
+  "authorization": {
+    "confirmation_generation": false,
+    "gpu_execution": true,
+    "http_execution": true,
+    "model_download": true,
+    "no_gpu_preparation": true,
+    "project_prompt_access": false,
+    "public_synthetic_only": true,
+    "retained_population_access": false,
+    "scientific_execution": false,
+    "server_process_execution": true,
+    "server_rental": true
+  },
+  "client_plan_file_sha256": "b9b6c0b6541413b65ec1baf1848b767b0391f62674ae4b9bf24edf10e88fc32a",
+  "client_plan_sha256": "c4b734a607ea39f55a52da1240a589b724910487ee34b2d01590b4deb5bae2b1",
+  "format_version": "phase5-lock-a-acceptance-v1",
+  "governance": {
+    "confirmation_status": "RESERVED_NOT_GENERATED",
+    "formal_scientific_execution_started": false,
+    "next_stage_unlocked": "SYNTHETIC_PREFLIGHT_ONLY",
+    "retained_data_available_to_remote": false
+  },
+  "limits": {
+    "currency": "CNY",
+    "maximum_download_bytes": 1,
+    "maximum_spend_minor": 3000,
+    "minimum_free_data_disk_bytes": 103079215104,
+    "minimum_post_download_free_bytes": 68719476736,
+    "whole_rental_wall_clock_seconds": 14400
+  },
+  "operator_approval_sha256": "80c657b30ac20f777f293763b3ed4071bdeb4195300640c934e6e1cad3a653f3",
+  "provider_quote": {
+    "currency": "CNY",
+    "gpu_count": 1,
+    "gpu_hourly_price_minor": 598,
+    "gpu_memory_bytes": 103079215104,
+    "gpu_model": "RTX PRO 6000",
+    "provider": "AutoDL",
+    "quote_evidence_sha256": "a2de00ce00af01382616a3c344afa2cb0d0554c825982c446ecb687ce4b18ec4",
+    "storage_daily_price_minor": 158
+  },
+  "remote_environment_manifest_sha256": "a8716d101011d7251cb12cae2a5c82c422d3b1d82b00a36cc935843f9fbae816",
+  "review_record_sha256s": [
+    "af4cafb0bc8f5adef5bedd1bf7b3eba966345aebdfc82dcd615b51767d4b1980",
+    "70e42e32dd0da038619152f87fbc440802f777910b7ae56a3a05c5ff84dbe748"
+  ],
+  "runtime_bindings_sha256": "04f66ef99f081a1c139d772a187dfdb97eda65435ffe7d8c254702ddd3e17af5",
+  "source_commit": "6fecb3fb38a617cd526fd405de2498171f21699d",
+  "status": "LOCK_A_ACCEPTED_PUBLIC_SYNTHETIC_ONLY",
+  "validity": {
+    "expires_utc": "2026-07-23T11:00:00Z",
+    "not_before_utc": "2026-07-22T11:00:00Z"
+  },
+  "weight_download_plan_sha256": "ee5eaa6d9fb3b9da9ede408743dacad0ed6c9bf6e4495307a662deff23ab6c8c"
+}
