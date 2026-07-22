@@ -1,0 +1,63 @@
+{
+  "format_version": "phase5-v11-estimand-freeze-v1",
+  "status": "V11_ESTIMAND_FROZEN_EXECUTION_NOT_AUTHORIZED",
+  "supersession": {
+    "scope": "FUTURE_PHASE5_RUNS_ONLY",
+    "v10_result_file": "configs/phase5_public_synthetic_preflight_result_20260722.json",
+    "v10_result_file_sha256": "65f27fe5ac02600b937911ccb5221aae50aff19e1f2c37e56845ae4404a01507",
+    "v10_result_sha256": "b58cf42a42b0e97f583176cf279b5ece67da4e19d3b13ffc487ad79045604667",
+    "v10_status_remains": "FAIL_PRECOMMITTED_SEMANTIC_GATE",
+    "retroactive_relabeling_forbidden": true
+  },
+  "estimand": {
+    "id": "APPLICATION_LEVEL_NATIVE_CHAT_COMPARABILITY_V1",
+    "scientific_interface": "OPENAI_CHAT_COMPLETIONS_WITH_IDENTICAL_MESSAGES_AND_SCHEMA",
+    "formal_gate_mode": "native_package",
+    "claim_boundary": "DEPLOYMENT_PACKAGE_COMPARISON_NOT_WEIGHTS_ONLY_CAUSAL_ATTRIBUTION",
+    "common_base_serialization_role": "NON_GATING_PUBLIC_RAW_SERIALIZATION_DIAGNOSTIC",
+    "diagnostic_tail_may_authorize_science": false
+  },
+  "unseen_public_probe": {
+    "seed": 2026072204,
+    "integers": [
+      23,
+      7
+    ],
+    "expected": {
+      "sum": 30,
+      "difference": 16,
+      "checksum": "PUBLIC-23-7"
+    }
+  },
+  "client_plan": {
+    "relative_path": ".cache/phase5_synthetic_client_plan/v11-b2887ba90d81-b752a05215d7.json",
+    "client_plan_sha256": "242a1aa2e044d04301772cf53c892b5671191a4a29b887a1af308f2ac94256dd",
+    "client_plan_file_sha256": "bcbbd77fe94e9bcb6a74d789533758f8980a6fd488b4fefaddd7beb72200aafa",
+    "request_count": 20
+  },
+  "gates": {
+    "native_strict_json_exact_oracle_required": true,
+    "native_repeat_exact_required": true,
+    "common_raw_text_always_retained": true,
+    "common_classification_is_pass_predicate": false,
+    "common_repeat_exact_is_pass_predicate": false,
+    "arbitrary_tail_recovery_forbidden": true
+  },
+  "authorization": {
+    "model_download": false,
+    "server_rental": false,
+    "server_process_execution": false,
+    "http_execution": false,
+    "gpu_execution": false,
+    "retained_population_access": false,
+    "project_prompt_access": false,
+    "scientific_execution": false
+  },
+  "governance": {
+    "lock_a_registry": "UNREGISTERED_FAIL_CLOSED",
+    "new_lock_a_required": true,
+    "formal_scientific_execution_started": false,
+    "confirmation_status": "RESERVED_NOT_GENERATED"
+  },
+  "freeze_sha256": "6a8362077ec80b834c65e5807db873b5195bfcbf2a5950d8843f425e0fd30b6a"
+}

@@ -115,7 +115,7 @@ def main() -> None:
         raise ValueError("source evidence self-hash differs")
 
     client = _read_client_plan(
-        ROOT / ".cache" / "phase5_synthetic_client_plan" / "v10-b2887ba90d81-b752a05215d7.json"
+        ROOT / ".cache" / "phase5_synthetic_client_plan" / "v11-b2887ba90d81-b752a05215d7.json"
     )
     termination = _read_plan(
         ROOT / ".cache" / "phase5_common_termination_probe_plan" / "v2-1a8cdbf5f807.json"

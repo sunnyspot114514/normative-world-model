@@ -37,9 +37,9 @@ from .phase5_termination_probe import (
     verify_common_termination_probe_plan,
 )
 
-SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION = "phase5-public-synthetic-client-plan-v10"
+SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION = "phase5-public-synthetic-client-plan-v11"
 SYNTHETIC_CLIENT_PLAN_MAX_BYTES = 4 * 1024 * 1024
-PUBLIC_REQUEST_SEED = 2026071803
+PUBLIC_REQUEST_SEED = 2026072204
 PUBLIC_IMAGE_DATA_URI = (
     "data:image/png;base64,"
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGNgAAIA"
@@ -56,8 +56,8 @@ PUBLIC_TOY_MESSAGES = (
     {
         "role": "user",
         "content": (
-            "For the public integers 17 and 5, return their sum, the first minus "
-            "the second, and the checksum literal PUBLIC-17-5."
+            "For the public integers 23 and 7, return their sum, the first minus "
+            "the second, and the checksum literal PUBLIC-23-7."
         ),
     },
 )
@@ -66,15 +66,15 @@ PUBLIC_TOY_SCHEMA = {
     "properties": {
         "sum": {"type": "integer"},
         "difference": {"type": "integer"},
-        "checksum": {"type": "string", "enum": ["PUBLIC-17-5"]},
+        "checksum": {"type": "string", "enum": ["PUBLIC-23-7"]},
     },
     "required": ["sum", "difference", "checksum"],
     "additionalProperties": False,
 }
 PUBLIC_TOY_EXPECTED = {
-    "sum": 22,
-    "difference": 12,
-    "checksum": "PUBLIC-17-5",
+    "sum": 30,
+    "difference": 16,
+    "checksum": "PUBLIC-23-7",
 }
 IMPLEMENTATION_SOURCE_PATHS = (
     "configs/phase5_scale_inference_draft.toml",
@@ -130,7 +130,7 @@ def _implementation_source_records() -> dict[str, dict[str, Any]]:
 
 
 def verify_implementation_source_records(client_plan: Mapping[str, Any]) -> dict[str, Any]:
-    """Re-hash every V10 transitive execution source before any side effect."""
+    """Re-hash every V11 transitive execution source before any side effect."""
 
     records = client_plan.get("implementation_sources")
     if not isinstance(records, Mapping) or set(records) != set(IMPLEMENTATION_SOURCE_PATHS):
@@ -503,7 +503,7 @@ def build_phase5_synthetic_client_plan(
     result = {
         "format_version": SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION,
         "status": (
-            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V10_TRANSITIVE_CLOSURE_LOCK_PASS_"
+            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V11_TRANSITIVE_CLOSURE_LOCK_PASS_"
             "EXECUTION_NOT_AUTHORIZED"
         ),
         "authorization": {
@@ -540,6 +540,20 @@ def build_phase5_synthetic_client_plan(
             "selected_prompt_text_allowed": False,
             "scientific_request_bodies_allowed": False,
             "prompt_derived_artifacts_allowed": False,
+        },
+        "estimand_contract": {
+            "estimand_id": "APPLICATION_LEVEL_NATIVE_CHAT_COMPARABILITY_V1",
+            "formal_interface": "OPENAI_CHAT_COMPLETIONS_WITH_IDENTICAL_MESSAGES_AND_SCHEMA",
+            "formal_gate_mode": "native_package",
+            "checkpoint_specific_model_alias_is_not_a_semantic_payload_difference": True,
+            "claim_boundary": (
+                "COMPARE_DEPLOYMENT_PACKAGES_AT_THE_APPLICATION_API;DO_NOT_ATTRIBUTE_"
+                "DIFFERENCES_TO_WEIGHTS_ALONE"
+            ),
+            "common_base_serialization_role": "NON_GATING_RAW_SERIALIZATION_DIAGNOSTIC",
+            "common_base_serialization_may_authorize_scientific_execution": False,
+            "v10_failure_is_preserved_and_may_not_be_relabeled": True,
+            "v11_uses_unseen_public_toy_values": True,
         },
         "common_prompt_proof": {
             "rendered_prompt": common_prompt,
@@ -610,13 +624,28 @@ def build_phase5_synthetic_client_plan(
                 ),
             },
             "termination_evidence_verifier_must_pass": True,
-            "toy_schema_must_pass": True,
+            "toy_schema_must_pass_for_modes": ["native_package"],
             "toy_oracle_exact": dict(PUBLIC_TOY_EXPECTED),
-            "toy_oracle_must_pass_for_every_toy_case": True,
-            "repeat_comparison": "FINAL_CONTENT_EXACT_STRING_EQUALITY_WITHIN_CHECKPOINT_AND_MODE",
+            "toy_oracle_must_pass_for_modes": ["native_package"],
+            "repeat_comparison": "NATIVE_FINAL_CONTENT_EXACT_STRING_EQUALITY_WITHIN_CHECKPOINT",
             "reasoning_comparison": "REPORTED_SEPARATELY_NOT_A_PASS_PREDICATE",
             "whole_envelope_comparison": "REPORTED_SEPARATELY_NOT_A_PASS_PREDICATE",
             "missing_raw_generated_text_result": "FAIL",
+            "common_base_serialization_diagnostic": {
+                "pass_predicate": False,
+                "raw_generated_text_always_retained": True,
+                "classifications": [
+                    "STRICT_JSON_EXACT_ORACLE",
+                    "STRICT_JSON_SEMANTIC_MISMATCH",
+                    "BOUNDED_QWEN_THINK_ENVELOPE_EXACT_ORACLE_TAIL",
+                    "BOUNDED_QWEN_THINK_ENVELOPE_SEMANTIC_MISMATCH",
+                    "UNCLASSIFIED_NON_STRICT_TEXT",
+                ],
+                "tail_extraction_allowed_for_scientific_inputs": False,
+                "tail_extraction_allowed_for_pass_gate": False,
+                "arbitrary_prose_or_last_brace_recovery_forbidden": True,
+                "repeat_equality_reported_but_not_a_pass_predicate": True,
+            },
         },
         "lifecycle_contract": {
             "status": (
@@ -689,7 +718,7 @@ def build_phase5_synthetic_client_plan(
             "complete_mock_throughput_and_memory-envelope qualification",
             (
                 "create_two-review_operator-approved_external_lock_a_certificate_"
-                "binding_runtime_v2_and_client_plan_v10"
+                "binding_runtime_v2_and_client_plan_v11"
             ),
             (
                 "register_exact_accepted_lock_a_digest_in_separate_deployment_registry_"
@@ -719,7 +748,7 @@ def default_phase5_synthetic_client_plan_path(
         project_root
         / ".cache"
         / "phase5_synthetic_client_plan"
-        / f"v10-{runtime_plan_sha256[:12]}-{termination_plan_sha256[:12]}.json"
+        / f"v11-{runtime_plan_sha256[:12]}-{termination_plan_sha256[:12]}.json"
     )
 
 
@@ -828,7 +857,7 @@ def verify_phase5_synthetic_client_plan() -> dict[str, Any]:
         raise ValueError("synthetic client plan differs from independent rebuild")
     return {
         "status": (
-            "PASS_LOCAL_CLIENT_PLAN_V10_TRANSITIVE_CLOSURE_LOCK_"
+            "PASS_LOCAL_CLIENT_PLAN_V11_TRANSITIVE_CLOSURE_LOCK_"
             "EXECUTION_NOT_AUTHORIZED"
         ),
         "client_plan_sha256": stored["client_plan_sha256"],

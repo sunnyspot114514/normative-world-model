@@ -385,12 +385,24 @@ class Phase5SyntheticEvidenceTests(unittest.TestCase):
             expected_client_plan_sha256=client["client_plan_sha256"],
             expected_runtime_bindings=bindings,
         )
-        self.assertEqual(result["status"], "PASS_PUBLIC_SYNTHETIC_EVIDENCE_V2")
+        self.assertEqual(
+            result["status"],
+            "PASS_APPLICATION_NATIVE_GATE_WITH_RAW_COMMON_DIAGNOSTIC_V3",
+        )
         self.assertEqual(result["request_count"], 20)
         self.assertEqual(result["termination_case_count"], 8)
         self.assertEqual(result["repeat_cells"], 4)
         self.assertEqual(len(result["repeat_diagnostics"]), 4)
         self.assertTrue(all(row["final_content_equal"] for row in result["repeat_diagnostics"]))
+        self.assertTrue(result["application_gate"]["pass"])
+        self.assertFalse(result["raw_common_serialization_diagnostic"]["pass_predicate"])
+        self.assertEqual(
+            {
+                row["classification"]
+                for row in result["raw_common_serialization_diagnostic"]["observations"]
+            },
+            {"STRICT_JSON_EXACT_ORACLE"},
+        )
 
     def test_raw_before_parse_order_and_cross_checkpoint_lifecycle_are_enforced(self) -> None:
         client, termination, bundle, bindings = _fixture()
@@ -443,7 +455,7 @@ class Phase5SyntheticEvidenceTests(unittest.TestCase):
             for row in broken["checkpoint_runs"][0]["attempts"]
             if row["case_id"].endswith("native_package-toy-repeat-1")
         )
-        bad_content = '{"checksum":"PUBLIC-17-5","difference":12,"sum":23}'
+        bad_content = '{"checksum":"PUBLIC-23-7","difference":16,"sum":31}'
         bad_response = {
             "model": "phase5-agentworld",
             "object": "chat.completion",
@@ -586,15 +598,47 @@ class Phase5SyntheticEvidenceTests(unittest.TestCase):
                 expected_runtime_bindings=bindings,
             )
 
-    def test_duplicate_generated_json_keys_are_rejected(self) -> None:
+    def test_duplicate_native_generated_json_keys_are_rejected(self) -> None:
         client, termination, bundle, bindings = _fixture()
         broken = copy.deepcopy(bundle)
         toy = next(
             row
             for row in broken["checkpoint_runs"][0]["attempts"]
+            if row["case_id"].endswith("native_package-toy-repeat-1")
+        )
+        content = '{"sum":30,"sum":30,"difference":16,"checksum":"PUBLIC-23-7"}'
+        response = {
+            "model": "phase5-agentworld",
+            "object": "chat.completion",
+            "choices": [{"index": 0, "message": {"content": content}}],
+        }
+        toy["raw_response_body_base64"], toy["raw_response_body_sha256"] = _b64_record(
+            _json_bytes(response)
+        )
+        toy["generated_text"] = content
+        toy["generated_text_utf8_sha256"] = hashlib.sha256(content.encode()).hexdigest()
+        _rehash(broken)
+        with self.assertRaisesRegex(ValueError, "duplicate key"):
+            verify_phase5_synthetic_evidence(
+                client,
+                termination,
+                broken,
+                expected_client_plan_sha256=client["client_plan_sha256"],
+                expected_runtime_bindings=bindings,
+            )
+
+    def test_common_reasoning_tail_is_reported_but_never_becomes_the_pass_gate(self) -> None:
+        client, termination, bundle, bindings = _fixture()
+        changed = copy.deepcopy(bundle)
+        toy = next(
+            row
+            for row in changed["checkpoint_runs"][0]["attempts"]
             if row["case_id"].endswith("common_base_serialization-toy-repeat-1")
         )
-        content = '{"sum":22,"sum":22,"difference":12,"checksum":"PUBLIC-17-5"}'
+        content = (
+            "<think>public diagnostic reasoning</think>"
+            '{"checksum":"PUBLIC-23-7","difference":16,"sum":30}'
+        )
         response = {
             "model": "phase5-agentworld",
             "object": "text_completion",
@@ -605,8 +649,58 @@ class Phase5SyntheticEvidenceTests(unittest.TestCase):
         )
         toy["generated_text"] = content
         toy["generated_text_utf8_sha256"] = hashlib.sha256(content.encode()).hexdigest()
+        _rehash(changed)
+        result = verify_phase5_synthetic_evidence(
+            client,
+            termination,
+            changed,
+            expected_client_plan_sha256=client["client_plan_sha256"],
+            expected_runtime_bindings=bindings,
+        )
+        observation = next(
+            row
+            for row in result["raw_common_serialization_diagnostic"]["observations"]
+            if row["case_id"].endswith("common_base_serialization-toy-repeat-1")
+        )
+        self.assertEqual(
+            observation["classification"],
+            "BOUNDED_QWEN_THINK_ENVELOPE_EXACT_ORACLE_TAIL",
+        )
+        self.assertTrue(observation["bounded_reasoning_tail_exact_oracle"])
+        self.assertFalse(observation["pass_predicate"])
+        self.assertTrue(result["application_gate"]["pass"])
+        common_repeat = next(
+            row
+            for row in result["repeat_diagnostics"]
+            if row["checkpoint"] == "agentworld"
+            and row["mode"] == "common_base_serialization"
+        )
+        self.assertFalse(common_repeat["final_content_equal"])
+
+    def test_native_reasoning_wrapper_fails_instead_of_using_the_tail(self) -> None:
+        client, termination, bundle, bindings = _fixture()
+        broken = copy.deepcopy(bundle)
+        toy = next(
+            row
+            for row in broken["checkpoint_runs"][0]["attempts"]
+            if row["case_id"].endswith("native_package-toy-repeat-1")
+        )
+        content = (
+            "<think>public diagnostic reasoning</think>"
+            '{"checksum":"PUBLIC-23-7","difference":16,"sum":30}'
+        )
+        response = {
+            "model": "phase5-agentworld",
+            "object": "chat.completion",
+            "choices": [{"index": 0, "message": {"content": content}}],
+        }
+        toy["raw_response_body_base64"], toy["raw_response_body_sha256"] = _b64_record(
+            _json_bytes(response)
+        )
+        toy["generated_text"] = content
+        toy["generated_text_utf8_sha256"] = hashlib.sha256(content.encode()).hexdigest()
         _rehash(broken)
-        with self.assertRaisesRegex(ValueError, "duplicate key"):
+        with self.assertRaisesRegex(ValueError, "invalid inert JSON content"):
             verify_phase5_synthetic_evidence(
                 client,
                 termination,

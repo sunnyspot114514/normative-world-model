@@ -130,7 +130,7 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
         self.assertEqual(
             plan["status"],
             (
-                "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V10_TRANSITIVE_CLOSURE_LOCK_"
+                "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V11_TRANSITIVE_CLOSURE_LOCK_"
                 "PASS_EXECUTION_NOT_AUTHORIZED"
             ),
         )
@@ -196,12 +196,29 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
             self.assertEqual(row["headers"]["X-Request-ID"], row["logical_request_id"])
         gate = plan["semantic_pass_gate"]
         self.assertEqual(gate["toy_oracle_exact"], PUBLIC_TOY_EXPECTED)
-        self.assertTrue(gate["toy_oracle_must_pass_for_every_toy_case"])
+        self.assertEqual(gate["toy_oracle_must_pass_for_modes"], ["native_package"])
         self.assertEqual(
             gate["repeat_comparison"],
-            "FINAL_CONTENT_EXACT_STRING_EQUALITY_WITHIN_CHECKPOINT_AND_MODE",
+            "NATIVE_FINAL_CONTENT_EXACT_STRING_EQUALITY_WITHIN_CHECKPOINT",
         )
         self.assertIn("SEPARATELY", gate["reasoning_comparison"])
+        diagnostic = gate["common_base_serialization_diagnostic"]
+        self.assertFalse(diagnostic["pass_predicate"])
+        self.assertFalse(diagnostic["tail_extraction_allowed_for_pass_gate"])
+        self.assertTrue(diagnostic["arbitrary_prose_or_last_brace_recovery_forbidden"])
+
+        estimand = plan["estimand_contract"]
+        self.assertEqual(
+            estimand["estimand_id"],
+            "APPLICATION_LEVEL_NATIVE_CHAT_COMPARABILITY_V1",
+        )
+        self.assertEqual(estimand["formal_gate_mode"], "native_package")
+        self.assertFalse(
+            estimand["common_base_serialization_may_authorize_scientific_execution"]
+        )
+        self.assertTrue(estimand["v11_uses_unseen_public_toy_values"])
+        self.assertEqual(PUBLIC_TOY_EXPECTED["checksum"], "PUBLIC-23-7")
+        self.assertNotIn("PUBLIC-17-5", json.dumps(plan, sort_keys=True))
 
     def test_retry_identity_and_raw_before_parse_are_machine_readable(self) -> None:
         plan = _build()

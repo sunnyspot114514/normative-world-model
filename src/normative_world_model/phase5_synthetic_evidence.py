@@ -20,7 +20,7 @@ from .phase5_public_metadata import _load_inert_json
 from .phase5_synthetic_client_plan import verify_implementation_source_records
 from .phase5_termination_probe import verify_common_termination_probe_evidence
 
-SYNTHETIC_EVIDENCE_FORMAT_VERSION = "phase5-public-synthetic-evidence-v2"
+SYNTHETIC_EVIDENCE_FORMAT_VERSION = "phase5-public-synthetic-evidence-v3"
 RAW_BODY_MAX_BYTES = 4 * 1024 * 1024
 CHECKPOINT_ORDER = ("agentworld", "base")
 ATTEMPT_EVENT_ORDER = (
@@ -133,10 +133,10 @@ def _verify_plan_binding(
     if _canonical_sha256(client_without_hash) != expected:
         raise ValueError("client plan self-hash is invalid")
     if (
-        client_plan.get("format_version") != "phase5-public-synthetic-client-plan-v10"
+        client_plan.get("format_version") != "phase5-public-synthetic-client-plan-v11"
         or client_plan.get("status")
         != (
-            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V10_TRANSITIVE_CLOSURE_LOCK_"
+            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V11_TRANSITIVE_CLOSURE_LOCK_"
             "PASS_EXECUTION_NOT_AUTHORIZED"
         )
         or not isinstance(client_plan.get("authorization"), Mapping)
@@ -146,7 +146,7 @@ def _verify_plan_binding(
         or client_plan.get("lifecycle_contract", {}).get("lifecycle_evidence_event_order")
         != list(LIFECYCLE_EVENT_ORDER)
     ):
-        raise ValueError("client plan is not the reviewed closed V10 contract")
+        raise ValueError("client plan is not the reviewed closed V11 contract")
     termination_hash = _lower_sha256(
         termination_plan.get("plan_sha256"), label="termination plan hash"
     )
@@ -545,6 +545,102 @@ def _toy_reasoning(response: Mapping[str, Any], *, mode: str) -> Any:
     return message.get("reasoning_content")
 
 
+def _toy_value_is_exact(value: Any, expected: Mapping[str, Any]) -> bool:
+    return (
+        isinstance(value, Mapping)
+        and set(value) == set(expected)
+        and value == expected
+        and isinstance(value.get("sum"), int)
+        and not isinstance(value.get("sum"), bool)
+        and isinstance(value.get("difference"), int)
+        and not isinstance(value.get("difference"), bool)
+        and isinstance(value.get("checksum"), str)
+    )
+
+
+def _parse_toy_json(text: str, *, expected: Mapping[str, Any], label: str) -> tuple[bool, Any]:
+    try:
+        parsed = _load_inert_json(text.encode("utf-8"), label=label)
+    except (UnicodeError, ValueError):
+        return False, None
+    return _toy_value_is_exact(parsed, expected), parsed
+
+
+def classify_common_serialization_diagnostic(
+    generated: str, *, expected: Mapping[str, Any], label: str
+) -> dict[str, Any]:
+    """Classify raw common-serialization text without changing any pass decision.
+
+    The only tail inspected is one exactly bounded ``<think>...</think>``
+    envelope.  There is deliberately no trimming, prose recovery, code-fence
+    removal, last-brace search, or other output normalization.
+    """
+
+    strict_exact, strict_value = _parse_toy_json(
+        generated,
+        expected=expected,
+        label=f"common diagnostic strict JSON/{label}",
+    )
+    if strict_value is not None:
+        classification = (
+            "STRICT_JSON_EXACT_ORACLE"
+            if strict_exact
+            else "STRICT_JSON_SEMANTIC_MISMATCH"
+        )
+        return {
+            "classification": classification,
+            "raw_strict_json": True,
+            "raw_strict_json_exact_oracle": strict_exact,
+            "bounded_reasoning_envelope": False,
+            "bounded_reasoning_tail_exact_oracle": False,
+            "pass_predicate": False,
+        }
+
+    opening = "<think>"
+    closing = "</think>"
+    bounded = (
+        generated.startswith(opening)
+        and generated.count(opening) == 1
+        and generated.count(closing) == 1
+    )
+    if bounded:
+        close_index = generated.find(closing, len(opening))
+        bounded = close_index >= len(opening)
+    if bounded:
+        reasoning = generated[len(opening) : close_index]
+        tail = generated[close_index + len(closing) :]
+        bounded = opening not in reasoning and closing not in reasoning and bool(tail)
+    if bounded:
+        tail_exact, tail_value = _parse_toy_json(
+            tail,
+            expected=expected,
+            label=f"common diagnostic bounded tail/{label}",
+        )
+        if tail_value is not None:
+            classification = (
+                "BOUNDED_QWEN_THINK_ENVELOPE_EXACT_ORACLE_TAIL"
+                if tail_exact
+                else "BOUNDED_QWEN_THINK_ENVELOPE_SEMANTIC_MISMATCH"
+            )
+            return {
+                "classification": classification,
+                "raw_strict_json": False,
+                "raw_strict_json_exact_oracle": False,
+                "bounded_reasoning_envelope": True,
+                "bounded_reasoning_tail_exact_oracle": tail_exact,
+                "pass_predicate": False,
+            }
+
+    return {
+        "classification": "UNCLASSIFIED_NON_STRICT_TEXT",
+        "raw_strict_json": False,
+        "raw_strict_json_exact_oracle": False,
+        "bounded_reasoning_envelope": False,
+        "bounded_reasoning_tail_exact_oracle": False,
+        "pass_predicate": False,
+    }
+
+
 def _verify_final_response(
     request: Mapping[str, Any],
     attempt: Mapping[str, Any],
@@ -553,7 +649,7 @@ def _verify_final_response(
     alias: str,
     toy_expected: Mapping[str, Any],
     termination_rows: list[dict[str, Any]],
-) -> tuple[str | None, Any, bytes]:
+) -> tuple[str | None, Any, bytes, dict[str, Any] | None]:
     label = str(request["case_id"])
     status = attempt["http_status"]
     mode = request["mode"]
@@ -574,7 +670,7 @@ def _verify_final_response(
             or data[0].get("id") != alias
         ):
             raise ValueError(f"models endpoint alias differs: {label}")
-        return None, None, raw
+        return None, None, raw, None
     if mode == "language_only_negative":
         if (
             status != 400
@@ -596,7 +692,7 @@ def _verify_final_response(
             or "(s) may be provided in one prompt." not in message
         ):
             raise ValueError(f"language-only error semantics differ: {label}")
-        return None, None, raw
+        return None, None, raw, None
     if status != 200:
         raise ValueError(f"final HTTP status differs: {label}")
     response = _response_object(raw, label=f"response/{label}")
@@ -620,18 +716,20 @@ def _verify_final_response(
     elif mode in {"native_package", "common_base_serialization"}:
         generated = _toy_generated_text(response, mode=mode, alias=alias, label=label)
         reasoning = _toy_reasoning(response, mode=mode)
-        parsed = _load_inert_json(generated.encode("utf-8"), label=f"toy final/{label}")
-        if (
-            not isinstance(parsed, Mapping)
-            or set(parsed) != set(toy_expected)
-            or parsed != toy_expected
-            or not isinstance(parsed["sum"], int)
-            or isinstance(parsed["sum"], bool)
-            or not isinstance(parsed["difference"], int)
-            or isinstance(parsed["difference"], bool)
-            or not isinstance(parsed["checksum"], str)
-        ):
-            raise ValueError(f"toy semantic oracle differs: {label}")
+        if mode == "native_package":
+            parsed = _load_inert_json(
+                generated.encode("utf-8"),
+                label=f"toy final/{label}",
+            )
+            if not _toy_value_is_exact(parsed, toy_expected):
+                raise ValueError(f"toy semantic oracle differs: {label}")
+            common_diagnostic = None
+        else:
+            common_diagnostic = classify_common_serialization_diagnostic(
+                generated,
+                expected=toy_expected,
+                label=label,
+            )
     else:
         raise ValueError(f"unsupported request mode: {mode}")
     if mode == "common_termination":
@@ -641,7 +739,9 @@ def _verify_final_response(
     expected_text_hash = hashlib.sha256(generated.encode("utf-8")).hexdigest()
     if attempt["generated_text_utf8_sha256"] != expected_text_hash:
         raise ValueError(f"generated-text digest differs: {label}")
-    return generated, reasoning, raw
+    if mode == "common_termination":
+        common_diagnostic = None
+    return generated, reasoning, raw, common_diagnostic
 
 
 def verify_phase5_synthetic_evidence(
@@ -710,6 +810,7 @@ def verify_phase5_synthetic_evidence(
     repeat_texts: dict[tuple[str, str], list[str]] = defaultdict(list)
     repeat_reasoning: dict[tuple[str, str], list[Any]] = defaultdict(list)
     repeat_envelopes: dict[tuple[str, str], list[bytes]] = defaultdict(list)
+    common_diagnostics: list[dict[str, Any]] = []
     lifecycle_bounds = []
     total_attempts = 0
     for run in runs:
@@ -807,7 +908,7 @@ def verify_phase5_synthetic_evidence(
                     continue
                 if attempt_index != len(case_attempts):
                     raise ValueError(f"nonretryable response was retried: {request['case_id']}")
-                text, reasoning, envelope = _verify_final_response(
+                text, reasoning, envelope, common_diagnostic = _verify_final_response(
                     request,
                     attempt,
                     raw,
@@ -819,6 +920,14 @@ def verify_phase5_synthetic_evidence(
                     repeat_texts[(checkpoint, request["mode"])].append(text or "")
                     repeat_reasoning[(checkpoint, request["mode"])].append(reasoning)
                     repeat_envelopes[(checkpoint, request["mode"])].append(envelope)
+                if common_diagnostic is not None:
+                    common_diagnostics.append(
+                        {
+                            "checkpoint": checkpoint,
+                            "case_id": request["case_id"],
+                            **common_diagnostic,
+                        }
+                    )
         if cursor != len(attempts):
             raise ValueError(f"attempt sequence has extra or reordered rows: {checkpoint}")
         if previous_attempt_end >= lifecycle_bounds[-1][2]:
@@ -830,8 +939,16 @@ def verify_phase5_synthetic_evidence(
         (checkpoint, mode)
         for checkpoint in CHECKPOINT_ORDER
         for mode in ("native_package", "common_base_serialization")
-    } or any(len(values) != 2 or values[0] != values[1] for values in repeat_texts.values()):
-        raise ValueError("toy repeat final-content semantics differ")
+    } or any(len(values) != 2 for values in repeat_texts.values()):
+        raise ValueError("toy repeat cell count differs")
+    if any(
+        repeat_texts[(checkpoint, "native_package")][0]
+        != repeat_texts[(checkpoint, "native_package")][1]
+        for checkpoint in CHECKPOINT_ORDER
+    ):
+        raise ValueError("native toy repeat final-content semantics differ")
+    if len(common_diagnostics) != 4:
+        raise ValueError("common serialization diagnostic count differs")
 
     termination_result = verify_common_termination_probe_evidence(
         termination_plan,
@@ -853,7 +970,8 @@ def verify_phase5_synthetic_evidence(
                 }
             )
     return {
-        "status": "PASS_PUBLIC_SYNTHETIC_EVIDENCE_V2",
+        "status": "PASS_APPLICATION_NATIVE_GATE_WITH_RAW_COMMON_DIAGNOSTIC_V3",
+        "estimand_id": "APPLICATION_LEVEL_NATIVE_CHAT_COMPARABILITY_V1",
         "client_plan_sha256": expected_client_plan_sha256,
         "lock_a_acceptance_sha256": expected_lock_a,
         "bundle_sha256": bundle["bundle_sha256"],
@@ -863,4 +981,16 @@ def verify_phase5_synthetic_evidence(
         "termination_case_count": termination_result["case_count"],
         "repeat_cells": len(repeat_texts),
         "repeat_diagnostics": repeat_diagnostics,
+        "application_gate": {
+            "mode": "native_package",
+            "strict_json_exact_oracle_cells": 4,
+            "repeat_cells_exact": 2,
+            "pass": True,
+        },
+        "raw_common_serialization_diagnostic": {
+            "mode": "common_base_serialization",
+            "pass_predicate": False,
+            "may_authorize_scientific_execution": False,
+            "observations": common_diagnostics,
+        },
     }

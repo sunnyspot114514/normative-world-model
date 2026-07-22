@@ -266,7 +266,7 @@ class Phase5SyntheticRunnerTests(unittest.TestCase):
         )
         self.assertEqual(
             module.DEFAULT_CLIENT_PLAN.name,
-            "v10-b2887ba90d81-b752a05215d7.json",
+            "v11-b2887ba90d81-b752a05215d7.json",
         )
         self.assertEqual(
             module.DEFAULT_TERMINATION_PLAN.name,
@@ -320,7 +320,10 @@ class Phase5SyntheticRunnerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "run"
             result = _run(root)
-            self.assertEqual(result["status"], "PASS_PUBLIC_SYNTHETIC_EVIDENCE_V2")
+            self.assertEqual(
+                result["status"],
+                "PASS_APPLICATION_NATIVE_GATE_WITH_RAW_COMMON_DIAGNOSTIC_V3",
+            )
             self.assertEqual(result["request_count"], 20)
             self.assertTrue((root / "evidence-bundle.json").is_file())
             self.assertTrue((root / "verification.json").is_file())
@@ -435,7 +438,10 @@ class Phase5SyntheticRunnerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "run"
             result = _run(root, inputs=inputs)
-            self.assertEqual(result["status"], "PASS_PUBLIC_SYNTHETIC_EVIDENCE_V2")
+            self.assertEqual(
+                result["status"],
+                "PASS_APPLICATION_NATIVE_GATE_WITH_RAW_COMMON_DIAGNOSTIC_V3",
+            )
             release = (
                 root
                 / "agentworld"
@@ -451,7 +457,7 @@ class Phase5SyntheticRunnerTests(unittest.TestCase):
             for row in client["request_sequence"]
             if row["case_id"] == "agentworld-native_package-toy-repeat-1"
         )
-        bad_content = '{"checksum":"PUBLIC-17-5","difference":12,"sum":99}'
+        bad_content = '{"checksum":"PUBLIC-23-7","difference":16,"sum":99}'
         bad_response = {
             "model": "phase5-agentworld",
             "object": "chat.completion",

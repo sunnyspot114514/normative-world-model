@@ -31,7 +31,7 @@ DEFAULT_CLIENT_PLAN = (
     PROJECT_ROOT
     / ".cache"
     / "phase5_synthetic_client_plan"
-    / "v10-b2887ba90d81-b752a05215d7.json"
+    / "v11-b2887ba90d81-b752a05215d7.json"
 )
 DEFAULT_TERMINATION_PLAN = (
     PROJECT_ROOT

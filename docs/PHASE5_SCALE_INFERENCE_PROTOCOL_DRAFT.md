@@ -1,16 +1,16 @@
 # Phase 5 matched scale-inference protocol — draft
 
-Status: **DRAFT TWO-LOCK PROTOCOL; NEITHER LOCK EXISTS; NO MODEL DOWNLOAD OR SERVER EXECUTION AUTHORIZED**.
+Status: **DRAFT V11 TWO-LOCK PROTOCOL; NEITHER V11 LOCK EXISTS; NO MODEL DOWNLOAD OR SERVER EXECUTION AUTHORIZED**.
 
-The AgentWorld synthetic preflight has been accepted only as infrastructure evidence. It does not establish Base feasibility, common-serialization equality for the scientific population, throughput feasibility, model quality, or authorization. Its historical evidence bundle is immutable; corrections discovered by review are carried in the audit disposition and future code rather than rewritten into that bundle.
+The V10 AgentWorld synthetic preflight is preserved as a precommitted failure: AgentWorld's raw common-completion output contained a reasoning envelope around an exact JSON tail. It established native-chat feasibility and lifecycle evidence, but it did not authorize science. V11 prospectively changes the estimand to application-level native-chat package comparability. The historical V10 evidence and decision remain immutable.
 
 ## Purpose
 
 The local Qwen3-1.7B sequence is a preserved engineering null. This separate protocol asks a narrower scale question without reopening V4:
 
-> Under identical one-step inputs, decoding, hardware class, and evaluation code, does `Qwen-AgentWorld-35B-A3B` produce better physical/event predictions than its declared `Qwen3.5-35B-A3B-Base` parent without increasing evaluator-conditioned factual leakage or losing normative responsiveness?
+> Under identical OpenAI message/schema payloads, decoding, hardware class, and evaluation code, does the deployable `Qwen-AgentWorld-35B-A3B` package produce better physical/event predictions than the deployable `Qwen3.5-35B-A3B-Base` package without increasing evaluator-conditioned factual leakage or losing normative responsiveness?
 
-This is an exploratory matched-checkpoint inference study. It is not Phase-4 confirmation, not a rerun of V4, and not a causal attribution to CPT, SFT, or RL. AgentWorld differs from the base through all three stages, so a positive result supports only a checkpoint-family difference consistent with world-model training.
+This is an exploratory application-interface package comparison. It is not Phase-4 confirmation, not a rerun of V4, and not a causal attribution to weights, templates, CPT, SFT, or RL. Native tokenizer/template behavior is part of each deployment package. A positive result therefore supports only a deployable checkpoint-family difference consistent with world-model training.
 
 ## Live availability observation
 
@@ -37,7 +37,7 @@ Before any remote execution, a separate selector must be implemented, reviewed, 
 - 24 hard-policy families whose decision is invariant across the selected profiles;
 - equal environment counts within each stratum;
 - for each family: two profiles × structured/NL × canonical/surface-sham, giving eight semantic presentations;
-- each presentation is run in two separately reported serialization modes, giving 1,536 requests per checkpoint.
+- each presentation is run once through the frozen native chat application interface, giving 768 requests per checkpoint.
 
 Scenario families, not presentations, are the bootstrap and split unit. If the remaining pool cannot fill every frozen stratum without replacement, selection fails; it may not silently relax balance, reuse a prior scenario, or substitute after seeing model output. This population is opened discovery data and supports only an exploratory engineering claim.
 
@@ -47,26 +47,25 @@ The first population-deriving operation is the selector's first execution over t
 
 Both checkpoints receive byte-identical user content and the same common system instruction. The instruction describes the one-step prediction task and output fields but does not tell the model that factual fields must be invariant to evaluator profiles. This avoids turning the primary leakage test into a direct instruction-following test.
 
-A live metadata check found that the two observed tokenizer packages share the same 248,044-entry core vocabulary with identical token IDs, normalizer, pre-tokenizer, and decoder, while AgentWorld adds four reasoning/tool-response tokens and uses a different chat template. Therefore prompt serialization is a predeclared factor rather than an uncontrolled difference:
+A live metadata check found that the two observed tokenizer packages share the same 248,044-entry core vocabulary with identical token IDs, normalizer, pre-tokenizer, and decoder, while AgentWorld adds four reasoning/tool-response tokens and uses a different chat template. V11 treats those package differences as part of the deployment interface rather than attempting a weights-only contrast:
 
-1. `native_package`: each checkpoint uses its own frozen tokenizer and chat template; this measures the deployable checkpoint package and includes template/reasoning-token effects.
-2. `common_base_serialization`: the client renders the message history with the frozen Base tokenizer/template using `add_generation_prompt=false` and thinking disabled, appends the exact shared assistant prefix `<|im_start|>assistant\n`, and sends that raw string through the completions path for both checkpoints. The common prompt must contain none of the reserved control literals (`<tool_response>`, `</tool_response>`, `<think>`, `</think>`). This keeps the matched path free of an empty reasoning envelope and prevents prompt/control collisions. The public-snapshot probe later confirmed that both effective tokenizer packages register these control tokens at the same IDs; their presence was not itself a token-ID mismatch. Before serving, the runner encodes the string with each checkpoint's frozen server tokenizer; the two token-ID sequences must be byte-identical, are stored in every row, and are independently recomputed by the verifier. This is the primary matched-training comparison. If the freeze-time tokenizer audit no longer confirms equivalent input tokenization, or the recomputed token IDs differ, the protocol stops instead of approximating a common serialization.
+1. `native_package`: both checkpoints receive semantically and byte-wise identical `messages`, schema, and decoding fields except for the required model alias and request identity. Each server applies its own frozen tokenizer and chat template. This is the only scientific interface and the only semantic preflight gate.
+2. `common_base_serialization`: a small public-synthetic-only raw completions probe is retained as a non-gating serialization diagnostic. Its raw text is always preserved. The verifier may classify either strict JSON or one exactly bounded `<think>...</think>` envelope followed immediately by an exact JSON oracle, but no extracted tail may enter a PASS decision, project prompt, scientific metric, or model input. Arbitrary prose recovery, code-fence stripping, trimming, and last-brace parsing are forbidden.
 
-Before rental, official tokenizer/config/template files for both checkpoints are re-resolved and hash-bound. A synthetic probe validates the checker before population derivation. After selection, the CPU proof must cover every locked common-serialization prompt, not only a probe subset. For Lock B, the tokenizer/config files copied back from each served snapshot are transfer-hashed, rehashed locally, and then used locally to repeat the all-common-prompt proof. No selected prompt, rendered prompt, request body, prompt-token sequence, cache, embedding, or other prompt-derived artifact is sent to the synthetic rental. A single mismatch blocks the common mode.
+Before rental, official tokenizer/config/template files for both checkpoints are re-resolved and hash-bound. A synthetic probe validates the checker before population derivation. For Lock B, the tokenizer/config files copied back from each served snapshot are transfer-hashed and rehashed locally. No selected prompt, rendered prompt, request body, prompt-token sequence, cache, embedding, or other prompt-derived artifact is sent to the synthetic rental.
 
-Metrics are never pooled across these modes. A native-only advantage is a package result, not evidence that the learned world-model weights are responsible.
+The raw common diagnostic is never pooled with scientific rows. Any native advantage is a package result, not evidence that learned world-model weights alone are responsible.
 
 The primary serving implementation is vLLM's OpenAI-compatible API.
 
-The native condition uses `/v1/chat/completions`. The common condition uses a client-rendered base-template string through `/v1/completions`; it does not ask the AgentWorld server to apply its native chat template. JSON guidance is identical at the final-content layer in both endpoints.
+The scientific condition uses `/v1/chat/completions`. The public-only raw diagnostic uses a client-rendered base-template string through `/v1/completions`; it does not ask the AgentWorld server to apply its native chat template.
 
 Prospective runtime requirements:
 
-- native checkpoint serialization in `native_package`, and the same frozen base serialization in `common_base_serialization`;
-- a single common-mode EOS/termination policy frozen at Lock A after a public synthetic termination probe; the two checkpoint-default EOS tokens may not silently differ in the matched condition;
+- native checkpoint serialization in `native_package`; the common serialization and explicit termination-token requests remain public-only diagnostics;
 - the observed AgentWorld compatibility baseline: vLLM 0.25.1, `--language-model-only`, `--reasoning-parser qwen3`, `--moe-backend triton`, `--enforce-eager`, `--dtype bfloat16`, `--tensor-parallel-size 1`, `--gpu-memory-utilization 0.90`, `VLLM_USE_FLASHINFER_SAMPLER=0`, and `OMP_NUM_THREADS=1`;
 - final-content JSON-schema guidance applied identically to both checkpoints;
-- each native package uses its own default thinking-enabled chat template and captures any reasoning separately from final JSON; thinking is disabled for both checkpoints in the common-serialization condition;
+- each native package uses its own default thinking-enabled chat template and captures any reasoning separately from strict final JSON;
 - `temperature=0`, `top_p=1`, one completion, and a fixed request order;
 - maximum model length 8,192 and maximum generated tokens 2,048;
 - no truncation of any source presentation;
@@ -75,7 +74,7 @@ Prospective runtime requirements:
 
 Guided JSON makes schema validity an operational condition, not a scientific success metric. Content metrics remain fully scored. The deterministic setting intentionally differs from AgentWorld's sampling recommendation because paired factual invariance and exact replay are primary here. A sampling sensitivity run is outside the minimum protocol and cannot be added after results.
 
-The interface preflight value `max-num-seqs=1` is an observed feasibility setting, not the science-throughput setting. Lock A freezes the candidate grid `[1, 8, 16, 32]` and a deterministic rule: choose the largest candidate that passes every checkpoint-by-serialization stability probe. The selected common value is recorded only in Lock B. This predeclared selection is part of the throughput smoke, not an ad hoc flag change; a value outside the grid or a change to the rule requires a Lock-A amendment and delta review.
+The interface preflight value `max-num-seqs=1` is an observed feasibility setting, not the science-throughput setting. Lock A freezes the candidate grid `[1, 8, 16, 32]` and a deterministic rule: choose the largest candidate that passes every checkpoint's native stability probe. The selected common concurrency is recorded only in Lock B. This predeclared selection is part of the throughput smoke, not an ad hoc flag change; a value outside the grid or a change to the rule requires a Lock-A amendment and delta review.
 
 Runtime settings are checkpoint-common by default. A checkpoint-specific setting is allowed only when architecture or packaging forces it, it is predeclared with evidence, and it follows the exception class below:
 
@@ -85,7 +84,7 @@ Runtime settings are checkpoint-common by default. A checkpoint-specific setting
 
 If a setting required by one checkpoint is harmless for the other, both receive it. Every surviving exception enters the claim boundary. A failed token-affecting neutrality test makes the affected mode `TECHNICALLY_BLOCKED`; the protocol does not approximate around it.
 
-Deterministic replay means byte equality of the guided **final content** under the frozen request, seed, and serving stack. Reasoning equality and whole-response-envelope equality are separate diagnostics; request IDs and timestamps are not expected to replay byte-for-byte.
+Deterministic replay means byte equality of the native guided **final content** under the frozen request, seed, and serving stack. Reasoning equality, whole-response-envelope equality, and raw-common repeat equality are separate diagnostics; request IDs and timestamps are not expected to replay byte-for-byte.
 
 ## Synthetic throughput and cost smoke
 
@@ -93,18 +92,18 @@ The synthetic-only rental serves both checkpoints sequentially on the same GPU. 
 
 The smoke has two separately reported components:
 
-1. A **protocol-shaped** component uses the exact endpoints, reasoning settings, JSON guidance, and decoding parameters planned for science, but only public synthetic content. It runs 16 requests in each checkpoint-by-mode-by-input-length cell at approximately 1,024/3,072/6,000 **total rendered prompt tokens**, including system and template tokens. The 6,000-token cell therefore leaves 2,192 tokens within the 8,192 context budget and can accommodate the frozen 2,048-token generation cap without truncation. It measures request overhead, schema-path stability, achieved output lengths, and latency without pretending that synthetic output lengths reproduce the scientific population.
-2. A **decode-ceiling** component uses a frozen synthetic long-output task targeting 1,800 generated tokens. It tests each candidate in `[1, 8, 16, 32]` with eight stability requests for every checkpoint-by-mode-by-candidate cell. A cell passes only if all eight requests return a final HTTP 2xx after at most the frozen retry, all final contents validate against the frozen synthetic schema, no request is context-truncated, the cell generates at least 8,192 tokens in aggregate, and the server remains healthy with no crash, worker restart, CUDA OOM, or KV-allocation failure. Latency is recorded but is not a stability-pass predicate. The largest candidate whose four checkpoint-by-mode cells pass is selected. One warm-up block—one batch at the selected concurrency—is then run and excluded from throughput statistics for each checkpoint-by-mode condition. At the selected common value, three post-warm-up measurement windows are recorded per condition, each with at least 8,192 generated tokens. The across-window decode-throughput coefficient of variation must be at most 0.20.
+1. A **protocol-shaped** component uses the exact native endpoint, reasoning settings, JSON guidance, and decoding parameters planned for science, but only public synthetic content. It runs 16 requests in each checkpoint-by-input-length cell at approximately 1,024/3,072/6,000 **total rendered prompt tokens**, including system and template tokens. The 6,000-token cell therefore leaves 2,192 tokens within the 8,192 context budget and can accommodate the frozen 2,048-token generation cap without truncation. It measures request overhead, schema-path stability, achieved output lengths, and latency without pretending that synthetic output lengths reproduce the scientific population.
+2. A **decode-ceiling** component uses a frozen synthetic long-output task targeting 1,800 generated tokens. It tests each candidate in `[1, 8, 16, 32]` with eight stability requests for every checkpoint-by-candidate cell. A cell passes only if all eight requests return a final HTTP 2xx after at most the frozen retry, all final contents validate against the frozen synthetic schema, no request is context-truncated, the cell generates at least 8,192 tokens in aggregate, and the server remains healthy with no crash, worker restart, CUDA OOM, or KV-allocation failure. Latency is recorded but is not a stability-pass predicate. The largest candidate whose two checkpoint cells pass is selected. One warm-up block—one batch at the selected concurrency—is then run and excluded from throughput statistics for each checkpoint. At the selected common value, three post-warm-up measurement windows are recorded per checkpoint, each with at least 8,192 generated tokens. The across-window decode-throughput coefficient of variation must be at most 0.20.
 
-The 30-minute cap applies separately to the three post-warm-up decode measurement windows in each checkpoint-by-mode condition; the sum of those measured-window times is capped at one GPU-hour per checkpoint. Grid probes, warm-up, and the protocol-shaped component are excluded from those measurement-only caps, but every activity—including download, verification, load/unload, JIT, probes, warm-up, both smoke components, packaging, and transfer—is included in a separate whole-rental wall-clock cap and the preflight maximum-spend cap bound at Lock A. Reaching either whole-rental cap before all required evidence is present makes the smoke insufficient for Lock B.
+The 30-minute cap applies separately to the three post-warm-up decode measurement windows for each checkpoint; the sum of those measured-window times is capped at one GPU-hour per checkpoint. Grid probes, warm-up, and the protocol-shaped component are excluded from those measurement-only caps, but every activity—including download, verification, load/unload, JIT, probes, warm-up, both smoke components, packaging, and transfer—is included in a separate whole-rental wall-clock cap and the preflight maximum-spend cap bound at Lock A. Reaching either whole-rental cap before all required evidence is present makes the smoke insufficient for Lock B.
 
-Both components retain raw synthetic rows. The long-output schema may differ from the scientific output schema only to create a decode-load ceiling and is never used as a behavioral or schema-quality result. Both checkpoints' native and common conditions must be valid. A failed stability cell may lower the selected concurrency only according to the frozen grid rule; failure at concurrency 1, a server crash, a request that still fails after the frozen retry, or exhaustion of a measurement-only or whole-rental cap before the applicable minimum evidence makes the smoke insufficient for Lock B.
+Both components retain raw synthetic rows. The long-output schema may differ from the scientific output schema only to create a decode-load ceiling and is never used as a behavioral or schema-quality result. Both checkpoints' native conditions must be valid. A failed stability cell may lower the selected concurrency only according to the frozen grid rule; failure at concurrency 1, a server crash, a request that still fails after the frozen retry, or exhaustion of a measurement-only or whole-rental cap before the applicable minimum evidence makes the smoke insufficient for Lock B.
 
-The smoke records prefill and aggregate decode throughput, achieved output lengths, latency percentiles, KV/GPU memory, failures/retries, wall time, and provider price. Expected and worst-case projections are separate. The exact maximum-spend rule is `1.5 × (measured fixed overhead + worst-case variable projection)`. Fixed overhead includes both model downloads, publisher-hash verification, loading/unloading, JIT/warm-up, and evidence packaging/transfer; the variable projection includes all 3,072 requests and the frozen retry allowance. This is an engineering cost ceiling, never a model-quality result.
+The smoke records prefill and aggregate decode throughput, achieved output lengths, latency percentiles, KV/GPU memory, failures/retries, wall time, and provider price. Expected and worst-case projections are separate. The exact maximum-spend rule is `1.5 × (measured fixed overhead + worst-case variable projection)`. Fixed overhead includes both model downloads, publisher-hash verification, loading/unloading, JIT/warm-up, and evidence packaging/transfer; the variable projection includes all 1,536 requests and the frozen retry allowance. This is an engineering cost ceiling, never a model-quality result.
 
 ## Metrics
 
-All headline metrics are scenario-macro averages with a shared 10,000-resample scenario bootstrap, reported separately by serialization mode. The matched scientific contrast uses `common_base_serialization`; `native_package` is a deployment-package diagnostic.
+All headline metrics are scenario-macro averages with a shared 10,000-resample scenario bootstrap. The scientific contrast uses only `native_package` and is explicitly a deployment-package comparison. `common_base_serialization` remains a public-synthetic serialization diagnostic and never receives project prompts.
 
 Factual capability:
 
@@ -129,25 +128,24 @@ The verifier must rebuild every summary from raw request/response rows. A stored
 
 These margins are engineering choices made before any 35B output is generated:
 
-1. An AgentWorld matched factual advantage in `common_base_serialization` requires at least two of:
+1. An AgentWorld application-package factual advantage in `native_package` requires at least two of:
    - physical-field F1 higher than base by at least 0.05;
    - event-field F1 higher than base by at least 0.05;
    - event continuous MAE lower than base by at least 0.03.
 2. For each counted advantage, the paired 95% bootstrap interval must exclude zero in the favorable direction.
-3. In `common_base_serialization`, corrected evaluator leakage must be at most 0.05 for AgentWorld and may not exceed base by more than 0.03.
-4. In `common_base_serialization`, AgentWorld discretionary flip-pair accuracy may not be more than 0.03 below base, and its minimum decision-class recall must be at least 0.20.
+3. In `native_package`, corrected evaluator leakage must be at most 0.05 for AgentWorld and may not exceed base by more than 0.03.
+4. In `native_package`, AgentWorld discretionary flip-pair accuracy may not be more than 0.03 below base, and its minimum decision-class recall must be at least 0.20.
 5. Both checkpoints must return one complete guided final object for every request; an engine/parser failure makes the affected comparison `TECHNICALLY_BLOCKED`, not a model-quality zero.
 
 Decision labels:
 
-- `AGENTWORLD_MATCHED_ADVANTAGE`: factual rule 1 passes and rules 2–5 all pass in common serialization;
-- `NATIVE_PACKAGE_ONLY_ADVANTAGE`: the same factual pattern appears only with native serialization; this cannot be attributed to learned world-model weights;
-- `SCALE_ONLY_SIGNAL`: at least one checkpoint beats the retained static baseline by 0.05 F1 or 0.02 MAE, but AgentWorld does not clear the matched advantage rule;
+- `AGENTWORLD_APPLICATION_PACKAGE_ADVANTAGE`: factual rule 1 passes and rules 2–5 all pass through the native application interface; this cannot be attributed to learned world-model weights alone;
+- `SCALE_ONLY_SIGNAL`: at least one checkpoint beats the retained static baseline by 0.05 F1 or 0.02 MAE, but AgentWorld does not clear the application-package advantage rule;
 - `MIXED_LEAKAGE_TRADEOFF`: AgentWorld clears factual advantage but violates rule 3 or 4;
 - `INFERENCE_SCALE_NULL`: neither checkpoint clears a scale signal;
 - `TECHNICALLY_BLOCKED`: model loading, schema-guided reasoning, completeness, or source-lock verification fails.
 
-No label authorizes confirmation. Only `AGENTWORLD_MATCHED_ADVANTAGE` or `SCALE_ONLY_SIGNAL` may justify drafting a separate training study, which still requires its own review and authorization. `NATIVE_PACKAGE_ONLY_ADVANTAGE` justifies at most a packaging/template follow-up.
+No label authorizes confirmation. Only `AGENTWORLD_APPLICATION_PACKAGE_ADVANTAGE` or `SCALE_ONLY_SIGNAL` may justify drafting a separate training study, which still requires its own review and authorization.
 
 ## Two prospective execution locks
 
@@ -159,7 +157,7 @@ Lock A authorizes only a synthetic infrastructure rental. It must bind, in one c
 2. the selector, provisional population lock, source/exclusion hashes, and selected order;
 3. the locally retained executable-input hashes, prompt/schema/renderer hashes, and full request-order hashes;
 4. the publisher-resolved model/tokenizer/config manifest, including every file referenced by each checkpoint's own index rather than a hard-coded shard count;
-5. the CPU tokenizer proof over every locked common prompt;
+5. the exact application-level request payload hashes and checkpoint-specific frozen tokenizer/template hashes;
 6. the preflight runner/client/orchestrator, synthetic prompt set, semantic PASS gate, raw-before-parse evidence path, and independent verifier;
 7. the fail-closed **remote synthetic payload allowlist**, which excludes project prompt content, scientific request bodies, and all prompt-derived artifacts or reversible encodings, and the verifier evidence showing that only declared runtime/source files and public synthetic inputs are present;
 8. the runtime-exception register, container pinning policy, provider quote, preflight-only maximum spend, source-closure manifest, cleanliness attestation, and local test evidence;
@@ -173,7 +171,7 @@ After both-checkpoint preflight and throughput evidence returns and verifies loc
 
 1. every still-valid Lock-A hash plus an explicit supersede ledger;
 2. both evidence bundles, transfer manifests, and publisher-versus-downloaded file-hash comparisons;
-3. served-snapshot tokenizer hashes and the all-common-prompt token-ID proof;
+3. served-snapshot tokenizer/template hashes and exact application request reconstruction proof;
 4. the final common runtime, every checkpoint exception, actual container digest, software versions, and hardware inventory;
 5. the throughput/cost evidence, fixed and variable cost model, final provider quote, and adopted science-run maximum spend;
 6. the final runner and independent verifier, with verifier tamper tests and raw-row summary reconstruction;
