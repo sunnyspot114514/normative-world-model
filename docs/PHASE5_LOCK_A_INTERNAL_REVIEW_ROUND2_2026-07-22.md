@@ -20,7 +20,7 @@ Decision: **PASS FOR ONE PUBLIC-SYNTHETIC PREFLIGHT; SCIENCE REMAINS CLOSED**
    snapshot roots, identical runtime flags and environment for both
    checkpoints, offline Hugging Face settings, data-disk cache paths, and
    loopback port 8000. Bundle SHA-256:
-   `e21074f1e337f63677d687480a2819f496ae19456ad67175a5b8ef5f7bb58224`.
+   `23bc5c115561682ab56c9ba430474746ab5bcd549ae2f04c8f47eb4996d2cb0e`.
 4. Runtime-bindings SHA-256:
    `04f66ef99f081a1c139d772a187dfdb97eda65435ffe7d8c254702ddd3e17af5`.
 5. The provider quote is CNY 5.98 per GPU-hour plus CNY 1.58 per day of
@@ -43,4 +43,4 @@ Decision: **PASS FOR ONE PUBLIC-SYNTHETIC PREFLIGHT; SCIENCE REMAINS CLOSED**
   scientific result.
 
 No unresolved blocking finding remains for the bounded public-synthetic run.
-The repository-wide check passed 248 tests plus compile and isolation audits.
+The repository-wide check passed 249 tests plus compile and isolation audits.

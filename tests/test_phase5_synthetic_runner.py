@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import ast
 import copy
 import importlib.util
 import json
@@ -15,6 +16,7 @@ from normative_world_model.phase5_lock_a import (
     LOCK_A_AUTHORIZATION,
     LOCK_A_FORMAT_VERSION,
 )
+from normative_world_model.phase5_synthetic_client_plan import IMPLEMENTATION_SOURCE_PATHS
 from normative_world_model.phase5_synthetic_evidence import _canonical_sha256
 from normative_world_model.phase5_synthetic_runner import (
     SyntheticHTTPResponse,
@@ -211,6 +213,39 @@ def _run(root: Path, *, inputs=None) -> dict:
 
 
 class Phase5SyntheticRunnerTests(unittest.TestCase):
+    def test_plan_hashed_sources_cover_the_transitive_local_import_closure(self) -> None:
+        project = Path(__file__).resolve().parents[1]
+        package = project / "src" / "normative_world_model"
+        entrypoint = project / "scripts" / "run-phase5-public-synthetic-preflight.py"
+        modules = {"__init__"}
+        entry_tree = ast.parse(entrypoint.read_text(encoding="utf-8"))
+        for node in ast.walk(entry_tree):
+            if (
+                isinstance(node, ast.ImportFrom)
+                and isinstance(node.module, str)
+                and node.module.startswith("normative_world_model.")
+            ):
+                modules.add(node.module.split(".", 1)[1].split(".", 1)[0])
+        queue = list(modules)
+        while queue:
+            module = queue.pop()
+            path = package / ("__init__.py" if module == "__init__" else f"{module}.py")
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom) and node.level == 1 and node.module:
+                    child = node.module.split(".", 1)[0]
+                    if (package / f"{child}.py").is_file() and child not in modules:
+                        modules.add(child)
+                        queue.append(child)
+        closure = {
+            "src/normative_world_model/__init__.py"
+            if module == "__init__"
+            else f"src/normative_world_model/{module}.py"
+            for module in modules
+        }
+        closure.remove("src/normative_world_model/phase5_lock_a_registry.py")
+        self.assertTrue(closure.issubset(set(IMPLEMENTATION_SOURCE_PATHS)))
+
     def test_concrete_entrypoint_binds_exact_two_file_deployment_delta(self) -> None:
         path = (
             Path(__file__).resolve().parents[1]
@@ -231,7 +266,7 @@ class Phase5SyntheticRunnerTests(unittest.TestCase):
         )
         self.assertEqual(
             module.DEFAULT_CLIENT_PLAN.name,
-            "v9-b2887ba90d81-b752a05215d7.json",
+            "v10-b2887ba90d81-b752a05215d7.json",
         )
         self.assertEqual(
             module.DEFAULT_TERMINATION_PLAN.name,

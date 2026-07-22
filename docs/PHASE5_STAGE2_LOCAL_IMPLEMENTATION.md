@@ -239,6 +239,13 @@ digest into a separate committed deployment registry. The registry cannot be
 supplied by a caller; its deployment commit and clean-tree evidence are
 reviewed separately, while changing it no longer mutates the accepted plan.
 
+The later V10 pre-deployment audit additionally expands the hashed file set to
+the complete transitive local-import closure reached by the concrete entry
+point, including package initialization. A recursive AST test enforces this
+property. The remote deployment uses a sparse checkout of that closure plus
+the two deployment files and public synthetic plan artifacts, so retained
+corpora and project prompt material are not copied to the rental.
+
 V2 is likewise preserved and superseded. A full PNG chunk/CRC audit found that
 its nominal 1-by-1 fixture was malformed even though its signature and IHDR
 looked valid. V3 replaces it with a standard-library-constructed 1-by-1 RGBA

@@ -37,7 +37,7 @@ from .phase5_termination_probe import (
     verify_common_termination_probe_plan,
 )
 
-SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION = "phase5-public-synthetic-client-plan-v9"
+SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION = "phase5-public-synthetic-client-plan-v10"
 SYNTHETIC_CLIENT_PLAN_MAX_BYTES = 4 * 1024 * 1024
 PUBLIC_REQUEST_SEED = 2026071803
 PUBLIC_IMAGE_DATA_URI = (
@@ -80,16 +80,27 @@ IMPLEMENTATION_SOURCE_PATHS = (
     "configs/phase5_scale_inference_draft.toml",
     "configs/phase5_common_termination_probe_candidate.toml",
     "scripts/run-phase5-public-synthetic-preflight.py",
+    "src/normative_world_model/__init__.py",
+    "src/normative_world_model/comparators.py",
+    "src/normative_world_model/contracts.py",
+    "src/normative_world_model/metrics.py",
+    "src/normative_world_model/model_arms.py",
+    "src/normative_world_model/phase2_dataset.py",
     "src/normative_world_model/phase5_lock_a.py",
     "src/normative_world_model/phase5_preflight.py",
     "src/normative_world_model/phase5_loopback_adapter.py",
+    "src/normative_world_model/phase5_public_metadata.py",
+    "src/normative_world_model/phase5_public_weight_plan.py",
     "src/normative_world_model/phase5_runtime_plan.py",
     "src/normative_world_model/phase5_serialization.py",
     "src/normative_world_model/phase5_synthetic_client_plan.py",
     "src/normative_world_model/phase5_synthetic_evidence.py",
     "src/normative_world_model/phase5_synthetic_runner.py",
     "src/normative_world_model/phase5_termination_probe.py",
+    "src/normative_world_model/phase5_tokenizer_probe.py",
     "src/normative_world_model/phase5_weight_snapshot.py",
+    "src/normative_world_model/policy_oracle.py",
+    "src/normative_world_model/transfer_matrix.py",
 )
 
 
@@ -119,7 +130,7 @@ def _implementation_source_records() -> dict[str, dict[str, Any]]:
 
 
 def verify_implementation_source_records(client_plan: Mapping[str, Any]) -> dict[str, Any]:
-    """Re-hash every V9 plan-bound execution source before any side effect."""
+    """Re-hash every V10 transitive execution source before any side effect."""
 
     records = client_plan.get("implementation_sources")
     if not isinstance(records, Mapping) or set(records) != set(IMPLEMENTATION_SOURCE_PATHS):
@@ -492,7 +503,7 @@ def build_phase5_synthetic_client_plan(
     result = {
         "format_version": SYNTHETIC_CLIENT_PLAN_FORMAT_VERSION,
         "status": (
-            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V9_ATTESTED_NONCIRCULAR_LOCK_PASS_"
+            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V10_TRANSITIVE_CLOSURE_LOCK_PASS_"
             "EXECUTION_NOT_AUTHORIZED"
         ),
         "authorization": {
@@ -678,7 +689,7 @@ def build_phase5_synthetic_client_plan(
             "complete_mock_throughput_and_memory-envelope qualification",
             (
                 "create_two-review_operator-approved_external_lock_a_certificate_"
-                "binding_runtime_v2_and_client_plan_v9"
+                "binding_runtime_v2_and_client_plan_v10"
             ),
             (
                 "register_exact_accepted_lock_a_digest_in_separate_deployment_registry_"
@@ -708,7 +719,7 @@ def default_phase5_synthetic_client_plan_path(
         project_root
         / ".cache"
         / "phase5_synthetic_client_plan"
-        / f"v9-{runtime_plan_sha256[:12]}-{termination_plan_sha256[:12]}.json"
+        / f"v10-{runtime_plan_sha256[:12]}-{termination_plan_sha256[:12]}.json"
     )
 
 
@@ -817,7 +828,7 @@ def verify_phase5_synthetic_client_plan() -> dict[str, Any]:
         raise ValueError("synthetic client plan differs from independent rebuild")
     return {
         "status": (
-            "PASS_LOCAL_CLIENT_PLAN_V9_ATTESTED_NONCIRCULAR_LOCK_"
+            "PASS_LOCAL_CLIENT_PLAN_V10_TRANSITIVE_CLOSURE_LOCK_"
             "EXECUTION_NOT_AUTHORIZED"
         ),
         "client_plan_sha256": stored["client_plan_sha256"],

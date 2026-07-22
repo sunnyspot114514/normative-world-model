@@ -133,10 +133,10 @@ def _verify_plan_binding(
     if _canonical_sha256(client_without_hash) != expected:
         raise ValueError("client plan self-hash is invalid")
     if (
-        client_plan.get("format_version") != "phase5-public-synthetic-client-plan-v9"
+        client_plan.get("format_version") != "phase5-public-synthetic-client-plan-v10"
         or client_plan.get("status")
         != (
-            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V9_ATTESTED_NONCIRCULAR_LOCK_"
+            "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V10_TRANSITIVE_CLOSURE_LOCK_"
             "PASS_EXECUTION_NOT_AUTHORIZED"
         )
         or not isinstance(client_plan.get("authorization"), Mapping)
@@ -146,7 +146,7 @@ def _verify_plan_binding(
         or client_plan.get("lifecycle_contract", {}).get("lifecycle_evidence_event_order")
         != list(LIFECYCLE_EVENT_ORDER)
     ):
-        raise ValueError("client plan is not the reviewed closed V9 contract")
+        raise ValueError("client plan is not the reviewed closed V10 contract")
     termination_hash = _lower_sha256(
         termination_plan.get("plan_sha256"), label="termination plan hash"
     )

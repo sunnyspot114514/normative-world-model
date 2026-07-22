@@ -130,7 +130,7 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
         self.assertEqual(
             plan["status"],
             (
-                "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V9_ATTESTED_NONCIRCULAR_LOCK_"
+                "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V10_TRANSITIVE_CLOSURE_LOCK_"
                 "PASS_EXECUTION_NOT_AUTHORIZED"
             ),
         )

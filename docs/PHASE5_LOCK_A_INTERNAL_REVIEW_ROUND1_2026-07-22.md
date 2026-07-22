@@ -28,12 +28,18 @@ have reopened the self-authorization flaw that V6 was intended to close.
   executable hashes, hostname, kernel, GPU identity, and disk headroom before
   entering the model runner.
 
-The source closure produces client-plan V9:
+The first source closure produced V9, but a pre-deployment sparse-payload audit
+found that its hash list omitted modules imported transitively through package
+initialization and build-time helpers. The V9 acceptance was therefore
+superseded before any remote source upload or model launch. A recursive AST
+closure test now fails if a future local import is absent from the plan.
+
+The repaired source closure produces client-plan V10:
 
 - client-plan SHA-256:
-  `ba5e4ac433916b40ba5054fb854c542a9875c986e7b51e57069efee46e4a4cbd`;
+  `c4b734a607ea39f55a52da1240a589b724910487ee34b2d01590b4deb5bae2b1`;
 - path:
-  `.cache/phase5_synthetic_client_plan/v9-b2887ba90d81-b752a05215d7.json`;
+  `.cache/phase5_synthetic_client_plan/v10-b2887ba90d81-b752a05215d7.json`;
 - requests: 20 public synthetic requests, 10 per checkpoint;
 - retained data, project prompts, scientific execution, and confirmation
   generation remain closed.
@@ -49,4 +55,4 @@ The source closure produces client-plan V9:
   emergency cleanup, and port-release checks.
 
 No unresolved blocking finding remains in the authorization architecture.
-The repository-wide check passed 248 tests plus compile and isolation audits.
+The repository-wide check passed 249 tests plus compile and isolation audits.
