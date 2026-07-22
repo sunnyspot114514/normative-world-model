@@ -1,0 +1,22 @@
+{
+  "format_version": "phase5-operator-approval-v2",
+  "operator": "repository_owner",
+  "approval_messages": [
+    "克隆到新实例上了",
+    "向执行代理提供新实例连接信息；凭证不写入项目文件"
+  ],
+  "approved_instance_id": "vyjukdwhue-05db523c",
+  "approved_scope": {
+    "server_rental": true,
+    "model_download_already_completed": true,
+    "gpu_execution": true,
+    "model_server_process_execution": true,
+    "loopback_http_execution": true,
+    "public_synthetic_preflight_only": true,
+    "retained_population_access": false,
+    "project_prompt_access": false,
+    "scientific_execution": false,
+    "confirmation_generation": false
+  },
+  "shutdown_instruction": "用完记得关闭 AutoDL 实例"
+}
