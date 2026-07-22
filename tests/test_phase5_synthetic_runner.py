@@ -260,17 +260,24 @@ class Phase5SyntheticRunnerTests(unittest.TestCase):
         client, termination, specs, acceptance, adapters = _inputs()
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "run"
-            with self.assertRaisesRegex(PermissionError, "no Lock-A acceptance digest"):
-                run_phase5_public_synthetic_preflight(
-                    client_plan=client,
-                    termination_plan=termination,
-                    expected_client_plan_sha256=client["client_plan_sha256"],
-                    runtime_specs=specs,
-                    adapters=adapters,
-                    lock_a_acceptance=acceptance,
-                    expected_runtime_bindings=runtime_bindings_from_specs(specs),
-                    output_root=root,
-                )
+            with patch(
+                "normative_world_model.phase5_synthetic_runner."
+                "registered_lock_a_acceptance_sha256",
+                side_effect=PermissionError(
+                    "no Lock-A acceptance digest is registered in the execution source"
+                ),
+            ):
+                with self.assertRaisesRegex(PermissionError, "no Lock-A acceptance digest"):
+                    run_phase5_public_synthetic_preflight(
+                        client_plan=client,
+                        termination_plan=termination,
+                        expected_client_plan_sha256=client["client_plan_sha256"],
+                        runtime_specs=specs,
+                        adapters=adapters,
+                        lock_a_acceptance=acceptance,
+                        expected_runtime_bindings=runtime_bindings_from_specs(specs),
+                        output_root=root,
+                    )
             self.assertFalse(root.exists())
             self.assertTrue(all(adapter.launch_count == 0 for adapter in adapters.values()))
 
