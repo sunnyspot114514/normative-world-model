@@ -1,0 +1,64 @@
+{
+  "result_sha256": "b58cf42a42b0e97f583176cf279b5ece67da4e19d3b13ffc487ad79045604667",
+  "format_version": "phase5-public-synthetic-preflight-result-v1",
+  "status": "FAIL_PRECOMMITTED_SEMANTIC_GATE",
+  "run_id": "v10-newhost-attempt1",
+  "bindings": {
+    "source_commit": "d6c418ca562ee994cfed44020faf782da24d0672",
+    "deployment_commit": "e5633850a1669b352713d1e060b2b8d97a264896",
+    "lock_a_acceptance_sha256": "0fa6b4b239efdc797f918af6adc237f92fa858eebc1b2fb93cd522aed59a2ca3",
+    "client_plan_sha256": "c4b734a607ea39f55a52da1240a589b724910487ee34b2d01590b4deb5bae2b1",
+    "runtime_bindings_sha256": "04f66ef99f081a1c139d772a187dfdb97eda65435ffe7d8c254702ddd3e17af5",
+    "remote_environment_manifest_sha256": "6c1053ffab2eb48b86a7fbcaa089e0a2bfb8bc5c5368c605b6ec806be7d79538"
+  },
+  "evidence_archive": {
+    "relative_path": "artifacts/phase5-lock-a/v10-newhost-attempt1-evidence.tar.gz",
+    "bytes": 77162,
+    "sha256": "f20870e26c40f9b073576542047c45ce54650ae32b2167ed892db9be7370e9f6"
+  },
+  "integrity_audit": {
+    "request_count": 20,
+    "request_bytes_verified": 20,
+    "raw_response_hashes_verified": 20,
+    "generated_text_hashes_verified": 20,
+    "strict_attempt_traces_verified": 20,
+    "weight_files_reverified_before_launch": 35,
+    "public_metadata_files_reverified_before_launch": 16,
+    "checkpoint_lifecycle_chains_complete": 2,
+    "graceful_shutdowns": 2,
+    "forced_terminations": 0,
+    "port_release_proofs": 2
+  },
+  "semantic_audit": {
+    "runtime_identity_cells_passed": 2,
+    "language_only_negative_cells_passed": 2,
+    "termination_cases_passed": 8,
+    "termination_cases_total": 8,
+    "toy_repeat_cells_exactly_reproducible": 4,
+    "toy_repeat_cells_total": 4,
+    "agentworld_native_package_strict_json_passed": 2,
+    "agentworld_common_serialization_strict_json_passed": 0,
+    "agentworld_common_serialization_cases": 2,
+    "agentworld_common_serialization_reasoning_tail_semantically_correct": 2,
+    "base_native_package_strict_json_passed": 2,
+    "base_common_serialization_strict_json_passed": 2
+  },
+  "primary_failure": {
+    "case_id": "agentworld-common_base_serialization-toy-repeat-1",
+    "error_type": "ValueError",
+    "error_message": "invalid inert JSON content: toy final/agentworld-common_base_serialization-toy-repeat-1",
+    "classification": "DETERMINISTIC_REASONING_ENVELOPE_LEAKAGE_ON_TEXT_COMPLETION_PATH",
+    "raw_output_prefix": "<think>",
+    "final_tail_is_exact_semantic_oracle": true,
+    "post_hoc_normalization_applied": false
+  },
+  "governance": {
+    "public_synthetic_only": true,
+    "retained_population_accessed": false,
+    "project_prompt_accessed": false,
+    "formal_scientific_execution_started": false,
+    "confirmation_status": "RESERVED_NOT_GENERATED",
+    "instance_shutdown_confirmed": true,
+    "next_stage": "BLOCKED_PENDING_VERSIONED_PREFLIGHT_DECISION"
+  }
+}
