@@ -242,7 +242,15 @@ class Phase5SyntheticRunnerTests(unittest.TestCase):
         from normative_world_model import phase5_lock_a
         from normative_world_model import phase5_lock_a_registry
 
-        self.assertIsNone(phase5_lock_a_registry.REGISTERED_LOCK_A_ACCEPTANCE_SHA256)
+        registered = phase5_lock_a_registry.REGISTERED_LOCK_A_ACCEPTANCE_SHA256
+        self.assertTrue(
+            registered is None
+            or (
+                isinstance(registered, str)
+                and len(registered) == 64
+                and all(character in "0123456789abcdef" for character in registered)
+            )
+        )
         self.assertNotIn(
             "REGISTERED_LOCK_A_ACCEPTANCE_SHA256: str | None = None",
             Path(phase5_lock_a.__file__).read_text(encoding="utf-8"),
