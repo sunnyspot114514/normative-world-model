@@ -1,0 +1,18 @@
+{
+  "format_version": "phase5-provider-quote-evidence-v1",
+  "observed_utc": "2026-07-22T10:25:00Z",
+  "provider": "AutoDL",
+  "currency": "CNY",
+  "instance_id": "qz2syaltqs-65a7cf63",
+  "zone_host": "northwest-b/d42",
+  "billing_mode": "pay_as_you_go",
+  "gpu_model": "RTX PRO 6000",
+  "gpu_count": 1,
+  "gpu_memory_bytes_advertised": 103079215104,
+  "gpu_hourly_price_minor": 598,
+  "storage_daily_price_minor": 158,
+  "data_disk_total_bytes": 375809638400,
+  "source_instance_retained": true,
+  "new_instance_status_at_observation": "RUNNING",
+  "balance_warning": "LESS_THAN_24_HOURS_AT_CURRENT_BALANCE"
+}

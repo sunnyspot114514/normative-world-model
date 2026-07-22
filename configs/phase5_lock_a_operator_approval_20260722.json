@@ -1,0 +1,28 @@
+{
+  "format_version": "phase5-operator-approval-v1",
+  "operator": "repository_owner",
+  "approval_messages": [
+    "可以，用无卡模式下载，然后有卡去跑吧",
+    "确认",
+    "克隆实例就好",
+    "可以了，在运行了"
+  ],
+  "approved_scope": {
+    "server_rental": true,
+    "model_download_already_completed": true,
+    "gpu_execution": true,
+    "model_server_process_execution": true,
+    "loopback_http_execution": true,
+    "public_synthetic_preflight_only": true,
+    "retained_population_access": false,
+    "project_prompt_access": false,
+    "scientific_execution": false,
+    "confirmation_generation": false
+  },
+  "action_time_financial_confirmation": {
+    "instance_was_created_and_started_by_operator": true,
+    "gpu_hourly_price_minor": 598,
+    "storage_daily_price_minor": 158
+  },
+  "shutdown_instruction": "用完记得关机，autodl的机子"
+}

@@ -12,13 +12,10 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from .phase5_public_metadata import _canonical_sha256, _load_inert_json
+from .phase5_lock_a_registry import REGISTERED_LOCK_A_ACCEPTANCE_SHA256
 
 LOCK_A_FORMAT_VERSION = "phase5-lock-a-acceptance-v1"
 LOCK_A_ACCEPTED_STATUS = "LOCK_A_ACCEPTED_PUBLIC_SYNTHETIC_ONLY"
-# This is intentionally closed in the committed V6 execution source.  A future
-# reviewed Lock-A certificate must be registered here by exact digest before the
-# runner can consume it; callers cannot supply their own trust root.
-REGISTERED_LOCK_A_ACCEPTANCE_SHA256: str | None = None
 LOCK_A_AUTHORIZATION = {
     "model_download": True,
     "server_rental": True,
@@ -35,7 +32,13 @@ LOCK_A_AUTHORIZATION = {
 
 
 def registered_lock_a_acceptance_sha256() -> str:
-    """Return the source-registered trust root or fail closed."""
+    """Return the deployment-registered trust root or fail closed.
+
+    The registry lives in a separate, committed deployment module.  Keeping
+    its mutable digest outside the client-plan implementation hash avoids a
+    circular dependency in which registering an acceptance changes the plan
+    that the same acceptance binds.
+    """
 
     if REGISTERED_LOCK_A_ACCEPTANCE_SHA256 is None:
         raise PermissionError("no Lock-A acceptance digest is registered in the execution source")

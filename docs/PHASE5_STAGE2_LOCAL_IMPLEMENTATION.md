@@ -231,6 +231,14 @@ That registry is deliberately empty, so V6 remains fail-closed. It also
 re-hashes every plan-bound execution source before any output or adapter side
 effect. See `PHASE5_SYNTHETIC_CLIENT_PLAN_V6_AUTHORIZATION_AUDIT_2026-07-22.md`.
 
+A later pre-execution audit found that V6's registry was located inside a
+plan-hashed source file. Registering an acceptance therefore changed the
+client-plan hash bound by the same acceptance, creating a circular dependency.
+V7 keeps the verifier in the plan-hashed source closure but moves the concrete
+digest into a separate committed deployment registry. The registry cannot be
+supplied by a caller; its deployment commit and clean-tree evidence are
+reviewed separately, while changing it no longer mutates the accepted plan.
+
 V2 is likewise preserved and superseded. A full PNG chunk/CRC audit found that
 its nominal 1-by-1 fixture was malformed even though its signature and IHDR
 looked valid. V3 replaces it with a standard-library-constructed 1-by-1 RGBA

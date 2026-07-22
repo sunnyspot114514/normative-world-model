@@ -130,7 +130,7 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
         self.assertEqual(
             plan["status"],
             (
-                "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V6_EXTERNAL_LOCK_AND_SOURCE_REHASH_"
+                "LOCAL_PUBLIC_SYNTHETIC_CLIENT_PLAN_V9_ATTESTED_NONCIRCULAR_LOCK_"
                 "PASS_EXECUTION_NOT_AUTHORIZED"
             ),
         )
@@ -340,6 +340,22 @@ class Phase5SyntheticClientPlanTests(unittest.TestCase):
         plan = _build(implementation_sources=None)
         result = verify_implementation_source_records(plan)
         self.assertEqual(result["status"], "PASS_CLIENT_PLAN_IMPLEMENTATION_SOURCES_REHASHED")
+
+        # The deployment trust-root registry is intentionally outside the
+        # client-plan hash.  Otherwise writing the accepted plan digest into
+        # that registry would mutate the very plan the acceptance binds.
+        self.assertNotIn(
+            "src/normative_world_model/phase5_lock_a_registry.py",
+            plan["implementation_sources"],
+        )
+        self.assertIn(
+            "scripts/run-phase5-public-synthetic-preflight.py",
+            plan["implementation_sources"],
+        )
+        self.assertIn(
+            "src/normative_world_model/phase5_lock_a.py",
+            plan["implementation_sources"],
+        )
 
         drifted = json.loads(json.dumps(plan))
         first = next(iter(drifted["implementation_sources"]))

@@ -1,0 +1,27 @@
+{
+  "captured_utc": "2026-07-22T10:40:40Z",
+  "cgroup_memory_max_bytes": 128849018880,
+  "data_disk_total_bytes": 375809638400,
+  "format_version": "phase5-remote-environment-manifest-v2",
+  "gpu_query_noheader_nounits": "NVIDIA RTX PRO 6000 Blackwell Server Edition, 97887, 595.58.03",
+  "hostname": "autodl-container-qz2syaltqs-65a7cf63",
+  "kernel": "5.15.0-78-generic",
+  "manifest_sha256": "a8716d101011d7251cb12cae2a5c82c422d3b1d82b00a36cc935843f9fbae816",
+  "observed_free_data_disk_bytes": 149192716288,
+  "os_pretty_name": "Ubuntu 22.04.5 LTS",
+  "packages": [
+    {"file_count": 4511, "files_fingerprint_sha256": "f365daaf25064c54945cfa5d1ab9be095ec67abfaf7c7d2e4a4501f4172dbcd3", "name": "vllm", "total_bytes": 605966824, "version": "0.25.1"},
+    {"file_count": 11847, "files_fingerprint_sha256": "582bb89500c25a98c39c2ffddf9c0f590ff2f369c71e657a53159cbe5a4d5db2", "name": "torch", "total_bytes": 1136857282, "version": "2.11.0"},
+    {"file_count": 2566, "files_fingerprint_sha256": "3175ec253037fa628901de360b73d9b045f41c174b2c62614b7eaec9d79e2d18", "name": "transformers", "total_bytes": 47133306, "version": "5.14.1"},
+    {"file_count": 359, "files_fingerprint_sha256": "6c137927540fdb27828f90addccefd993694c909532b12de5c77b0a032ff85e1", "name": "triton", "total_bytes": 669051335, "version": "3.6.0"},
+    {"file_count": 4650, "files_fingerprint_sha256": "749831a65c6dd6430a90a981322a3fea3a99f18f9ee3eaa4017bd91d1a719c4b", "name": "flashinfer-python", "total_bytes": 75188140, "version": "0.6.13"},
+    {"file_count": 31, "files_fingerprint_sha256": "cca39d6206c8055bd1d5eff995718bf81e3148ed5bc01275e5db5b7f026225e5", "name": "tokenizers", "total_bytes": 10322229, "version": "0.22.2"},
+    {"file_count": 17, "files_fingerprint_sha256": "088b789bf2b3fe682363913bee784c39fce29bc83e06d9fd43e0db3c86e204c6", "name": "safetensors", "total_bytes": 1337913, "version": "0.8.0"},
+    {"file_count": 904, "files_fingerprint_sha256": "356592f833c289ef6d3b775d4630116efa907d66740708e8972dc0dc98f3b8a8", "name": "numpy", "total_bytes": 57522577, "version": "2.3.5"}
+  ],
+  "python_executable": "/root/miniconda3/bin/python3.12",
+  "python_executable_sha256": "0c05a22b0b180580a76437114a95cf138f67c8f46245acad26017c803b42b8c1",
+  "runtime_executable": "/root/autodl-tmp/phase5-preflight/bin/vllm",
+  "runtime_executable_sha256": "31f57df762b0411ed8e0ba371962bb6d1c753fc2d478b27962baea0aac39362c",
+  "status": "CAPTURED_FOR_LOCK_A_PUBLIC_SYNTHETIC_PREFLIGHT"
+}

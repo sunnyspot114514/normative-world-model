@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import copy
+import importlib.util
 import json
 import tempfile
 import unittest
@@ -210,6 +211,43 @@ def _run(root: Path, *, inputs=None) -> dict:
 
 
 class Phase5SyntheticRunnerTests(unittest.TestCase):
+    def test_concrete_entrypoint_binds_exact_two_file_deployment_delta(self) -> None:
+        path = (
+            Path(__file__).resolve().parents[1]
+            / "scripts"
+            / "run-phase5-public-synthetic-preflight.py"
+        )
+        spec = importlib.util.spec_from_file_location("phase5_concrete_entrypoint", path)
+        self.assertIsNotNone(spec)
+        self.assertIsNotNone(spec.loader)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        self.assertEqual(
+            module.ALLOWED_DEPLOYMENT_DIFF,
+            {
+                "configs/phase5_lock_a_acceptance_20260722.json",
+                "src/normative_world_model/phase5_lock_a_registry.py",
+            },
+        )
+        self.assertEqual(
+            module.DEFAULT_CLIENT_PLAN.name,
+            "v9-b2887ba90d81-b752a05215d7.json",
+        )
+        self.assertEqual(
+            module.DEFAULT_TERMINATION_PLAN.name,
+            "v2-1a8cdbf5f807.json",
+        )
+
+    def test_deployment_registry_is_separate_from_plan_hashed_verifier(self) -> None:
+        from normative_world_model import phase5_lock_a
+        from normative_world_model import phase5_lock_a_registry
+
+        self.assertIsNone(phase5_lock_a_registry.REGISTERED_LOCK_A_ACCEPTANCE_SHA256)
+        self.assertNotIn(
+            "REGISTERED_LOCK_A_ACCEPTANCE_SHA256: str | None = None",
+            Path(phase5_lock_a.__file__).read_text(encoding="utf-8"),
+        )
+
     def test_unregistered_trust_root_rejects_valid_certificate_before_side_effect(self) -> None:
         client, termination, specs, acceptance, adapters = _inputs()
         with tempfile.TemporaryDirectory() as temporary:
