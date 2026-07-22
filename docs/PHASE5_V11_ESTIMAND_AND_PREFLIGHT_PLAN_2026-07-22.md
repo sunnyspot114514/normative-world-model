@@ -2,6 +2,11 @@
 
 Status: **LOCAL PLAN FROZEN; EXECUTION NOT AUTHORIZED**
 
+Revision note: before Lock A, internal review found that the concrete entry
+point did not consume the acceptance record's whole-file client-plan digest.
+The byte-binding check was added, the ignored plan was rebuilt, and the hashes
+below supersede the pre-fix values preserved at commit `bc003ab`.
+
 ## Decision
 
 V11 adopts an application-level deployment-package estimand. Both checkpoints
@@ -35,9 +40,9 @@ gate and never enters scientific requests or metrics.
 ## Frozen local object
 
 - Client-plan semantic SHA-256:
-  `242a1aa2e044d04301772cf53c892b5671191a4a29b887a1af308f2ac94256dd`
+  `d85104f01375d18a772d25e3ef5b81f26503f09c39a62eb028c73be1a4d7a3d9`
 - Client-plan file SHA-256:
-  `bcbbd77fe94e9bcb6a74d789533758f8980a6fd488b4fefaddd7beb72200aafa`
+  `c8f0554485f9821fbade122eb9e9cb6bab1d862521130431487040bf7f6e0091`
 - Ignored local path:
   `.cache/phase5_synthetic_client_plan/v11-b2887ba90d81-b752a05215d7.json`
 - Request count: 20 public-synthetic requests.

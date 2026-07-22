@@ -2,6 +2,10 @@
 
 Decision: **PASS LOCAL FREEZE; REMOTE EXECUTION REMAINS UNAUTHORIZED**
 
+Historical note: this round reviewed the pre-Lock-A candidate preserved at
+commit `bc003ab`. The later client-plan byte-binding repair and replacement
+hashes are reviewed in the two `PHASE5_V11_LOCK_A_INTERNAL_REVIEW_*` records.
+
 ## Independent attack checklist
 
 - Native output with an exact JSON tail inside `<think>...</think>` fails.

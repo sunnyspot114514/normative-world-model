@@ -273,6 +273,17 @@ class Phase5SyntheticRunnerTests(unittest.TestCase):
             "v2-1a8cdbf5f807.json",
         )
 
+        with tempfile.TemporaryDirectory() as temporary:
+            client_plan = Path(temporary) / "client-plan.json"
+            client_plan.write_bytes(b"exact reviewed client-plan bytes\n")
+            acceptance = {
+                "client_plan_file_sha256": module._sha256_file(client_plan)
+            }
+            module._verify_client_plan_file_binding(client_plan, acceptance)
+            client_plan.write_bytes(b"drifted client-plan bytes\n")
+            with self.assertRaisesRegex(ValueError, "file bytes"):
+                module._verify_client_plan_file_binding(client_plan, acceptance)
+
     def test_deployment_registry_is_separate_from_plan_hashed_verifier(self) -> None:
         from normative_world_model import phase5_lock_a
         from normative_world_model import phase5_lock_a_registry

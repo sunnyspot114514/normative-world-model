@@ -82,6 +82,14 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _verify_client_plan_file_binding(
+    path: Path, acceptance: Mapping[str, Any]
+) -> None:
+    expected = acceptance.get("client_plan_file_sha256")
+    if not isinstance(expected, str) or _sha256_file(path) != expected:
+        raise ValueError("client-plan file bytes differ from the accepted binding")
+
+
 def _verify_remote_environment(
     manifest: Mapping[str, Any], acceptance: Mapping[str, Any]
 ) -> dict[str, Any]:
@@ -190,10 +198,12 @@ def main() -> None:
     parser.add_argument("--output-root", type=Path, required=True)
     args = parser.parse_args()
 
-    client_plan = _read_client_plan(args.client_plan.resolve(strict=True))
+    client_plan_path = args.client_plan.resolve(strict=True)
     termination_plan = _read_plan(args.termination_plan.resolve(strict=True))
     runtime_bundle = _load_json(args.runtime_bundle.resolve(strict=True), label="runtime bundle")
     acceptance = _load_json(args.acceptance.resolve(strict=True), label="Lock-A acceptance")
+    _verify_client_plan_file_binding(client_plan_path, acceptance)
+    client_plan = _read_client_plan(client_plan_path)
     remote_environment = _load_json(
         args.remote_environment.resolve(strict=True), label="remote environment manifest"
     )

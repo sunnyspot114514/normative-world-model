@@ -2,6 +2,10 @@
 
 Decision: **CHANGES REQUIRED, THEN RE-REVIEW**
 
+Historical note: this round reviewed the pre-Lock-A candidate preserved at
+commit `bc003ab`. The later client-plan byte-binding repair and replacement
+hashes are reviewed in the two `PHASE5_V11_LOCK_A_INTERNAL_REVIEW_*` records.
+
 ## Findings and disposition
 
 1. **Blocking — post-hoc normalization risk.** Stripping the V10 `<think>`
